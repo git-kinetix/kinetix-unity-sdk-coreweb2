@@ -1,24 +1,6 @@
-<<<<<<< HEAD
-<<<<<<< Updated upstream
-{
-  "name": "com.kinetix.coreweb2",
-  "version": "0.5.1",
-  "displayName": "Kinetix Core",
-  "description": "Kinetix Core SDK",
-  "author": {
-    "name": "Kinetix",
-    "url": "https://www.kinetix.tech"
-  }
-}
-=======
 {
   "name": "com.kinetix.coreweb2",
   "version": "0.6.1",
-=======
-{
-  "name": "com.kinetix.coreweb2",
-  "version": "0.6.0",
->>>>>>> 06ddde23de98092f4c3f29a5edcf5fb88da8c702
   "displayName": "Kinetix Core",
   "description": "Kinetix Core SDK",
   "author": {
@@ -26,7 +8,3 @@
     "url": "https://www.kinetix.tech"
   }
 }
-<<<<<<< HEAD
->>>>>>> Stashed changes
-=======
->>>>>>> 06ddde23de98092f4c3f29a5edcf5fb88da8c702
