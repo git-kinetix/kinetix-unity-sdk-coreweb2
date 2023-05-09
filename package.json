@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 {
   "name": "com.kinetix.coreweb2",
   "version": "0.5.1",
@@ -8,3 +9,15 @@
     "url": "https://www.kinetix.tech"
   }
 }
+=======
+{
+  "name": "com.kinetix.coreweb2",
+  "version": "0.6.1",
+  "displayName": "Kinetix Core",
+  "description": "Kinetix Core SDK",
+  "author": {
+    "name": "Kinetix",
+    "url": "https://www.kinetix.tech"
+  }
+}
+>>>>>>> Stashed changes
