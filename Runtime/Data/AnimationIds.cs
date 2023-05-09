@@ -10,10 +10,12 @@ using UnityEngine;
 [Serializable]
 public class AnimationIds
 {
+    public string UUID;
+    public string TokenID;
+    public string ContractAddress;
+
     
     // /!\ Not readonly for serialisation
-    
-    public string UUID;
 
     public AnimationIds(string _UUID)
     {
@@ -29,6 +31,8 @@ public class AnimationIds
     {
         return JsonUtility.FromJson<AnimationIds>(_JSON);
     }
+
+    
 
     #region Equals
     public override bool Equals(object obj)
@@ -58,4 +62,13 @@ public class AnimationIds
         return "\n" + "UUID : " + UUID;
     }
     
+
+    public EKinetixNodeProvider GetExpectedProvider()
+    {
+        if (UUID != string.Empty)
+            return EKinetixNodeProvider.SDK_API;
+
+
+        return EKinetixNodeProvider.NONE;
+    }
 }

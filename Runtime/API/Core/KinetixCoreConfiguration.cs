@@ -8,6 +8,8 @@ namespace Kinetix
 {
     public class KinetixCoreConfiguration
     {
+        public string VirtualWorldId;
+
         // Play Animation Automatically on Animators
         public bool   PlayAutomaticallyAnimationOnAnimators = true;
         
@@ -16,7 +18,11 @@ namespace Kinetix
         
         // Show Logs
         public bool   ShowLogs = false;
-        
+
+        // Are the User Generated Content available?
+        public bool EnableUGC = true;
+
+        // Network Configuration        
         public KinetixNetworkConfiguration NetworkConfiguration;
     }
 }

@@ -4,14 +4,25 @@
 // // </copyright>
 // // ----------------------------------------------------------------------------
 
-
 using System.Collections.Generic;
 
 namespace Kinetix.Internal
 {
     public static class KinetixConstants
     {
-        public const string version = "0.5.1";
+        public const string version = "0.6.2";
+
+        public static bool C_ShouldUGCBeAvailable = true;
+        
+#if STAGING_KINETIX
+        public static readonly string c_SDK_API_URL = "https://sdk-api.staging.kinetix.tech";
+#else
+        public static readonly string c_SDK_API_URL = "https://sdk-api.kinetix.tech";
+#endif
+
+
+        public static readonly int c_TimeOutCreateQRCode = 305;
+        
         
         #region StreamingAssets
         

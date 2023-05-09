@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 using Newtonsoft.Json;
+using System;
+using System.Linq;
 
 namespace Kinetix.Internal
 {
@@ -82,41 +84,6 @@ namespace Kinetix.Internal
             EditorGUILayout.Space();
             EditorGUILayout.Space();
             EditorGUILayout.Space();
-            
-            EditorGUILayout.LabelField("Import custom free emotes");
-            EditorGUILayout.Space();
-
-            
-            try {
-                if (GUILayout.Button("Select emote catalog folder")) {
-                    string path = EditorUtility.OpenFolderPanel("Select emote catalog folder", "", "");
-
-                    if (path.Length != 0) {
-                        if (!Directory.Exists("Assets/StreamingAssets/Kinetix")) {
-                            Directory.CreateDirectory("Assets/StreamingAssets/Kinetix");
-                        }
-
-                        DirectoryInfo freeAnimDir = new DirectoryInfo(path);
-                        DirectoryInfo[] emotesDirectories = freeAnimDir.GetDirectories();
-
-                        foreach (DirectoryInfo emotedir in emotesDirectories) {
-                            manifest.AddEmote(KinetixConstants.C_FreeCustomAnimationsPath, emotedir.Name);
-                        }
-
-                        DirectoryHelper.Copy(path, Application.streamingAssetsPath + KinetixConstants.C_FreeCustomAnimationsPath);
-
-                        manifest.Save();
-                        AssetDatabase.Refresh();
-                    }
-                }
-            #pragma warning disable CS0168 // Variable non utilisée
-            } catch (ExitGUIException e) {
-            #pragma warning restore CS0168
-            }
-
-            if (GUILayout.Button("Remove Custom Free emotes")) {
-                RemoveKinetixCustomEmotes();
-            }
         }
 
         
@@ -130,7 +97,20 @@ namespace Kinetix.Internal
                 Directory.CreateDirectory("Assets/StreamingAssets/Kinetix");
             }
 
+            if (!Directory.Exists("Assets/StreamingAssets/Kinetix/FreeAnimations")) {
+                Directory.CreateDirectory("Assets/StreamingAssets/Kinetix/FreeAnimations");
+            }
+
+
             bool success = AssetDatabase.CopyAsset(KinetixConstants.C_FreeAnimationsAssetPluginPath, KinetixConstants.C_FreeAnimationsAssetSAPath);
+            
+            if (!success) {
+                success = true;
+
+                foreach (DirectoryInfo emotedir in new DirectoryInfo(KinetixConstants.C_FreeAnimationsAssetPluginPath).GetDirectories()) {
+                    success = success && AssetDatabase.CopyAsset(KinetixConstants.C_FreeAnimationsAssetPluginPath + "/" + emotedir.Name, KinetixConstants.C_FreeAnimationsAssetSAPath + "/" + emotedir.Name);
+                }
+            }
 
             DirectoryInfo freeAnimDir = new DirectoryInfo(KinetixConstants.C_FreeAnimationsAssetSAPath);
             DirectoryInfo[] emotesDirectories = freeAnimDir.GetDirectories();
