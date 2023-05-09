@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <<<<<<< Updated upstream
 using System.IO;
 using System.Collections.Generic;
@@ -198,6 +199,8 @@ namespace Kinetix.Internal
     }
 }
 =======
+=======
+>>>>>>> 06ddde23de98092f4c3f29a5edcf5fb88da8c702
 using System.IO;
 using System.Collections.Generic;
 using UnityEngine;
@@ -303,6 +306,7 @@ namespace Kinetix.Internal
 
 
             bool success = AssetDatabase.CopyAsset(KinetixConstants.C_FreeAnimationsAssetPluginPath, KinetixConstants.C_FreeAnimationsAssetSAPath);
+<<<<<<< HEAD
             
             if (!success) {
                 success = true;
@@ -311,6 +315,8 @@ namespace Kinetix.Internal
                     success = success && AssetDatabase.CopyAsset(KinetixConstants.C_FreeAnimationsAssetPluginPath + "/" + emotedir.Name, KinetixConstants.C_FreeAnimationsAssetSAPath + "/" + emotedir.Name);
                 }
             }
+=======
+>>>>>>> 06ddde23de98092f4c3f29a5edcf5fb88da8c702
 
             DirectoryInfo freeAnimDir = new DirectoryInfo(KinetixConstants.C_FreeAnimationsAssetSAPath);
             DirectoryInfo[] emotesDirectories = freeAnimDir.GetDirectories();
@@ -376,4 +382,7 @@ namespace Kinetix.Internal
 
     }
 }
+<<<<<<< HEAD
 >>>>>>> Stashed changes
+=======
+>>>>>>> 06ddde23de98092f4c3f29a5edcf5fb88da8c702

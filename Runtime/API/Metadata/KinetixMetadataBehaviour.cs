@@ -21,6 +21,8 @@ namespace Kinetix.Internal
             {
                 if (!EmotesManager.GetEmote(_Ids).HasMetadata())
                 {
+                    EmotesManager.GetEmote(_Ids).SetMetadata(await MetadataOperationManager.DownloadMetadataByAnimationIds(_Ids));
+
                     _OnFailure?.Invoke();
                     return;
                 }
