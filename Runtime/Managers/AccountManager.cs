@@ -29,7 +29,6 @@ namespace Kinetix.Internal
         public static void Initialize(string _VirtualWorldId)
         {
             Accounts = new List<Account>(); 
-            AddFreeAnimations();
 
             VirtualWorldId = _VirtualWorldId;
         }
@@ -41,7 +40,7 @@ namespace Kinetix.Internal
 
             if (String.IsNullOrEmpty(VirtualWorldId))
             {
-                KinetixDebug.LogWarning("No VirtualWorldId found, please check the KinetixCoreConfiguration.");
+                KinetixDebug.LogWarning("No VirtualWorldKey found, please check the KinetixCoreConfiguration.");
                 tcs.SetResult(false);
 
                 return await tcs.Task;
@@ -72,7 +71,7 @@ namespace Kinetix.Internal
 
             tcs.SetResult(true);
 
-            OnUpdatedAccount();
+            OnUpdatedAccount.Invoke();
             
             OnConnectedAccount?.Invoke();
 
@@ -95,6 +94,7 @@ namespace Kinetix.Internal
             }
 
             RemoveEmotesAndAccount(foundIndex);
+            loggedAccount = null;
         }
 
         public static async Task<bool> AssociateEmotesToVirtualWorld(AnimationIds[] emotes)
@@ -149,6 +149,11 @@ namespace Kinetix.Internal
 
             await AssociateEmotesToVirtualWorld(new AnimationIds[] { emote });
 
+            if (loggedAccount == null)
+            {
+                tcs.SetResult(false);
+                return await tcs.Task;
+            }
 
             KeyValuePair<string, string>[] headers = new KeyValuePair<string, string>[]
             {
@@ -159,11 +164,17 @@ namespace Kinetix.Internal
 
             bool result = await WebRequestHandler.Instance.PostAsyncRaw(url, headers, "");
 
+            if (loggedAccount == null)
+            {
+                tcs.SetResult(false);
+                return await tcs.Task;
+            }
+
             if (result)
             {
                 await loggedAccount.AddEmoteFromIds(emote);
 
-                OnUpdatedAccount();
+                OnUpdatedAccount.Invoke();
 
             }
 
@@ -226,33 +237,6 @@ namespace Kinetix.Internal
 
             return await tcs.Task;
         }
-        
-
-        public static void ConnectWallet(string _WalletAddress)
-        {
-            if (IsAccountAlreadyConnected(_WalletAddress))
-            {
-                KinetixDebug.LogWarning("Account is already connected");
-            }
-
-            WalletAccount account = new WalletAccount(_WalletAddress);
-            Accounts.Add(account);
-        }
-
-        public static void DisconnectWallet(string _WalletAddress)
-        {
-            int foundIndex = -1;
-
-            for (int i = 0; i < Accounts.Count; i++)
-            {
-                if (Accounts[i].AccountId == _WalletAddress && Accounts[i] is WalletAccount)
-                {
-                    foundIndex = i;
-                }
-            }
-
-            RemoveEmotesAndAccount(foundIndex);
-        }
 
         public static bool IsAccountAlreadyConnected(string _AccountId)
         {
@@ -267,34 +251,12 @@ namespace Kinetix.Internal
             return false;
         }
 
-        public static void DisconnectAllWallets()
-        {
-            foreach (Account acc in Accounts)
-            {
-                if (acc is WalletAccount)
-                    DisconnectWallet(acc.AccountId);
-            }
-        }
+        
 
         public static async void GetAllUserEmotes(Action<AnimationMetadata[]> _OnSuccess, Action _OnFailure = null)
         {
             List<KinetixEmote> emotesAccountAggregation = new List<KinetixEmote>();
             int                countAccount = Accounts.Count;
-
-            try
-            {
-                KinetixEmote[] freeEmotes = await FreeAnimationsManager.GetFreeEmotes();            
-                emotesAccountAggregation.AggregateAndDistinct(freeEmotes);
-            }
-            catch (OperationCanceledException)
-            {
-                _OnFailure?.Invoke();
-            }
-            catch (Exception e)
-            {
-                KinetixDebug.LogWarning(e.Message);
-                _OnFailure?.Invoke();
-            }
 
 
             if (Accounts.Count == 0)
@@ -330,11 +292,6 @@ namespace Kinetix.Internal
                 _OnSuccess?.Invoke(emotesAccountAggregation.Select(emote => emote.Metadata).ToArray());
                 KinetixDebug.LogWarning(e.Message);
             }
-        }
-
-        public static void AddFreeAnimations()
-        {
-            FreeAnimationsManager.AddFreeAnimations(OnUpdatedAccount);
         }
         
         public static void IsAnimationOwnedByUser(AnimationIds _AnimationIds, Action<bool> _OnSuccess, Action _OnFailure = null)
@@ -389,7 +346,7 @@ namespace Kinetix.Internal
 
                 GetAllUserEmotes(afterAnimationMetadatas =>
                 {
-                    List<AnimationIds> idsAfterRemoveWallet = afterAnimationMetadatas.ToList().Select(metadata => metadata.Ids).ToList();
+                    List<AnimationIds> idsAfterRemoveWallet = afterAnimationMetadatas.ToList().Select(metadata => metadata.Ids).ToList();                    
                     idsBeforeRemoveWallet = idsBeforeRemoveWallet.Except(idsAfterRemoveWallet).ToList();
 
                     LocalPlayerManager.UnloadLocalPlayerAnimations(idsBeforeRemoveWallet.ToArray());

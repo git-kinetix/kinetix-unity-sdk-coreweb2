@@ -5,11 +5,16 @@ namespace Kinetix.Internal
     internal static class KinetixAccountBehaviour
     {
 
-        public static async void ConnectAccount(string _UserId, Action<bool> finishedCallback = null)
+        public static async void ConnectAccount(string _UserId, Action _OnSuccess = null, Action _OnFailure = null)
         {
             bool isSuccess = await AccountManager.ConnectAccount(_UserId);
-            
-            finishedCallback?.Invoke(isSuccess);
+
+            if (isSuccess)
+            {
+                _OnSuccess?.Invoke();
+            } else {
+                _OnFailure?.Invoke();
+            }
         }
         
         public static void DisconnectAccount()
@@ -17,11 +22,17 @@ namespace Kinetix.Internal
             AccountManager.DisconnectAccount();
         }
 
-        public static async void AssociateEmotesToUser(AnimationIds emote, Action<bool> finishedCallback = null)
+        public static async void AssociateEmotesToUser(AnimationIds emote, Action _OnSuccess = null, Action _OnFailure = null)
         {
             bool isSuccess = await AccountManager.AssociateEmotesToUser(emote);
 
-            finishedCallback?.Invoke(isSuccess);
+            if (isSuccess)
+            {
+                _OnSuccess?.Invoke();
+            } else
+            {
+                _OnFailure?.Invoke();
+            }
         }
 
     }

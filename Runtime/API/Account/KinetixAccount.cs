@@ -20,9 +20,9 @@ namespace Kinetix.Internal
         /// Connect account with UserId
         /// </summary>
         /// <param name="_UserId">UserId of user</param>
-        public void ConnectAccount(string _UserId, Action<bool> finishedCallback = null)
+        public void ConnectAccount(string _UserId, Action _OnSuccess = null, Action _OnFailure = null)
         {
-            KinetixAccountBehaviour.ConnectAccount(_UserId, finishedCallback);
+            KinetixAccountBehaviour.ConnectAccount(_UserId, _OnSuccess, _OnFailure);
         }
         
         /// <summary>
@@ -33,9 +33,9 @@ namespace Kinetix.Internal
             KinetixAccountBehaviour.DisconnectAccount();
         }
 
-        public void AssociateEmotesToUser(AnimationIds emote, Action<bool> finishedCallback = null)
+        public void AssociateEmotesToUser(AnimationIds emote, Action _OnSuccess = null, Action _OnFailure = null)
         {
-            KinetixAccountBehaviour.AssociateEmotesToUser(emote, finishedCallback);
+            KinetixAccountBehaviour.AssociateEmotesToUser(emote, _OnSuccess, _OnFailure);
         }
 
         
