@@ -22,16 +22,24 @@ namespace Kinetix.Internal
             AccountManager.DisconnectAccount();
         }
 
-        public static async void AssociateEmotesToUser(AnimationIds emote, Action _OnSuccess = null, Action _OnFailure = null)
+        public static async void AssociateEmotesToUser(string emote, Action _OnSuccess = null, Action<string> _OnFailure = null)
         {
-            bool isSuccess = await AccountManager.AssociateEmotesToUser(emote);
+            try
+            {
+                bool isSuccess = await AccountManager.AssociateEmotesToUser(new AnimationIds(emote));
 
-            if (isSuccess)
+                if (isSuccess)
+                {
+                    _OnSuccess?.Invoke();
+                } else
+                {
+                    // We did not received a message for failure via exception
+                    _OnFailure?.Invoke("");
+                }
+            }
+            catch (Exception e)
             {
-                _OnSuccess?.Invoke();
-            } else
-            {
-                _OnFailure?.Invoke();
+                _OnFailure?.Invoke(e.Message);
             }
         }
 

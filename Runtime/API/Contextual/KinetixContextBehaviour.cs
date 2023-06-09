@@ -14,6 +14,12 @@ namespace Kinetix.Internal
             ContextManager.RegisterEmoteForContext(contextName, emoteUuid);
         }
 
+        
+        public static void UnregisterEmoteForContext(string contextName)
+        {
+            ContextManager.UnregisterEmoteForContext(contextName);
+        }
+
         public static ContextualEmote GetContextEmote(string contextName)
         {
             return ContextManager.GetContextEmote(contextName);
@@ -22,6 +28,11 @@ namespace Kinetix.Internal
         public static Dictionary<string, ContextualEmote> GetContextEmotes()
         {
             return ContextManager.GetContextEmotes();
+        }
+
+        public static bool IsContextEmoteAvailable(string contextName)
+        {
+            return ContextManager.IsContextEmoteAvailable(contextName);
         }
     }
 }

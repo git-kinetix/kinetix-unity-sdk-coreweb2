@@ -39,9 +39,9 @@ public class AnimationIds
     {
         if ((obj == null) || GetType() != obj.GetType())
             return false;
-        AnimationIds animationIds = (AnimationIds)obj;
-        if (!string.IsNullOrEmpty(UUID))
-            return UUID == animationIds.UUID;
+
+        AnimationIds animationIds = (AnimationIds) obj;
+
         return (UUID == animationIds.UUID);
     }
 

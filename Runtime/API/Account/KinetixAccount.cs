@@ -33,11 +33,24 @@ namespace Kinetix.Internal
             KinetixAccountBehaviour.DisconnectAccount();
         }
 
-        public void AssociateEmotesToUser(AnimationIds emote, Action _OnSuccess = null, Action _OnFailure = null)
+        /// <summary>
+        /// Allows a user to use the wanted emote
+        /// </summary>
+        /// <param name="_EmoteID">AnimationIds of the emote</param>
+        [Obsolete("Please use the overload with (string, Action, Action).", false)]
+        public void AssociateEmotesToUser(AnimationIds _EmoteID, Action _OnSuccess = null, Action<string> _OnFailure = null)
         {
-            KinetixAccountBehaviour.AssociateEmotesToUser(emote, _OnSuccess, _OnFailure);
+            KinetixAccountBehaviour.AssociateEmotesToUser(_EmoteID.UUID, _OnSuccess, _OnFailure);
         }
 
+        /// <summary>
+        /// Allows a user to use the wanted emote
+        /// </summary>
+        /// <param name="_EmoteUUID">UUID (unique id) of the emote</param>
+        public void AssociateEmotesToUser(string _EmoteUUID, Action _OnSuccess = null, Action<string> _OnFailure = null)
+        {
+            KinetixAccountBehaviour.AssociateEmotesToUser(_EmoteUUID, _OnSuccess, _OnFailure);
+        }
         
 
         

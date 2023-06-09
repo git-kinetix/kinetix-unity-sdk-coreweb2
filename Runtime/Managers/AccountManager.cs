@@ -14,9 +14,9 @@ namespace Kinetix.Internal
     {
         public static Action OnUpdatedAccount;
         public static Action OnConnectedAccount;
-        
+
         private static List<Account> Accounts;
-        private static string VirtualWorldId;
+        private static string        VirtualWorldId;
 
         public static UserAccount LoggedAccount { get { return loggedAccount; } }
         private static UserAccount loggedAccount;
@@ -28,32 +28,31 @@ namespace Kinetix.Internal
 
         public static void Initialize(string _VirtualWorldId)
         {
-            Accounts = new List<Account>(); 
+            Accounts = new List<Account>();
 
             VirtualWorldId = _VirtualWorldId;
         }
 
-
-        public async static Task<bool> ConnectAccount(string _UserId)
+        public static async Task<bool> ConnectAccount(string _UserId)
         {
-            var tcs = new TaskCompletionSource<bool>();
-
-            if (String.IsNullOrEmpty(VirtualWorldId))
+            if (string.IsNullOrEmpty(VirtualWorldId))
             {
                 KinetixDebug.LogWarning("No VirtualWorldKey found, please check the KinetixCoreConfiguration.");
-                tcs.SetResult(false);
 
-                return await tcs.Task;
+                return false;
             }
 
             if (IsAccountAlreadyConnected(_UserId))
             {
-                Debug.LogWarning("Account is already connected");
+                KinetixDebug.LogWarning("Account is already connected");
             }
 
-            if (! await AccountExists( _UserId)) {
-                if (! await TryCreateAccount(_UserId)) {
-                    Debug.LogWarning("Unable to create account !");
+            if (! await AccountExists(_UserId)) 
+            {
+                if (! await TryCreateAccount(_UserId)) 
+                {
+                    KinetixDebug.LogWarning("Unable to create account !");
+                    return false;
                 }
             }
            
@@ -68,14 +67,11 @@ namespace Kinetix.Internal
             await loggedAccount.FetchMetadatas();
 
             Accounts.Add(loggedAccount);
-
-            tcs.SetResult(true);
-
-            OnUpdatedAccount.Invoke();
             
+            OnUpdatedAccount?.Invoke();
             OnConnectedAccount?.Invoke();
 
-            return await tcs.Task;
+            return true;
         }
 
         public static void DisconnectAccount()
@@ -99,14 +95,11 @@ namespace Kinetix.Internal
 
         public static async Task<bool> AssociateEmotesToVirtualWorld(AnimationIds[] emotes)
         {
-            var tcs = new TaskCompletionSource<bool>();
-
             if (String.IsNullOrEmpty(VirtualWorldId))
             {
                 KinetixDebug.LogWarning("No VirtualWorldId found, please check the KinetixCoreConfiguration.");
-                tcs.SetResult(false);
 
-                return await tcs.Task;
+                return false;
             }
 
             List<string> emoteIDs = new List<string>();
@@ -120,39 +113,46 @@ namespace Kinetix.Internal
             {
                 new KeyValuePair<string, string>("x-api-key", VirtualWorldId)
             };
+            
+            bool result = false;
 
-            bool result = await WebRequestHandler.Instance.PostAsyncRaw(KinetixConstants.c_SDK_API_URL + "/v1/virtual-world/emotes", headers, "{\"uuids\":" + JsonConvert.SerializeObject(emoteIDs) + "}");
+            try
+            {
+                result = await WebRequestHandler.Instance.PostAsyncRaw(
+                    KinetixConstants.c_SDK_API_URL + "/v1/virtual-world/emotes",
+                    headers,
+                    "{\"uuids\":" + JsonConvert.SerializeObject(emoteIDs) + "}"
+                );
 
-            tcs.SetResult(result);
+            }
+            catch (Exception)
+            {
+                // Exception can be thrown if either
+                // - Real exception occured
+                // - Emote is already associated
+            }
 
-            return await tcs.Task;
+            return result;       
         }
 
         public static async Task<bool> AssociateEmotesToUser(AnimationIds emote)
-        {
-            var tcs = new TaskCompletionSource<bool>();
-            
+        {            
             if (loggedAccount == null)
             {
-                KinetixDebug.LogWarning("Unable to find a connected account. Did you use the KinetixCore.Account.ConnectAccount method?");
-                tcs.SetResult(false);
-
-                return await tcs.Task;
+                throw new Exception("Unable to find a connected account. Did you use the KinetixCore.Account.ConnectAccount method?");
             }
 
             if (loggedAccount.HasEmote(emote))
             {
-                tcs.SetResult(true);
-                return await tcs.Task;
+                throw new Exception("Emote is already assigned");
             }
 
-
+            // No exception catched here, 
             await AssociateEmotesToVirtualWorld(new AnimationIds[] { emote });
 
             if (loggedAccount == null)
             {
-                tcs.SetResult(false);
-                return await tcs.Task;
+                throw new Exception("Unable to find a connected account. Did you use the KinetixCore.Account.ConnectAccount method?");
             }
 
             KeyValuePair<string, string>[] headers = new KeyValuePair<string, string>[]
@@ -161,40 +161,42 @@ namespace Kinetix.Internal
             };
 
             string url = KinetixConstants.c_SDK_API_URL + "/v1/users/" + loggedAccount.AccountId + "/emotes/" + emote.UUID;
+            bool result = false;
 
-            bool result = await WebRequestHandler.Instance.PostAsyncRaw(url, headers, "");
+            try
+            {
+                result = await WebRequestHandler.Instance.PostAsyncRaw(url, headers, "");
+
+            } 
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+            
 
             if (loggedAccount == null)
             {
-                tcs.SetResult(false);
-                return await tcs.Task;
+                throw new Exception("Unable to find a connected account. Did you use the KinetixCore.Account.ConnectAccount method?");
             }
 
             if (result)
             {
                 await loggedAccount.AddEmoteFromIds(emote);
 
-                OnUpdatedAccount.Invoke();
-
+                OnUpdatedAccount?.Invoke();
             }
 
-            tcs.SetResult(result);
-
-            return await tcs.Task;
+            return result;
         }
 
         private static async Task<bool> TryCreateAccount(string _UserId)
         {
-            var tcs = new TaskCompletionSource<bool>();
-
             if (String.IsNullOrEmpty(VirtualWorldId))
             {
                 KinetixDebug.LogWarning("No VirtualWorldId found, please check the KinetixCoreConfiguration.");
-                tcs.SetResult(false);
 
-                return await tcs.Task;
+                return false;
             }
-
 
             // Try to create account
             string uri = KinetixConstants.c_SDK_API_URL + "/v1/virtual-world/users";
@@ -203,24 +205,28 @@ namespace Kinetix.Internal
             {
                 new KeyValuePair<string, string>("x-api-key", VirtualWorldId)
             };
+                        
 
-            bool result = await WebRequestHandler.Instance.PostAsyncRaw(uri, headers, "{\"id\":\"" + _UserId + "\"}");
-
-            tcs.SetResult(result);
-
-            return await tcs.Task;
+            try
+            {   
+               bool result = await WebRequestHandler.Instance.PostAsyncRaw(uri, headers, "{\"id\":\"" + _UserId + "\"}");
+                return result;
+            }
+            catch(Exception)
+            {
+                
+            }
+            return false;
+            return await WebRequestHandler.Instance.PostAsyncRaw(uri, headers, "{\"id\":\"" + _UserId + "\"}");
         }
 
         private static async Task<bool> AccountExists(string _UserId)
         {
-            var tcs = new TaskCompletionSource<bool>();
-
             if (String.IsNullOrEmpty(VirtualWorldId))
             {
                 KinetixDebug.LogWarning("No VirtualWorldId found, please check the KinetixCoreConfiguration.");
-                tcs.SetResult(false);
 
-                return await tcs.Task;
+                return false;
             }
 
             // Try to create account
@@ -233,9 +239,7 @@ namespace Kinetix.Internal
 
             string result = await WebRequestHandler.Instance.GetAsyncRaw(uri, headers, null);
 
-            tcs.SetResult(result != string.Empty);
-
-            return await tcs.Task;
+            return result != string.Empty;
         }
 
         public static bool IsAccountAlreadyConnected(string _AccountId)
@@ -251,16 +255,15 @@ namespace Kinetix.Internal
             return false;
         }
 
-        
 
         public static async void GetAllUserEmotes(Action<AnimationMetadata[]> _OnSuccess, Action _OnFailure = null)
         {
             List<KinetixEmote> emotesAccountAggregation = new List<KinetixEmote>();
-            int                countAccount = Accounts.Count;
+            int                countAccount             = Accounts.Count;
 
 
             if (Accounts.Count == 0)
-            {                
+            {
                 _OnSuccess?.Invoke(emotesAccountAggregation.Select(emote => emote.Metadata).ToArray());
                 return;
             }
@@ -269,13 +272,13 @@ namespace Kinetix.Internal
             {
                 for (int i = 0; i < Accounts.Count; i++)
                 {
-                    KinetixEmote[]     accountEmotes = await Accounts[i].FetchMetadatas();
-                    
+                    KinetixEmote[] accountEmotes = await Accounts[i].FetchMetadatas();
+
                     List<KinetixEmote> accountEmotesList = accountEmotes.ToList();
 
                     // Remove all animations with are duplicated and not owned
                     emotesAccountAggregation.RemoveAll(metadata => accountEmotesList.Exists(emote => emote.Ids.UUID == metadata.Ids.UUID && emote.Metadata.Ownership != EOwnership.OWNER));
-                    
+
                     emotesAccountAggregation.AggregateAndDistinct(accountEmotes);
                     countAccount--;
 
@@ -293,12 +296,12 @@ namespace Kinetix.Internal
                 KinetixDebug.LogWarning(e.Message);
             }
         }
-        
+
         public static void IsAnimationOwnedByUser(AnimationIds _AnimationIds, Action<bool> _OnSuccess, Action _OnFailure = null)
         {
             GetAllUserEmotes(metadatas => { _OnSuccess.Invoke(metadatas.ToList().Exists(metadata => metadata.Ids.Equals(_AnimationIds))); }, _OnFailure);
         }
-        
+
         public static void GetUserAnimationsMetadatasByPage(int _Count, int _Page, Action<AnimationMetadata[]> _Callback, Action _OnFailure)
         {
             GetAllUserEmotes(animationMetadatas =>
@@ -331,11 +334,10 @@ namespace Kinetix.Internal
             }, () => { _OnFailure?.Invoke(); });
         }
 
-        
 
         private static void RemoveEmotesAndAccount(int accountIndex)
         {
-            if (accountIndex == -1) 
+            if (accountIndex == -1)
                 return;
 
             GetAllUserEmotes(beforeAnimationMetadatas =>
@@ -346,14 +348,14 @@ namespace Kinetix.Internal
 
                 GetAllUserEmotes(afterAnimationMetadatas =>
                 {
-                    List<AnimationIds> idsAfterRemoveWallet = afterAnimationMetadatas.ToList().Select(metadata => metadata.Ids).ToList();                    
+                    List<AnimationIds> idsAfterRemoveWallet = afterAnimationMetadatas.ToList().Select(metadata => metadata.Ids).ToList();
                     idsBeforeRemoveWallet = idsBeforeRemoveWallet.Except(idsAfterRemoveWallet).ToList();
 
-                    LocalPlayerManager.UnloadLocalPlayerAnimations(idsBeforeRemoveWallet.ToArray());
+                    LocalPlayerManager.ForceUnloadLocalPlayerAnimations(idsBeforeRemoveWallet.ToArray());
+                    LocalPlayerManager.RemoveLocalPlayerEmotesToPreload(idsBeforeRemoveWallet.ToArray());
                     OnUpdatedAccount?.Invoke();
                 });
             });
         }
-
     }
 }
