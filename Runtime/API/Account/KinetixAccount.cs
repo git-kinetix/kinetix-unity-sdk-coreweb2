@@ -20,9 +20,9 @@ namespace Kinetix.Internal
         /// Connect account with UserId
         /// </summary>
         /// <param name="_UserId">UserId of user</param>
-        public void ConnectAccount(string _UserId, Action<bool> finishedCallback = null)
+        public void ConnectAccount(string _UserId, Action _OnSuccess = null, Action _OnFailure = null)
         {
-            KinetixAccountBehaviour.ConnectAccount(_UserId, finishedCallback);
+            KinetixAccountBehaviour.ConnectAccount(_UserId, _OnSuccess, _OnFailure);
         }
         
         /// <summary>
@@ -33,11 +33,24 @@ namespace Kinetix.Internal
             KinetixAccountBehaviour.DisconnectAccount();
         }
 
-        public void AssociateEmotesToUser(AnimationIds emote, Action<bool> finishedCallback = null)
+        /// <summary>
+        /// Allows a user to use the wanted emote
+        /// </summary>
+        /// <param name="_EmoteID">AnimationIds of the emote</param>
+        [Obsolete("Please use the overload with (string, Action, Action).", false)]
+        public void AssociateEmotesToUser(AnimationIds _EmoteID, Action _OnSuccess = null, Action<string> _OnFailure = null)
         {
-            KinetixAccountBehaviour.AssociateEmotesToUser(emote, finishedCallback);
+            KinetixAccountBehaviour.AssociateEmotesToUser(_EmoteID.UUID, _OnSuccess, _OnFailure);
         }
 
+        /// <summary>
+        /// Allows a user to use the wanted emote
+        /// </summary>
+        /// <param name="_EmoteUUID">UUID (unique id) of the emote</param>
+        public void AssociateEmotesToUser(string _EmoteUUID, Action _OnSuccess = null, Action<string> _OnFailure = null)
+        {
+            KinetixAccountBehaviour.AssociateEmotesToUser(_EmoteUUID, _OnSuccess, _OnFailure);
+        }
         
 
         

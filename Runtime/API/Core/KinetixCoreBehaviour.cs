@@ -21,6 +21,7 @@ namespace Kinetix.Internal
             KinetixCore.Animation = new KinetixAnimation();
             KinetixCore.Network   = new KinetixNetwork();
             KinetixCore.UGC   = new KinetixUGC();
+            KinetixCore.Context   = new KinetixContext();
 
             InitializeManagers(_Configuration);
 
@@ -32,13 +33,15 @@ namespace Kinetix.Internal
         {
             KinetixDebug.c_ShowLog = _Configuration.ShowLogs;
             
+            MemoryManager.Initialize();
+            
             AssetManager.Initialize();
-            FreeAnimationsManager.Initialize();
-            ProviderManager.Initialize(EKinetixNodeProvider.SDK_API, _Configuration.VirtualWorldId);
+            ProviderManager.Initialize(EKinetixNodeProvider.SDK_API, _Configuration.VirtualWorldKey);
             EmotesManager.Initialize();
             LocalPlayerManager.Initialize(_Configuration.PlayAutomaticallyAnimationOnAnimators);
-            AccountManager.Initialize(_Configuration.VirtualWorldId);
-            UGCManager.Initialize(_Configuration.VirtualWorldId, _Configuration.EnableUGC);
+            AccountManager.Initialize(_Configuration.VirtualWorldKey);
+            UGCManager.Initialize(_Configuration.VirtualWorldKey, _Configuration.EnableUGC);
+            ContextManager.Initialize(_Configuration.EmoteContexts);
             NetworkManager.Initialize(_Configuration.NetworkConfiguration);
             KinetixAnalytics.Initialize(_Configuration.EnableAnalytics);
         }

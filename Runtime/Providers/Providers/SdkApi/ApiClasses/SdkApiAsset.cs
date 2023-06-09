@@ -17,16 +17,20 @@ namespace Kinetix.Internal
 
         public AnimationMetadata ToAnimationMetadata()
         {
-            ERarity enumRarity = ERarity.NONE;
-            string animUrl = string.Empty;
-            string thumbnailUrl = string.Empty;
+            ERarity enumRarity   = ERarity.NONE;
+            string  animUrl      = string.Empty;
+            string  thumbnailUrl = string.Empty;
 
             foreach (SignedFile file in files)
             {
                 switch (file.name)
                 {
                     case Thumbnail_Filename:
-                        thumbnailUrl = file.url;
+                    {
+                        if (file.extension == "png")
+                            thumbnailUrl = file.url;
+                    }
+                        
                     break;
                     case Animation_Filename:
                         animUrl = file.url;
@@ -41,8 +45,8 @@ namespace Kinetix.Internal
                 Description  = string.Empty,
                 AnimationURL = animUrl,
                 IconeURL     = thumbnailUrl,
-                Ownership = EOwnership.OWNER,
-                CreatedAt = createdAt,
+                Ownership    = EOwnership.OWNER,
+                CreatedAt    = createdAt,
 
                 
 

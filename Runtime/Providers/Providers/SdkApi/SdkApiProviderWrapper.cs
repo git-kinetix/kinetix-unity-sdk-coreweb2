@@ -59,6 +59,12 @@ namespace Kinetix.Utils
 
             SdkApiUserAsset[] collection = JsonConvert.DeserializeObject<SdkApiUserAsset[]>(result);
 
+            if (collection == null)
+            {
+                KinetixDebug.LogWarning("API provided no results when fetching owner's emotes");
+                return;
+            }
+
             try
             {
                 for (int i = 0; i < collection.Length; i++)

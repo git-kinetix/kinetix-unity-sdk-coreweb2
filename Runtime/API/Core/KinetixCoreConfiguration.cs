@@ -8,7 +8,8 @@ namespace Kinetix
 {
     public class KinetixCoreConfiguration
     {
-        public string VirtualWorldId;
+        public string VirtualWorldKey;
+        public ContextualEmoteSO EmoteContexts;
 
         // Play Animation Automatically on Animators
         public bool   PlayAutomaticallyAnimationOnAnimators = true;
@@ -24,5 +25,6 @@ namespace Kinetix
 
         // Network Configuration        
         public KinetixNetworkConfiguration NetworkConfiguration;
+        
     }
 }
