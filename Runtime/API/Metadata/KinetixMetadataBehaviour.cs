@@ -15,17 +15,16 @@ namespace Kinetix.Internal
 {
     internal static class KinetixMetadataBehaviour
     {
-        public static async void GetAnimationMetadataByAnimationIds(AnimationIds _Ids, Action<AnimationMetadata> _OnSuccess, Action _OnFailure)
+        public static async void GetAnimationMetadataByAnimationIds(AnimationIds _Ids,
+            Action<AnimationMetadata>                                            _OnSuccess, Action _OnFailure)
         {
             try
             {
                 if (!EmotesManager.GetEmote(_Ids).HasMetadata())
                 {
                     EmotesManager.GetEmote(_Ids).SetMetadata(await MetadataOperationManager.DownloadMetadataByAnimationIds(_Ids));
-
-                    _OnFailure?.Invoke();
-                    return;
                 }
+
                 _OnSuccess?.Invoke(EmotesManager.GetEmote(_Ids).Metadata);
             }
             catch (Exception e)
@@ -45,7 +44,8 @@ namespace Kinetix.Internal
             AccountManager.GetAllUserEmotes(_OnSuccess, _OnFailure);
         }
 
-        public static void GetUserAnimationMetadatasByPage(int _Count, int _PageNumber, Action<AnimationMetadata[]> _OnSuccess, Action _OnFailure)
+        public static void GetUserAnimationMetadatasByPage(int _Count,     int    _PageNumber,
+            Action<AnimationMetadata[]>                        _OnSuccess, Action _OnFailure)
         {
             AccountManager.GetUserAnimationsMetadatasByPage(_Count, _PageNumber, _OnSuccess, _OnFailure);
         }
@@ -55,17 +55,22 @@ namespace Kinetix.Internal
             AccountManager.GetUserAnimationsTotalPagesCount(_CountByPage, _Callback, _OnFailure);
         }
 
-        public static async void LoadIconByAnimationId(AnimationIds _Ids, Action<Sprite> _OnSuccess, TokenCancel cancelToken = null)
+        public static async void LoadIconByAnimationId(AnimationIds _Ids, Action<Sprite> _OnSuccess,
+            TokenCancel                                             cancelToken = null)
         {
             if (EmotesManager.GetEmote(_Ids).HasMetadata())
             {
                 try
                 {
-                    Sprite sprite = await AssetManager.LoadIcon(EmotesManager.GetEmote(_Ids).Metadata.IconeURL, cancelToken);
+                    Sprite sprite = await AssetManager.LoadIcon(_Ids, cancelToken);
                     _OnSuccess?.Invoke(sprite);
                 }
                 catch (TaskCanceledException)
                 {
+                }
+                catch (Exception)
+                {
+                    _OnSuccess?.Invoke(null);
                 }
             }
         }
@@ -74,7 +79,7 @@ namespace Kinetix.Internal
         {
             if (EmotesManager.GetEmote(_Ids).HasMetadata())
             {
-                AssetManager.UnloadIcon(EmotesManager.GetEmote(_Ids).Metadata.IconeURL);
+                AssetManager.UnloadIcon(_Ids);
                 _OnSuccess?.Invoke();
             }
         }
