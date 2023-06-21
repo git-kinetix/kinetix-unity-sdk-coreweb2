@@ -205,19 +205,17 @@ namespace Kinetix.Internal
             {
                 new KeyValuePair<string, string>("x-api-key", VirtualWorldId)
             };
-                        
-
+            
             try
             {   
                bool result = await WebRequestHandler.Instance.PostAsyncRaw(uri, headers, "{\"id\":\"" + _UserId + "\"}");
-                return result;
+               return result;
             }
-            catch(Exception)
+            catch (Exception)
             {
                 
             }
             return false;
-            return await WebRequestHandler.Instance.PostAsyncRaw(uri, headers, "{\"id\":\"" + _UserId + "\"}");
         }
 
         private static async Task<bool> AccountExists(string _UserId)
