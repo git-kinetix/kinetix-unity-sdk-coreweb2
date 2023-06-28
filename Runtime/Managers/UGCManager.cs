@@ -8,8 +8,8 @@ namespace Kinetix.Internal
 {
     internal static class UGCManager
     {
-        const int FETCH_ANIM_CONTACT_ATTEMPTS = 10;
-        const int FETCH_ANIM_REQUEST_TIMEOUT = 300;
+        const int FETCH_ANIM_CONTACT_ATTEMPTS = 30;
+        const int FETCH_ANIM_REQUEST_TIMEOUT = 900;
 
         const int TOKEN_CONTACT_ATTEMPTS = 25;
         const int TOKEN_REQUEST_TIMEOUT = 375;
