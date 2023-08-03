@@ -10,6 +10,7 @@ namespace Kinetix
     {
         public string VirtualWorldKey;
         public ContextualEmoteSO EmoteContexts;
+        public EKinetixNodeProvider EmoteProvider = EKinetixNodeProvider.SDK_API;
 
         // Play Animation Automatically on Animators
         public bool   PlayAutomaticallyAnimationOnAnimators = true;

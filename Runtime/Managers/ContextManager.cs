@@ -5,14 +5,21 @@ using UnityEngine;
 
 namespace Kinetix.Internal
 {
-    internal static class ContextManager
+    internal class ContextManager: AKinetixManager
     {
-        private static ContextualEmoteSO emoteContextsSO;
-        private static Dictionary<string, ContextualEmote> contexts;
+        private ContextualEmoteSO emoteContextsSO;
+        private Dictionary<string, ContextualEmote> contexts;
 
         const string LOCK_CONTEXT_ID = "ContextManager";
 
-        public static void Initialize(ContextualEmoteSO emoteContexts = null)
+        public ContextManager(ServiceLocator _ServiceLocator, KinetixCoreConfiguration _Config) : base(_ServiceLocator, _Config) {}
+
+        protected override void Initialize(KinetixCoreConfiguration _Config)
+        {
+            Initialize(_Config.EmoteContexts);
+        }
+
+        public void Initialize(ContextualEmoteSO emoteContexts = null)
         {
             emoteContextsSO = emoteContexts;
             contexts = new Dictionary<string, ContextualEmote>();
@@ -20,7 +27,7 @@ namespace Kinetix.Internal
             InitEmotes();
         }
 
-        public static void InitEmotes()
+        public void InitEmotes()
         {
             if (emoteContextsSO == null)
                 return;
@@ -32,7 +39,7 @@ namespace Kinetix.Internal
         }
 
 
-        public static void RegisterEmotes()
+        public void RegisterEmotes()
         {
             if (emoteContextsSO == null)
                 return;
@@ -44,7 +51,7 @@ namespace Kinetix.Internal
         }
 
 
-        public static bool PlayContext(string contextName)
+        public bool PlayContext(string contextName)
         {
             if (!contexts.ContainsKey(contextName))
                 return false;
@@ -60,14 +67,14 @@ namespace Kinetix.Internal
             return true;
         }
 
-        public static void RegisterEmoteForContext(string contextName, ContextualEmote emote)
+        public void RegisterEmoteForContext(string contextName, ContextualEmote emote)
         {
             contexts ??= new Dictionary<string, ContextualEmote>();
             
             contexts[contextName] = emote.Clone();
         }
 
-        public static void RegisterEmoteForContext(string contextName, string emoteUuid)
+        public void RegisterEmoteForContext(string contextName, string emoteUuid)
         {
             contexts ??= new Dictionary<string, ContextualEmote>();
 
@@ -82,7 +89,7 @@ namespace Kinetix.Internal
             RegisterEmoteForContext(contextName, emote);
         }
 
-        public static void UnregisterEmoteForContext(string contextName)
+        public void UnregisterEmoteForContext(string contextName)
         {
             contexts ??= new Dictionary<string, ContextualEmote>();
 
@@ -96,17 +103,17 @@ namespace Kinetix.Internal
             emote.EmoteUuid = string.Empty;
         }
 
-        public static void LoadContextEmote(AnimationIds emoteIds, string contextName)
+        public void LoadContextEmote(AnimationIds emoteIds, string contextName)
         {     
             KinetixCore.Animation.LoadLocalPlayerAnimation(emoteIds, LOCK_CONTEXT_ID + "_" + contextName);
         }
 
-        public static void UnloadContextEmote(AnimationIds emoteIds, string contextName)
+        public void UnloadContextEmote(AnimationIds emoteIds, string contextName)
         {
             KinetixCore.Animation.UnloadLocalPlayerAnimation(emoteIds, LOCK_CONTEXT_ID + "_" + contextName);
         }
 
-        public static ContextualEmote GetContextEmote(string contextName)
+        public ContextualEmote GetContextEmote(string contextName)
         {
             if (!contexts.ContainsKey(contextName))
                 return null;
@@ -114,7 +121,7 @@ namespace Kinetix.Internal
             return contexts[contextName];
         }
 
-        public static Dictionary<string, ContextualEmote> GetContextEmotes()
+        public Dictionary<string, ContextualEmote> GetContextEmotes()
         {
             Dictionary<string, ContextualEmote> contextsCopy = new Dictionary<string, ContextualEmote>();
 
@@ -126,7 +133,7 @@ namespace Kinetix.Internal
             return contextsCopy;
         }
 
-        public static bool IsContextEmoteAvailable(string contextName)
+        public bool IsContextEmoteAvailable(string contextName)
         {
             return contexts.ContainsKey(contextName)
             && contexts[contextName].EmoteUuid != string.Empty

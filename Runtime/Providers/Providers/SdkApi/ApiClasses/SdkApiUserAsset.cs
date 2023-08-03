@@ -1,6 +1,11 @@
 // FILE_WEB2
+using System.Runtime.CompilerServices;
+using System;
+
+[assembly: InternalsVisibleTo("Kinetix.Tests.Unit.Editor")]
 namespace Kinetix.Internal
 {
+    [Serializable]
     internal class SdkApiUserAsset
     {
         public int id;
@@ -21,3 +26,4 @@ namespace Kinetix.Internal
         }
     }
 }
+

@@ -59,8 +59,8 @@ namespace Kinetix.Internal
 
         public KinetixAccount()
         {
-            AccountManager.OnUpdatedAccount += UpdatedAccount;
-            AccountManager.OnConnectedAccount += ConnectedAccount;
+            KinetixCoreBehaviour.ManagerLocator.Get<AccountManager>().OnUpdatedAccount += UpdatedAccount;
+            KinetixCoreBehaviour.ManagerLocator.Get<AccountManager>().OnConnectedAccount += ConnectedAccount;
         }
 
         private void UpdatedAccount()

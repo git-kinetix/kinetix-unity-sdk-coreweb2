@@ -6,25 +6,25 @@ namespace Kinetix.Internal
     {
         public static void StartPollingForUGC()
         {
-            UGCManager.StartPollingForUGC();
+            KinetixCoreBehaviour.ManagerLocator.Get<UGCManager>().StartPollingForUGC();
         }
 
         public static void StartPollingForNewUGCToken()
         {
-            UGCManager.StartPollingForNewUGCToken();
+            KinetixCoreBehaviour.ManagerLocator.Get<UGCManager>().StartPollingForNewUGCToken();
         }
 
 
         public static async void GetUgcUrl(Action<string> urlFetchedCallback)
         {
-            string url = await UGCManager.GetUgcUrl();
+            string url = await KinetixCoreBehaviour.ManagerLocator.Get<UGCManager>().GetUgcUrl();
             
             urlFetchedCallback(url);
         }
 
         public static bool IsUGCAvailable()
         {
-            return UGCManager.IsUGCAvailable();
+            return KinetixCoreBehaviour.ManagerLocator.Get<UGCManager>().IsUGCAvailable();
         }
     }
 }
