@@ -7,7 +7,7 @@ namespace Kinetix.Internal
 
         public static async void ConnectAccount(string _UserId, Action _OnSuccess = null, Action _OnFailure = null)
         {
-            bool isSuccess = await AccountManager.ConnectAccount(_UserId);
+            bool isSuccess = await KinetixCoreBehaviour.ManagerLocator.Get<AccountManager>().ConnectAccount(_UserId);
 
             if (isSuccess)
             {
@@ -19,14 +19,14 @@ namespace Kinetix.Internal
         
         public static void DisconnectAccount()
         {
-            AccountManager.DisconnectAccount();
+            KinetixCoreBehaviour.ManagerLocator.Get<AccountManager>().DisconnectAccount();
         }
 
         public static async void AssociateEmotesToUser(string emote, Action _OnSuccess = null, Action<string> _OnFailure = null)
         {
             try
             {
-                bool isSuccess = await AccountManager.AssociateEmotesToUser(new AnimationIds(emote));
+                bool isSuccess = await KinetixCoreBehaviour.ManagerLocator.Get<AccountManager>().AssociateEmotesToUser(new AnimationIds(emote));
 
                 if (isSuccess)
                 {

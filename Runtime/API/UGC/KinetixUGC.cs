@@ -31,7 +31,7 @@ namespace Kinetix.Internal
 
         public KinetixUGC()
         {
-            UGCManager.OnUGCTokenExpired += UGCTokenExpired;
+            KinetixCoreBehaviour.ManagerLocator.Get<UGCManager>().OnUGCTokenExpired += UGCTokenExpired;
         }
 
         private void UGCTokenExpired()

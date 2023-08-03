@@ -6,33 +6,33 @@ namespace Kinetix.Internal
     {
         public static bool PlayContext(string contextName)
         {
-            return ContextManager.PlayContext(contextName);
+            return KinetixCoreBehaviour.ManagerLocator.Get<ContextManager>().PlayContext(contextName);
         }
 
         public static void RegisterEmoteForContext(string contextName, string emoteUuid)
         {
-            ContextManager.RegisterEmoteForContext(contextName, emoteUuid);
+            KinetixCoreBehaviour.ManagerLocator.Get<ContextManager>().RegisterEmoteForContext(contextName, emoteUuid);
         }
 
         
         public static void UnregisterEmoteForContext(string contextName)
         {
-            ContextManager.UnregisterEmoteForContext(contextName);
+            KinetixCoreBehaviour.ManagerLocator.Get<ContextManager>().UnregisterEmoteForContext(contextName);
         }
 
         public static ContextualEmote GetContextEmote(string contextName)
         {
-            return ContextManager.GetContextEmote(contextName);
+            return KinetixCoreBehaviour.ManagerLocator.Get<ContextManager>().GetContextEmote(contextName);
         }
 
         public static Dictionary<string, ContextualEmote> GetContextEmotes()
         {
-            return ContextManager.GetContextEmotes();
+            return KinetixCoreBehaviour.ManagerLocator.Get<ContextManager>().GetContextEmotes();
         }
 
         public static bool IsContextEmoteAvailable(string contextName)
         {
-            return ContextManager.IsContextEmoteAvailable(contextName);
+            return KinetixCoreBehaviour.ManagerLocator.Get<ContextManager>().IsContextEmoteAvailable(contextName);
         }
     }
 }

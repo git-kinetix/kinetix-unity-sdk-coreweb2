@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Kinetix.Internal;
 using Newtonsoft.Json;
+using UnityEngine;
 
 namespace Kinetix.Utils
 {
@@ -50,12 +51,12 @@ namespace Kinetix.Utils
 
             _AnimationMetadatas ??= new List<AnimationMetadata>();
 
-            KeyValuePair<string, string>[] headers = new KeyValuePair<string, string>[]
-            {
-                new KeyValuePair<string, string>("x-api-key", VirtualWorldAPIKey)
-            };
+            MetadataDownloaderConfig   metadataDownloaderConfig = new MetadataDownloaderConfig(uri, VirtualWorldAPIKey);
+            MetadataDownloader         metadataDownloader       = new MetadataDownloader(metadataDownloaderConfig);
+            MetadataDownloaderResponse response = await OperationManagerShortcut.Get().RequestExecution(metadataDownloader);
 
-            string result = await WebRequestHandler.Instance.GetAsyncRaw(uri, headers, null);
+           
+            string result = response.json;
 
             SdkApiUserAsset[] collection = JsonConvert.DeserializeObject<SdkApiUserAsset[]>(result);
 
@@ -94,12 +95,11 @@ namespace Kinetix.Utils
 
             string uri = KinetixConstants.c_SDK_API_URL + "/v1/emotes/" + _AnimationIds.UUID;
 
-            KeyValuePair<string, string>[] headers = new KeyValuePair<string, string>[]
-            {
-                new KeyValuePair<string, string>("x-api-key", VirtualWorldAPIKey)
-            };
+            GetRawAPIResultConfig   apiResultOpConfig = new GetRawAPIResultConfig(uri, VirtualWorldAPIKey);
+            GetRawAPIResult         apiResultOp       = new GetRawAPIResult(apiResultOpConfig);
+            GetRawAPIResultResponse response = await OperationManagerShortcut.Get().RequestExecution(apiResultOp);
 
-            string result = await WebRequestHandler.Instance.GetAsyncRaw(uri, headers, null);
+            string result = response.json;
 
             SdkApiAsset collection = JsonConvert.DeserializeObject<SdkApiAsset>(result);
 
