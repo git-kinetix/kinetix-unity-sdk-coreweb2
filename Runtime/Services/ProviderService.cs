@@ -21,9 +21,8 @@ namespace Kinetix.Internal
 
         public ProviderService(KinetixCoreConfiguration _Config)
         {
-            if (ProviderWrappers == null)
-            ProviderWrappers = new Dictionary<EKinetixNodeProvider, IProviderWrapper>();
-            
+            ProviderWrappers ??= new Dictionary<EKinetixNodeProvider, IProviderWrapper>();
+
             CreateProvider(_Config.EmoteProvider, _Config.VirtualWorldKey);
         }
 
@@ -76,13 +75,11 @@ namespace Kinetix.Internal
             try
             {
                 AnimationMetadata     emoteMetadata = await ProviderWrappers[_AnimationIds.GetExpectedProvider()].GetAnimationMetadataOfEmote(_AnimationIds);
-                
                 return emoteMetadata;
             }
             catch (Exception e)
             {
-                KinetixDebug.LogWarningException(e);
-                return null;
+                throw e;
             }
         }
 
@@ -92,9 +89,8 @@ namespace Kinetix.Internal
 
             if (_Account is UserAccount)
                 return EKinetixNodeProvider.SDK_API;
-            
-
             return EKinetixNodeProvider.NONE;
         }
     }
 }
+
