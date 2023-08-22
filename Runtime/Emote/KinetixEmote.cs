@@ -53,11 +53,6 @@ namespace Kinetix.Internal
             return File.Exists(PathGLB);
         }
 
-        public bool IsFileInUse()
-        {
-            return KinetixCoreBehaviour.ServiceLocator.Get<RetargetingService>().IsFileInUse();
-        }
-
         public void ClearAvatar(KinetixAvatar _Avatar)
         {
             KinetixCoreBehaviour.ServiceLocator.Get<RetargetingService>().ClearAvatar(this, _Avatar);

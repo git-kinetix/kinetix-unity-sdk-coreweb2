@@ -46,7 +46,7 @@ namespace Kinetix.Internal
             
             serviceLocator.Register<EmotesService>(new EmotesService(serviceLocator, _Configuration));
             serviceLocator.Register<LockService>(new LockService());
-            serviceLocator.Register<MemoryService>(new MemoryService());
+            serviceLocator.Register<MemoryService>(new MemoryService(_Configuration));
             serviceLocator.Register<AssetService>(new AssetService());
             serviceLocator.Register<RetargetingService>(new RetargetingService(serviceLocator));
             serviceLocator.Register<ProviderService>(new ProviderService(_Configuration));
@@ -60,11 +60,13 @@ namespace Kinetix.Internal
             
             managerLocator = new ManagerLocator();
             
-            managerLocator.Register<LocalPlayerManager>(new LocalPlayerManager(serviceLocator, _Configuration));
+            managerLocator.Register<PlayersManager>(new PlayersManager(serviceLocator, _Configuration));
             managerLocator.Register<AccountManager>(new AccountManager(serviceLocator, _Configuration));
             managerLocator.Register<UGCManager>(new UGCManager(serviceLocator, _Configuration));
             managerLocator.Register<ContextManager>(new ContextManager(serviceLocator, _Configuration));
             managerLocator.Register<NetworkManager>(new NetworkManager(serviceLocator, _Configuration));
+
+            managerLocator.Get<AccountManager>().OnDisconnectedAccount += managerLocator.Get<UGCManager>().ClearPolling;
         }
 
         public static bool IsInitialized()

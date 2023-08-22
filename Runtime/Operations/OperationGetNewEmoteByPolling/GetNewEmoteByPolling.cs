@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Kinetix.Utils;
 using Newtonsoft.Json;
@@ -8,16 +9,14 @@ using UnityEngine;
 
 namespace Kinetix.Internal
 {
-    public class GetNewUgcEmoteByPolling : Operation<GetNewUgcEmoteByPollingConfig, GetNewUgcEmoteByPollingResponse>
+    public class GetNewEmoteByPolling : Operation<GetNewEmoteByPollingConfig, GetNewEmoteByPollingResponse>
     {
-        public GetNewUgcEmoteByPolling(GetNewUgcEmoteByPollingConfig forNewUgcEmoteConfig) : base(forNewUgcEmoteConfig)
+        public GetNewEmoteByPolling(GetNewEmoteByPollingConfig forNewUgcEmoteConfig) : base(forNewUgcEmoteConfig)
         {
         }
 
         public override async Task Execute()
         {
-            int totalTries = Mathf.CeilToInt(Config.TotalTimeInSeconds / Config.IntervalTimeInSeconds);
-
             Dictionary<string, string> headers = new Dictionary<string, string>
             {
                 { "Content-type", "application/json" },
@@ -27,7 +26,7 @@ namespace Kinetix.Internal
 
             WebRequestDispatcher webRequest = new WebRequestDispatcher();
             
-            for (int i = 0; i < totalTries; i++)
+            while (!CurrentTaskCompletionSource.Task.IsCompleted)
             {
                 if (CancellationTokenSource.IsCancellationRequested)
                 {
@@ -45,18 +44,27 @@ namespace Kinetix.Internal
                 }
                 
                 string json = response.Content;
+                
                 if (response.IsSuccess && json != string.Empty)
                 {
-
                     // Then try getting the emotes again
-                    SdkApiUserAsset[] collection = JsonConvert.DeserializeObject<SdkApiUserAsset[]>(json);
-
-                    if (collection.Length > KinetixCoreBehaviour.ManagerLocator.Get<AccountManager>().LoggedAccount.Emotes.ToArray().Length)
+                    List<SdkApiUserAsset> fetchedCollection = JsonConvert.DeserializeObject<SdkApiUserAsset[]>(json).ToList();
+                    fetchedCollection.RemoveAll(asset => asset.data == null);
+                    
+                    KinetixEmote[] userEmotes = KinetixCoreBehaviour.ManagerLocator.Get<AccountManager>().LoggedAccount.Emotes.ToArray();
+                    if (fetchedCollection.Count > userEmotes.Length)
                     {
-                        AnimationMetadata newEmoteMetadata = collection[collection.Length - 1].ToAnimationMetadata();
-                        GetNewUgcEmoteByPollingResponse result = new GetNewUgcEmoteByPollingResponse()
+                        List<AnimationMetadata> userAnimationMetadatas    = userEmotes.Select(emote => emote.Metadata).ToList();
+                        List<AnimationMetadata> fetchedAnimationMetadatas = new List<AnimationMetadata>();
+                        fetchedCollection.ToList().ForEach(userAsset => fetchedAnimationMetadatas.Add(userAsset.ToAnimationMetadata()));
+
+                        HashSet<string> userUUIDs = new HashSet<string>(userAnimationMetadatas.Select(userMetadata => userMetadata.Ids.UUID));
+                        fetchedAnimationMetadatas.RemoveAll(fetchedMetadata => userUUIDs.Contains(fetchedMetadata.Ids.UUID));
+
+                        AnimationMetadata[] newEmotesMetadata = fetchedAnimationMetadatas.ToArray();
+                        GetNewEmoteByPollingResponse result = new GetNewEmoteByPollingResponse()
                         {
-                            newAnimationMetadata = newEmoteMetadata
+                            newAnimationsMetadata = newEmotesMetadata
                         };
 
                         CurrentTaskCompletionSource.TrySetResult(result);
@@ -70,14 +78,14 @@ namespace Kinetix.Internal
             CurrentTaskCompletionSource.TrySetException(new TimeoutException());
         }
 
-        public override bool Compare(GetNewUgcEmoteByPollingConfig forNewUgcEmoteByPollingConfig)
+        public override bool Compare(GetNewEmoteByPollingConfig forNewUgcEmoteByPollingConfig)
         {
             return Config.Url == forNewUgcEmoteByPollingConfig.Url;
         }
 
-        public override IOperation<GetNewUgcEmoteByPollingConfig, GetNewUgcEmoteByPollingResponse> Clone()
+        public override IOperation<GetNewEmoteByPollingConfig, GetNewEmoteByPollingResponse> Clone()
         {
-            return new GetNewUgcEmoteByPolling(Config);
+            return new GetNewEmoteByPolling(Config);
         }
     }
 }

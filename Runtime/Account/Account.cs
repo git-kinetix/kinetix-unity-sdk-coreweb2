@@ -43,6 +43,14 @@ namespace Kinetix.Internal
             }
         }
 
+        public void AddEmotesFromMetadata(AnimationMetadata[] animationsMetadata)
+        {
+            for (int i = 0; i < animationsMetadata.Length; i++)
+            {
+                AddEmoteFromMetadata(animationsMetadata[i]);
+            }
+        }
+        
         public void AddEmoteFromMetadata(AnimationMetadata animationMetadata)
         {
             KinetixEmote emote = KinetixCoreBehaviour.ServiceLocator.Get<EmotesService>().GetEmote(animationMetadata.Ids);

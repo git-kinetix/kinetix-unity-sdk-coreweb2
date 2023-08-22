@@ -14,6 +14,10 @@ namespace Kinetix.Internal
         /// </summary>
         public event Action OnConnectedAccount;
 
+        /// <summary>
+        /// Event called upon account disconnection
+        /// </summary>
+        public event Action OnDisconnectedAccount;
 
 
         /// <summary>
@@ -24,7 +28,7 @@ namespace Kinetix.Internal
         {
             KinetixAccountBehaviour.ConnectAccount(_UserId, _OnSuccess, _OnFailure);
         }
-        
+
         /// <summary>
         /// Disconnect account with account address
         /// </summary>
@@ -38,7 +42,8 @@ namespace Kinetix.Internal
         /// </summary>
         /// <param name="_EmoteID">AnimationIds of the emote</param>
         [Obsolete("Please use the overload with (string, Action, Action).", false)]
-        public void AssociateEmotesToUser(AnimationIds _EmoteID, Action _OnSuccess = null, Action<string> _OnFailure = null)
+        public void AssociateEmotesToUser(AnimationIds _EmoteID, Action _OnSuccess = null,
+            Action<string>                             _OnFailure = null)
         {
             KinetixAccountBehaviour.AssociateEmotesToUser(_EmoteID.UUID, _OnSuccess, _OnFailure);
         }
@@ -46,21 +51,22 @@ namespace Kinetix.Internal
         /// <summary>
         /// Allows a user to use the wanted emote
         /// </summary>
-        /// <param name="_EmoteUUID">UUID (unique id) of the emote</param>
-        public void AssociateEmotesToUser(string _EmoteUUID, Action _OnSuccess = null, Action<string> _OnFailure = null)
+        /// <param name="_EmoteID">UUID (unique id) of the emote</param>
+        public void AssociateEmotesToUser(string _EmoteID, Action _OnSuccess = null, Action<string> _OnFailure = null)
         {
-            KinetixAccountBehaviour.AssociateEmotesToUser(_EmoteUUID, _OnSuccess, _OnFailure);
+            KinetixAccountBehaviour.AssociateEmotesToUser(_EmoteID, _OnSuccess, _OnFailure);
         }
-        
 
-        
-        
+
+
+
         #region Internal
 
         public KinetixAccount()
         {
-            KinetixCoreBehaviour.ManagerLocator.Get<AccountManager>().OnUpdatedAccount += UpdatedAccount;
-            KinetixCoreBehaviour.ManagerLocator.Get<AccountManager>().OnConnectedAccount += ConnectedAccount;
+            KinetixCoreBehaviour.ManagerLocator.Get<AccountManager>().OnUpdatedAccount      += UpdatedAccount;
+            KinetixCoreBehaviour.ManagerLocator.Get<AccountManager>().OnConnectedAccount    += ConnectedAccount;
+            KinetixCoreBehaviour.ManagerLocator.Get<AccountManager>().OnDisconnectedAccount += DisconnectedAccount;
         }
 
         private void UpdatedAccount()
@@ -71,6 +77,11 @@ namespace Kinetix.Internal
         private void ConnectedAccount()
         {
             OnConnectedAccount?.Invoke();
+        }
+
+        private void DisconnectedAccount()
+        {
+            OnDisconnectedAccount?.Invoke();
         }
 
         #endregion

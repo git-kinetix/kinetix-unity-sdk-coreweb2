@@ -25,9 +25,9 @@ namespace Kinetix
 		private KinetixFrame currentFrame;
 
 		/// <inheritdoc/>
-		public override void Init(KinetixAvatar kinetixAvatar, RootMotionConfig _RootMotionConfig)
+		public override void Init(ServiceLocator _ServiceLocator, KinetixAvatar kinetixAvatar, RootMotionConfig _RootMotionConfig)
 		{
-			base.Init(kinetixAvatar, _RootMotionConfig);
+			base.Init(_ServiceLocator, kinetixAvatar, _RootMotionConfig);
 			sampler = new SimulationSampler();
 			sampler.OnQueueStart              += Sampler_OnQueueStart             ;
 			sampler.OnQueueStop               += Sampler_OnQueueStop              ;
@@ -150,7 +150,7 @@ namespace Kinetix
 		#region Sampler Event
 		private void Sampler_RequestAdaptToInterpreter(KinetixFrame obj)
 		{
-			obj.AdaptToInterpreter(poseInerpretor[0]);
+			obj.AdaptToInterpreter(poseInterpretor[0]);
 		}
 
 		private void Sampler_OnPlayedFrame(KinetixFrame obj)
@@ -159,10 +159,10 @@ namespace Kinetix
 
 			if (AutoPlay)
 			{
-				int count = poseInerpretor.Count;
+				int count = poseInterpretor.Count;
 				for (int i = 0; i < count; i++)
 				{
-					obj.Sample(poseInerpretor[i]);
+					obj.Sample(poseInterpretor[i]);
 				}
 			}
 
@@ -173,10 +173,10 @@ namespace Kinetix
 		{
 			if (AutoPlay)
 			{
-				int count = poseInerpretor.Count;
+				int count = poseInterpretor.Count;
 				for (int i = 0; i < count; i++)
 				{
-					if (poseInerpretor[i] is IPoseInterpreterStartEnd startEnd) startEnd.AnimationStart(obj.clip);
+					if (poseInterpretor[i] is IPoseInterpreterStartEnd startEnd) startEnd.AnimationStart(obj.clip);
 				}
 			}
 
@@ -189,10 +189,10 @@ namespace Kinetix
 		
 			if (AutoPlay)
 			{
-				int count = poseInerpretor.Count;
+				int count = poseInterpretor.Count;
 				for (int i = 0; i < count; i++)
 				{
-					if (poseInerpretor[i] is IPoseInterpreterStartEnd startEnd) startEnd.AnimationEnd(obj.clip);
+					if (poseInterpretor[i] is IPoseInterpreterStartEnd startEnd) startEnd.AnimationEnd(obj.clip);
 				}
 			}
 
@@ -205,10 +205,10 @@ namespace Kinetix
 
 			if (AutoPlay)
 			{
-				int count = poseInerpretor.Count;
+				int count = poseInterpretor.Count;
 				for (int i = 0; i < count; i++)
 				{
-					if (poseInerpretor[i] is IPoseInterpreterStartEnd startEnd) startEnd.QueueStart();
+					if (poseInterpretor[i] is IPoseInterpreterStartEnd startEnd) startEnd.QueueStart();
 				}
 			}
 		}
@@ -219,10 +219,10 @@ namespace Kinetix
 
 			if (AutoPlay)
 			{
-				int count = poseInerpretor.Count;
+				int count = poseInterpretor.Count;
 				for (int i = 0; i < count; i++)
 				{
-					if (poseInerpretor[i] is IPoseInterpreterStartEnd startEnd) startEnd.QueueEnd();
+					if (poseInterpretor[i] is IPoseInterpreterStartEnd startEnd) startEnd.QueueEnd();
 				}
 			}
 		}
@@ -232,12 +232,12 @@ namespace Kinetix
 
 		private KinetixPose Sampler_RequestAvatarPos()
 		{
-			if (poseInerpretor.Count == 0)
+			if (poseInterpretor.Count == 0)
 			{
 				return new KinetixPose(new TransformData[0], new HumanBodyBones[0], null, default, default);
 			}
 
-			return poseInerpretor[0].GetPose();
+			return poseInterpretor[0].GetPose();
 		}
 		#endregion
 

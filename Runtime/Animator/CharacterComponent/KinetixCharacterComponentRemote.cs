@@ -20,9 +20,9 @@ namespace Kinetix
 		private KinetixNetworkedPose currentFrame;
 
 		///<inheritdoc/>
-		public override void Init(KinetixAvatar kinetixAvatar, RootMotionConfig rootMotionConfig)
+		public override void Init(ServiceLocator _ServiceLocator, KinetixAvatar _KinetixAvatar, RootMotionConfig _RootMotionConfig)
 		{
-			base.Init(kinetixAvatar, rootMotionConfig);
+			base.Init(_ServiceLocator, _KinetixAvatar, _RootMotionConfig);
 			networkSampler.RequestCoroutine += NetworkSampler_RequestCoroutine;
 			networkSampler.OnPlayedFrame += NetworkSampler_OnPlayedFrame;
 			networkSampler.OnQueueStart += NetworkSampler_OnQueueStart;
@@ -82,10 +82,10 @@ namespace Kinetix
 		{
 			if (AutoPlay)
 			{
-				int count = poseInerpretor.Count;
+				int count = poseInterpretor.Count;
 				for (int i = 0; i < count; i++)
 				{
-					obj.Sample(poseInerpretor[i]);
+					obj.Sample(poseInterpretor[i]);
 				}
 			}
 
@@ -95,10 +95,10 @@ namespace Kinetix
 		{
 			if (AutoPlay)
 			{
-				int count = poseInerpretor.Count;
+				int count = poseInterpretor.Count;
 				for (int i = 0; i < count; i++)
 				{
-					if (poseInerpretor[i] is IPoseInterpreterStartEnd startEnd)
+					if (poseInterpretor[i] is IPoseInterpreterStartEnd startEnd)
 					{
 						startEnd.QueueStart();
 						startEnd.AnimationStart(null);
@@ -115,10 +115,10 @@ namespace Kinetix
 
 			if (AutoPlay)
 			{
-				int count = poseInerpretor.Count;
+				int count = poseInterpretor.Count;
 				for (int i = 0; i < count; i++)
 				{
-					if (poseInerpretor[i] is IPoseInterpreterStartEnd startEnd)
+					if (poseInterpretor[i] is IPoseInterpreterStartEnd startEnd)
 					{
 						startEnd.AnimationEnd(null);
 						startEnd.QueueEnd();

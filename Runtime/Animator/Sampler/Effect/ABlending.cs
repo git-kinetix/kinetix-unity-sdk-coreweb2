@@ -46,24 +46,6 @@ namespace Kinetix.Internal
 				Quaternion rotA = trA.rotation.GetValueOrDefault(Quaternion.identity);
 				Vector3 scaleA = trA.scale.GetValueOrDefault(Vector3.one);
 
-				Matrix4x4 localToGlobalA = Matrix4x4.identity;
-
-				//This is a fix for the hips only, we're gonna blend the world position instead of the local one
-				if (bone == HumanBodyBones.Hips && trA.position.HasValue)
-				{
-                    TransformData armature = a.armature.GetValueOrDefault(TransformData.Default);
-                    TransformData root     = a.root.GetValueOrDefault(TransformData.Default);
-
-					localToGlobalA =
-						Matrix4x4.TRS(
-							armature.position.GetValueOrDefault(Vector3.zero),
-							armature.rotation.GetValueOrDefault(Quaternion.identity),
-							Vector3.one
-						);
-
-					posA = localToGlobalA.MultiplyPoint(posA);
-				}
-
 				Vector3 pos = Vector3.zero;
 				Quaternion rot = Quaternion.identity;
 				Vector3 scale = Vector3.zero;
@@ -88,31 +70,10 @@ namespace Kinetix.Internal
 
 					TransformData trB = b.humanTransforms[bIndex];
 
-					//Tried to lerp on global pose
-					if (bone == HumanBodyBones.Hips && trB.position.HasValue)
-					{
-						TransformData armature = b.armature.GetValueOrDefault(TransformData.Default);
-						TransformData root = b.root.GetValueOrDefault(TransformData.Default);
-
-						Matrix4x4 localToGlobalB =
-							Matrix4x4.TRS(
-								armature.position.GetValueOrDefault(Vector3.zero),
-								armature.rotation.GetValueOrDefault(Quaternion.identity),
-								Vector3.one
-							);
-
-						trB.position = localToGlobalB.MultiplyPoint(trB.position.Value);
-					}
-
 					BlendAdd(ref pos, ref rot, ref scale, ref pCount, ref rCount, ref sCount, trB);
 				}
 
 				ApplyBlendLerp(ref trA, time, posA, rotA, scaleA, pos, rot, scale, pCount, rCount, sCount);
-
-				if (bone == HumanBodyBones.Hips && trA.position.HasValue)
-				{
-					trA.position = localToGlobalA.inverse.MultiplyPoint(trA.position.Value);
-				}
 
 				a.humanTransforms[i] = trA;
 			}

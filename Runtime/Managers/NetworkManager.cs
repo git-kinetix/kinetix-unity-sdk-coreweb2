@@ -4,6 +4,7 @@
 // // </copyright>
 // // ----------------------------------------------------------------------------
 
+using Kinetix.Internal.Utils;
 using Kinetix.Utils;
 using System;
 using System.Collections.Generic;
@@ -56,9 +57,7 @@ namespace Kinetix.Internal
 			};
 			kinetixAvatar.Avatar = new AvatarData(_Animator.avatar, kinetixAvatar.Root);
 
-			kcc.Init(
-				kinetixAvatar
-			);
+			kcc.Init(serviceLocator, kinetixAvatar);
 
 			kcc.RegisterPoseInterpreter(new AnimatorPoseInterpetor(_Animator, _Animator.avatar, _Animator.GetComponentsInChildren<SkinnedMeshRenderer>().GetARKitRenderers()));
 			kcc.AutoPlay = true;
@@ -77,9 +76,7 @@ namespace Kinetix.Internal
 				Avatar = new AvatarData(_Root, _RootTransform)
 			};
 
-			kcc.Init(
-				kinetixAvatar
-			);
+			kcc.Init(serviceLocator, kinetixAvatar);
 
 			kcc.RegisterPoseInterpreter(_PoseInterpreter);
 			kcc.AutoPlay = true;

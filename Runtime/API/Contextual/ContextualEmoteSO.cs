@@ -14,14 +14,14 @@ public class ContextualEmote
     public string ContextName;
     public string ContextDescription;
     [HideInInspector]
-    public string EmoteUuid;
+    public string EmoteID;
 
     public ContextualEmote Clone()
     {
         return new ContextualEmote() {
             ContextName = this.ContextName,
             ContextDescription = this.ContextDescription,
-            EmoteUuid = this.EmoteUuid,
+            EmoteID = this.EmoteID,
         };
     }
 }

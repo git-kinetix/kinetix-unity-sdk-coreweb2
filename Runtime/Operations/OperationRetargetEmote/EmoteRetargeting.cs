@@ -39,8 +39,8 @@ namespace Kinetix.Internal
                 };
 
                 CurrentTaskCompletionSource.SetResult(emoteRetargetingResponse);
-                    
-                KinetixDebug.Log("Retargeted : " + Config.Emote.PathGLB);
+				
+				KinetixDebug.Log("Retargeted : " + Config.Emote.PathGLB);
             }, useWebRequest: useWebRequest);
 
 

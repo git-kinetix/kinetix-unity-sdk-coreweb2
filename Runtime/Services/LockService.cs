@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace Kinetix.Internal
 {
@@ -67,8 +68,6 @@ namespace Kinetix.Internal
         {
             KinetixDebug.Log("[FORCE UNLOAD] Animation : " + _EmoteAvatarPair.Emote.Ids);
 
-            locksByPairs.Remove(_EmoteAvatarPair);
-
             Unload(_EmoteAvatarPair);
         }
 
@@ -79,6 +78,8 @@ namespace Kinetix.Internal
         private void Unload(KinetixEmoteAvatarPair _EmoteAvatarPair)
         {
             KinetixDebug.Log("[UNLOAD] Animation : " + _EmoteAvatarPair.Emote.Ids);
+
+            locksByPairs.Remove(_EmoteAvatarPair);
 
             OnRequestEmoteUnload?.Invoke(_EmoteAvatarPair);
         }

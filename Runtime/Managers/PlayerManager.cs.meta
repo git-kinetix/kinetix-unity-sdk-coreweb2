@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+<<<<<<<< HEAD:Assets/Plugins/Kinetix/Core/Runtime/Utils/Log/BlendshapeMeshUtils.cs.meta
+guid: 1cd2786f3f398364aa4dce02e471c4a5
+========
+guid: 503377df498134e4a9db242a6564e305
+>>>>>>>> 1.1.0:Assets/Plugins/Kinetix/Core/Runtime/Managers/PlayerManager.cs.meta
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

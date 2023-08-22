@@ -13,7 +13,7 @@ namespace Kinetix.Internal
     public class RetargetingService: IKinetixService
     {
         private readonly Dictionary<KinetixEmoteAvatarPair, EmoteRetargetedData> retargetedEmoteByAvatar;
-        private readonly Dictionary<KinetixEmoteAvatarPair, List<Action>>        OnEmoteRetargetedByAvatar;
+        private readonly Dictionary<KinetixEmoteAvatarPair, List<Action>> OnEmoteRetargetedByAvatar;
         private ServiceLocator serviceLocator;
 
         public RetargetingService(ServiceLocator _ServiceLocator)
@@ -22,15 +22,6 @@ namespace Kinetix.Internal
             OnEmoteRetargetedByAvatar = new Dictionary<KinetixEmoteAvatarPair, List<Action>>();
 
             serviceLocator = _ServiceLocator;
-        }
-
-        /// <summary>
-        /// Check if GLB file is used (e.g. Import Retargeting)
-        /// </summary>
-        /// <returns>True if use</returns>
-        public bool IsFileInUse()
-        {
-            return true;
         }
 
         /// <summary>
@@ -211,7 +202,8 @@ namespace Kinetix.Internal
                     retargetedEmoteByAvatar[pair].clipsByType[typeof(TResponseType)] = castedClipResult;
                     retargetedEmoteByAvatar[pair].SizeInBytes = response.EstimatedClipSize;
 
-                    serviceLocator.Get<MemoryService>().AddRamAllocation(response.EstimatedClipSize);    
+                    serviceLocator.Get<MemoryService>().AddRamAllocation(response.EstimatedClipSize); 
+                    serviceLocator.Get<MemoryService>().OnFileStopBeingUsed(_Emote.Ids.UUID);   
                 }
 
                 // And invoke callbacks in case they were awaited by UI before the core was initialized
@@ -269,9 +261,6 @@ namespace Kinetix.Internal
         /// <returns></returns>
         public async Task<string> GetFilePath(KinetixEmote _Emote, CancellationTokenSource cancellationToken)
         {
-            if (_Emote.HasValidPath())
-                return _Emote.PathGLB;
-
             try
             {
                 string filename = _Emote.Ids.UUID + ".glb";
@@ -280,12 +269,24 @@ namespace Kinetix.Internal
                 if (!_Emote.HasMetadata())
                     throw new Exception("No metadata found for emote : " + _Emote.Ids.UUID);
 
+                _Emote.PathGLB = filePath;
+                serviceLocator.Get<MemoryService>().TagFileAsBeingInUse(_Emote.Ids.UUID);
+
+                if (_Emote.HasValidPath())
+                {
+                    serviceLocator.Get<MemoryService>().AddStorageAllocation(_Emote.PathGLB);
+
+                    return _Emote.PathGLB;
+                }
+
                 FileDownloaderConfig fileDownloadOperationConfig = new FileDownloaderConfig(_Emote.Metadata.AnimationURL, filePath);
                 FileDownloader fileDownloadOperation = new FileDownloader(fileDownloadOperationConfig);
 
                 FileDownloaderResponse response = await OperationManagerShortcut.Get().RequestExecution<FileDownloaderConfig, FileDownloaderResponse>(fileDownloadOperation, cancellationToken);
 
                 _Emote.PathGLB = response.path;
+                serviceLocator.Get<MemoryService>().AddStorageAllocation(_Emote.PathGLB);
+                
             }
             catch (OperationCanceledException e)
             {
@@ -296,7 +297,7 @@ namespace Kinetix.Internal
                 throw e;
             }
             
-            serviceLocator.Get<MemoryService>().AddStorageAllocation(_Emote.PathGLB);
+            
             return _Emote.PathGLB;
         }
 
@@ -340,7 +341,6 @@ namespace Kinetix.Internal
             }
             
             serviceLocator.Get<MemoryService>().RemoveRamAllocation(retargetedData.SizeInBytes);
-            serviceLocator.Get<MemoryService>().DeleteFileInStorage(pair.Emote.Ids.UUID);
 
             KinetixDebug.Log("[UNLOADED] Animation : " + pair.Emote.Ids);
 
@@ -360,7 +360,7 @@ namespace Kinetix.Internal
                 new Dictionary<KinetixEmoteAvatarPair, EmoteRetargetedData>(retargetedEmoteByAvatar);
             foreach (KeyValuePair<KinetixEmoteAvatarPair, EmoteRetargetedData> kvp in retargetedEmoteByAvatarCopy)
             {
-                if (!avoidAvatars.Exists(avatar => avatar.Equals(kvp.Key)))
+                if (!avoidAvatars.Exists(avatar => avatar.Equals(kvp.Key.Avatar)))
                     ClearAvatar(kvp.Key.Emote, kvp.Key.Avatar);
             }
         }
