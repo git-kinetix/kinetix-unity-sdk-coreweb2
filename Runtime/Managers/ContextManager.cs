@@ -19,9 +19,9 @@ namespace Kinetix.Internal
             Initialize(_Config.EmoteContexts);
         }
 
-        public void Initialize(ContextualEmoteSO emoteContexts = null)
+        public void Initialize(ContextualEmoteSO _EmoteContexts = null)
         {
-            emoteContextsSO = emoteContexts;
+            emoteContextsSO = _EmoteContexts;
             contexts = new Dictionary<string, ContextualEmote>();
 
             InitEmotes();
@@ -51,74 +51,90 @@ namespace Kinetix.Internal
         }
 
 
-        public bool PlayContext(string contextName)
+        public bool PlayContext(string _ContextName)
         {
-            if (!contexts.ContainsKey(contextName))
+            if (!contexts.ContainsKey(_ContextName))
                 return false;
             
-            if (contextName == string.Empty)
+            if (_ContextName == string.Empty)
                 return false;
 
-            if (contexts[contextName].EmoteUuid == string.Empty)
+            if (contexts[_ContextName].EmoteID == string.Empty)
                 return false;
             
-            KinetixCore.Animation.PlayAnimationOnLocalPlayer(new AnimationIds(contexts[contextName].EmoteUuid));
+            KinetixCore.Animation.PlayAnimationOnLocalPlayer(new AnimationIds(contexts[_ContextName].EmoteID));
 
             return true;
         }
 
-        public void RegisterEmoteForContext(string contextName, ContextualEmote emote)
+        public bool PlayContext(string _PlayerUUID, string _ContextName)
+        {
+            if (!contexts.ContainsKey(_ContextName))
+                return false;
+            
+            if (_ContextName == string.Empty)
+                return false;
+
+            if (contexts[_ContextName].EmoteID == string.Empty)
+                return false;
+            
+            KinetixCore.Animation.PlayAnimationOnAvatar(_PlayerUUID, new AnimationIds(contexts[_ContextName].EmoteID));
+
+            return true;
+        }
+
+        public void RegisterEmoteForContext(string _ContextName, ContextualEmote _Emote)
         {
             contexts ??= new Dictionary<string, ContextualEmote>();
             
-            contexts[contextName] = emote.Clone();
+            contexts[_ContextName] = _Emote.Clone();
         }
 
-        public void RegisterEmoteForContext(string contextName, string emoteUuid)
+        public void RegisterEmoteForContext(string _ContextName, string _EmoteID)
         {
             contexts ??= new Dictionary<string, ContextualEmote>();
 
-            if (!contexts.ContainsKey(contextName))
-                contexts[contextName] = new ContextualEmote();
+            if (!contexts.ContainsKey(_ContextName))
+                contexts[_ContextName] = new ContextualEmote();
 
-            ContextualEmote emote = contexts[contextName];
-            emote.EmoteUuid = emoteUuid;
+            ContextualEmote emote = contexts[_ContextName];
+            emote.EmoteID = _EmoteID;
 
-            LoadContextEmote(new AnimationIds(emoteUuid), contextName);
+            LoadContextEmote(new AnimationIds(_EmoteID), _ContextName);
 
-            RegisterEmoteForContext(contextName, emote);
+            RegisterEmoteForContext(_ContextName, emote);
         }
 
-        public void UnregisterEmoteForContext(string contextName)
+        public void UnregisterEmoteForContext(string _ContextName)
         {
             contexts ??= new Dictionary<string, ContextualEmote>();
 
-            if (!contexts.ContainsKey(contextName))
+            if (!contexts.ContainsKey(_ContextName))
                 return;
             
-            ContextualEmote emote = contexts[contextName];
+            ContextualEmote emote = contexts[_ContextName];
 
-            UnloadContextEmote(new AnimationIds(emote.EmoteUuid), contextName);
+            UnloadContextEmote(new AnimationIds(emote.EmoteID), _ContextName);
 
-            emote.EmoteUuid = string.Empty;
+            emote.EmoteID = string.Empty;
         }
 
-        public void LoadContextEmote(AnimationIds emoteIds, string contextName)
+        public void LoadContextEmote(AnimationIds _EmoteIds, string _ContextName)
         {     
-            KinetixCore.Animation.LoadLocalPlayerAnimation(emoteIds, LOCK_CONTEXT_ID + "_" + contextName);
+            KinetixCore.Animation.LoadLocalPlayerAnimation(_EmoteIds, LOCK_CONTEXT_ID + "_" + _ContextName);
         }
 
-        public void UnloadContextEmote(AnimationIds emoteIds, string contextName)
+        public void UnloadContextEmote(AnimationIds _EmoteIds, string _ContextName)
         {
-            KinetixCore.Animation.UnloadLocalPlayerAnimation(emoteIds, LOCK_CONTEXT_ID + "_" + contextName);
+            KinetixCore.Animation.UnloadLocalPlayerAnimation(_EmoteIds, LOCK_CONTEXT_ID + "_" + _ContextName);
         }
 
-        public ContextualEmote GetContextEmote(string contextName)
+        public ContextualEmote GetContextEmote(string _ContextName)
         {
-            if (!contexts.ContainsKey(contextName))
+            if (!contexts.ContainsKey(_ContextName))
                 return null;
 
-            return contexts[contextName];
+            return contexts[_ContextName];
         }
 
         public Dictionary<string, ContextualEmote> GetContextEmotes()
@@ -133,11 +149,11 @@ namespace Kinetix.Internal
             return contextsCopy;
         }
 
-        public bool IsContextEmoteAvailable(string contextName)
+        public bool IsContextEmoteAvailable(string _ContextName)
         {
-            return contexts.ContainsKey(contextName)
-            && contexts[contextName].EmoteUuid != string.Empty
-            && KinetixCore.Animation.IsAnimationAvailableOnLocalPlayer(new AnimationIds(contexts[contextName].EmoteUuid));
+            return contexts.ContainsKey(_ContextName)
+            && contexts[_ContextName].EmoteID != string.Empty
+            && KinetixCore.Animation.IsAnimationAvailableOnLocalPlayer(new AnimationIds(contexts[_ContextName].EmoteID));
         }
     }
 }

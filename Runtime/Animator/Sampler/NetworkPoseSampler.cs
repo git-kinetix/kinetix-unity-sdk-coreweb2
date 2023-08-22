@@ -47,13 +47,17 @@ namespace Kinetix.Internal
 
 		private HumanBodyBones[] bones;
 
-		internal NetworkPoseSampler(HumanBodyBones[] bones)
+		internal NetworkPoseSampler(ServiceLocator _ServiceLocator, HumanBodyBones[] bones)
         {
 			targetTimestampPoseQueue = new Queue<KinetixNetworkedPose>();
 
 			this.bones = bones;
 			
-			config = KinetixCoreBehaviour.ManagerLocator.Get<NetworkManager>().Configuration;
+			config = KinetixCoreBehaviour.ManagerLocator?.Get<NetworkManager>().Configuration;
+
+			if (config == null)
+				config = KinetixNetworkConfiguration.GetDefault();
+			
 			bonePoseInfos = new BonePoseInfo[bones.Length];
 		}
 

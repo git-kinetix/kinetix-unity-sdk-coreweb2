@@ -63,32 +63,33 @@ namespace Kinetix
 
 		// CACHE
 		protected KinetixAvatar kinetixAvatar;
-		protected readonly List<IPoseInterpreter> poseInerpretor = new List<IPoseInterpreter>();
+		protected readonly List<IPoseInterpreter> poseInterpretor = new List<IPoseInterpreter>();
 		protected HumanBodyBones[] characterBones;
+		protected ServiceLocator serviceLocator;
 
 		/// <summary>
 		/// Init the Character
 		/// </summary>
 		/// <param name="kinetixAvatar">The avatar to use for the animation</param>
-		public void Init(KinetixAvatar kinetixAvatar)
-			=> Init(kinetixAvatar, null);
+		public void Init(ServiceLocator _ServiceLocator, KinetixAvatar _KinetixAvatar)
+			=> Init(_ServiceLocator, _KinetixAvatar, null);
 
 		/// <summary>
 		/// Init the Character
 		/// </summary>
-		/// <param name="kinetixAvatar">The avatar to use for the animation</param>
+		/// <param name="_KinetixAvatar">The avatar to use for the animation</param>
 		/// <param name="rootMotionConfig">Configuration of the root motion</param>
-		public virtual void Init(KinetixAvatar kinetixAvatar, RootMotionConfig rootMotionConfig)
+		public virtual void Init(ServiceLocator _ServiceLocator, KinetixAvatar _KinetixAvatar, RootMotionConfig rootMotionConfig)
 		{
 			//networkSampler = new NetworkPoseSampler(this, GetComponent<Animator>(), clipSampler);
-			behaviour = kinetixAvatar.Root.gameObject.AddComponent<KinetixCharacterComponentBehaviour>();
+			behaviour = _KinetixAvatar.Root.gameObject.AddComponent<KinetixCharacterComponentBehaviour>();
 			behaviour._kcc = this;
 			behaviour.OnUpdate += Update;
 
-			this.kinetixAvatar = kinetixAvatar;
+			this.kinetixAvatar = _KinetixAvatar;
 			_guid = Guid.NewGuid().ToString();
 
-			AvatarData avatar = kinetixAvatar.Avatar;
+			AvatarData avatar = _KinetixAvatar.Avatar;
 
 			//Get the human bones
 			//NOTE: Maybe we can create an extension method from this
@@ -102,11 +103,11 @@ namespace Kinetix
 			}
 			else
 			{
-				throw new ArgumentNullException(nameof(kinetixAvatar)+"."+nameof(kinetixAvatar.Avatar));
+				throw new ArgumentNullException(nameof(_KinetixAvatar)+"."+nameof(_KinetixAvatar.Avatar));
 			}
 			//----//
 
-			networkSampler = new NetworkPoseSampler(characterBones);
+			networkSampler = new NetworkPoseSampler(serviceLocator, characterBones);
 
 		}
 
@@ -133,8 +134,8 @@ namespace Kinetix
 		/// <param name="interpreter"></param>
 		public void SetMainPoseInterpreter(IPoseInterpreter interpreter)
 		{
-			poseInerpretor.Remove(interpreter);
-			poseInerpretor.Insert(0, interpreter);
+			poseInterpretor.Remove(interpreter);
+			poseInterpretor.Insert(0, interpreter);
 		}
 
 		/// <summary>
@@ -143,8 +144,8 @@ namespace Kinetix
 		/// <param name="interpreter"></param>
 		public void RegisterPoseInterpreter(IPoseInterpreter interpreter)
 		{
-			poseInerpretor.Remove(interpreter);
-			poseInerpretor.Add(interpreter);
+			poseInterpretor.Remove(interpreter);
+			poseInterpretor.Add(interpreter);
 		}
 
 		/// <summary>
@@ -153,7 +154,7 @@ namespace Kinetix
 		/// <param name="interpreter"></param>
 		public void UnregisterPoseInterpreter(IPoseInterpreter interpreter)
 		{
-			poseInerpretor.Remove(interpreter);
+			poseInterpretor.Remove(interpreter);
 		}
 		#endregion
 
@@ -184,7 +185,7 @@ namespace Kinetix
 			if (behaviour != null)
 			{
 				behaviour._kcc = null;
-				UnityEngine.Object.Destroy(behaviour);
+				UnityEngine.Object.DestroyImmediate(behaviour, true);
 			}
 		}
 	}

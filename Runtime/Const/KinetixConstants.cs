@@ -10,7 +10,7 @@ namespace Kinetix.Internal
 {
     public static class KinetixConstants
     {
-        public const string version = "1.0.1";
+        public const string version = "1.1.0";
 
         public static bool C_ShouldUGCBeAvailable = true;
         

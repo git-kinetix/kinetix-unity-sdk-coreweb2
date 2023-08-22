@@ -20,7 +20,7 @@ namespace Kinetix.Internal
 	internal static class KinetixLogger
 	{
 		private static readonly Regex PREFIX_MATCHER = new Regex(@"([^,]+?)(\s*)(,|$)", RegexOptions.IgnoreCase);
-		private const string PREFIX_SUBSTITUTE = "[$1]$3";
+		private const string PREFIX_SUBSTITUTE = "[$1]";
 #if UNITY_EDITOR || UNITY_ANDROID
 		private const string DEBUG_COLOR = "<color=#979797>";
 		private const string DEBUG_COLOR_END = "</color>";

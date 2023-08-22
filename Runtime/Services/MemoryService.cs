@@ -4,9 +4,13 @@
 // // </copyright>
 // // ----------------------------------------------------------------------------
 
+using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Kinetix.Internal.Cache;
 using Kinetix.Utils;
+using Newtonsoft.Json;
 using UnityEngine;
 
 namespace Kinetix.Internal
@@ -22,14 +26,28 @@ namespace Kinetix.Internal
         private double currentRAM;
         private double currentStorage;
 
-        public MemoryService()
+        // Used by other services or managers to ask this service not to delete a file
+        private List<string> inUseUUIDs;
+        // List of files to delete when they can't be deleted at the moment
+        private List<string> toDeleteFilesUUIDs;
+
+        internal KinetixCacheManifest CacheManifest => cacheManifest;
+        private KinetixCacheManifest cacheManifest;
+
+        private const string c_CacheManifestKey = "KinetixSmartCache";
+
+        public MemoryService(KinetixCoreConfiguration _Configuration)
         {
             MaxStorageSizeInMB = MinStorageSizeInMB;
             MaxRAMSizeinMB     = MinRamSizeInMB;
 
-            CleanStorageObsoleteAnimations();
+            inUseUUIDs = new List<string>();
+            toDeleteFilesUUIDs = new List<string>();
+
             currentStorage = ByteConverter.ConvertBytesToMegabytes(FileUtils.GetSizeOfAnimationsCache());
             currentRAM     = 0.0f;
+
+            LoadManifest(_Configuration.CachedEmotesNb);
         }
 
         #region RAM
@@ -77,7 +95,7 @@ namespace Kinetix.Internal
 
                 // Clear emote clip for all avatars except exclude avatar and local player avatar if UUID match
                 // Otherwise clean all avatars except local player avatar
-                ForceClearEmote(emotes[i], emotes[i].Ids.UUID == _ExcludeUUID ? new[] { KinetixCoreBehaviour.ManagerLocator.Get<LocalPlayerManager>().KAvatar, _ExcludeAvatar } : new[] { KinetixCoreBehaviour.ManagerLocator.Get<LocalPlayerManager>().KAvatar });
+                ForceClearEmote(emotes[i], emotes[i].Ids.UUID == _ExcludeUUID ? new[] { KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().LocalPlayer.KAvatar, _ExcludeAvatar } : new[] { KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().LocalPlayer.KAvatar });
             }
         }
         
@@ -99,14 +117,14 @@ namespace Kinetix.Internal
             _kinetixEmote.ClearAllAvatars(_AvoidAvatars);
         }
         
-        public void DeleteFileInRaM(Object _obj)
+        public void DeleteFileInRaM(UnityEngine.Object _obj)
         {
-            Object.Destroy(_obj);
+            UnityEngine.Object.Destroy(_obj);
         }
 
         #endregion
 
-        #region STORAGE
+        #region STORAGE MANAGEMENT
 
         public void CheckStorage()
         {
@@ -162,12 +180,13 @@ namespace Kinetix.Internal
             if (!Directory.Exists(PathConstants.CacheAnimationsPath))
                 return;
             
-            DirectoryInfo di    = new DirectoryInfo(PathConstants.CacheAnimationsPath);
-            FileInfo[]    files = di.GetFiles();
+            DirectoryInfo cacheDirInfo = new DirectoryInfo(PathConstants.CacheAnimationsPath);
+            FileInfo[] files = cacheDirInfo.GetFiles();
+            
             foreach (FileInfo file in files)
             {
-                string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(file.Name);
-                DeleteFileInStorage(Path.Combine(fileNameWithoutExtension), false);
+                string animUUIDWithoutExtension = Path.GetFileNameWithoutExtension(file.Name);
+                DeleteFileInStorage(Path.Combine(animUUIDWithoutExtension), false);
             }
         }
 
@@ -179,10 +198,10 @@ namespace Kinetix.Internal
                 if (!HasStorageExceedMemoryLimit())
                     return;
 
-                if (emotes[i].IsFileInUse())
+                if (inUseUUIDs.Contains(emotes[i].Ids.UUID))
                     continue;
 
-                if (!KinetixCoreBehaviour.ManagerLocator.Get<LocalPlayerManager>().IsEmoteUsedByPlayer(emotes[i].Ids))
+                if (!KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().LocalPlayer.IsEmoteUsedByPlayer(emotes[i].Ids))
                 {
                     DeleteFileInStorage(emotes[i].Ids.UUID);
                 }
@@ -197,30 +216,156 @@ namespace Kinetix.Internal
                 if (!HasStorageExceedMemoryLimit())
                     return;
                 
-                if (emotes[i].IsFileInUse())
+                if (inUseUUIDs.Contains(emotes[i].Ids.UUID))
                     continue;
 
-                if (KinetixCoreBehaviour.ManagerLocator.Get<LocalPlayerManager>().IsEmoteUsedByPlayer(emotes[i].Ids))
+                if (KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().LocalPlayer.IsEmoteUsedByPlayer(emotes[i].Ids))
                 {
                     DeleteFileInStorage(emotes[i].Ids.UUID);
                 }
             }
+        }
+
+        public void TagFileAsBeingInUse(string _UUID)
+        {
+            inUseUUIDs.Add(_UUID);
+        }
+
+        public void OnFileStopBeingUsed(string _UUID)
+        {
+            inUseUUIDs.Remove(_UUID);
+            EmptyDeletionList();
         }
         
         public void DeleteFileInStorage(string _UUID, bool _Log = true)
         {
             string path = Path.Combine(PathConstants.CacheAnimationsPath, (_UUID + ".glb"));
 
+            if (inUseUUIDs.Contains(_UUID) && !toDeleteFilesUUIDs.Contains(_UUID))
+            {
+                toDeleteFilesUUIDs.Add(_UUID);
+                return;
+            }
+
             if (File.Exists(path))
             {
                 RemoveStorageAllocation(path, _Log);
                 File.Delete(path);
+                toDeleteFilesUUIDs.Remove(_UUID);
                 
                 if (_Log)
                     KinetixDebug.Log("Storage Size : " + (GetStorageSize().ToString("F1") + "MB"));
             }
         }
+
+        public void EmptyDeletionList()
+        {
+            foreach (string UUID in toDeleteFilesUUIDs)
+                DeleteFileInStorage(UUID);
+        }
         
+        #endregion
+    
+        #region SMART CACHE
+
+        public void OnAnimationLoadedOnPlayer(AnimationIds _Ids)
+        {
+            // Check if cache is full and does not contain the anim already
+            if (!cacheManifest.Contains(_Ids))
+            {
+                if (cacheManifest.IsFull())
+                {
+                    cacheManifest.Reorder();
+                    cacheManifest.RemoveLast();
+                }
+
+                cacheManifest.Add(_Ids);
+            }
+
+            // Animation added or not, we reorder to have a clean manifest
+            cacheManifest.Reorder();
+  
+            SaveManifest();
+        }
+
+        public void OnAnimationUnloadedOnPlayer()
+        {
+            cacheManifest.Reorder();
+
+            SaveManifest();
+        }
+
+        public void LoadManifest(int _AnimationNb)
+        {            
+            string serializedManifest = PlayerPrefs.GetString(c_CacheManifestKey, "");
+
+            // If the manifest could not be fetched, create one
+            if (serializedManifest == string.Empty)
+            {
+                CreateManifest(_AnimationNb);
+                return;
+            }
+
+            cacheManifest = JsonConvert.DeserializeObject<KinetixCacheManifest>(serializedManifest);
+            
+            cacheManifest.TargetAnimationNb = _AnimationNb;
+            cacheManifest.OnAnimationRemoved += OnAnimationRemovedFromCache;
+            cacheManifest.CleanUntilTargetNumber();
+        }
+
+        public void CleanCache()
+        {
+            if (cacheManifest == null)
+                return;
+
+            foreach (KinetixCachedAnimation animation in cacheManifest.Animations)
+            {
+                DeleteFileInStorage(animation.Ids.UUID);
+            }
+
+            PlayerPrefs.DeleteKey(c_CacheManifestKey);
+        }
+
+        private void CreateManifest(int _AnimatioNb)
+        {
+            cacheManifest = new KinetixCacheManifest(_AnimatioNb);
+
+            // Read dir and add to now if there are some
+            ReadCachedAnimAndAdd();
+
+            SaveManifest();
+        }
+
+
+        private void ReadCachedAnimAndAdd()
+        {
+            if (!Directory.Exists(PathConstants.CacheAnimationsPath))
+                return;
+            
+            DirectoryInfo di = new DirectoryInfo(PathConstants.CacheAnimationsPath);
+            FileInfo[] files = di.GetFiles();
+
+            foreach (FileInfo file in files)
+            {
+                string animUUIDWithoutExtension = Path.GetFileNameWithoutExtension(file.Name);
+
+                cacheManifest.Add(new AnimationIds(animUUIDWithoutExtension));
+            }
+        }
+
+        private void SaveManifest()
+        {
+            PlayerPrefs.SetString(c_CacheManifestKey, JsonConvert.SerializeObject(cacheManifest));
+            PlayerPrefs.Save();
+
+            EmptyDeletionList();
+        }
+
+        private void OnAnimationRemovedFromCache(AnimationIds _Ids)
+        {
+            DeleteFileInStorage(_Ids.UUID);
+        }
+
         #endregion
     }
 }

@@ -22,8 +22,8 @@ namespace Kinetix.Internal
         public ProviderService(KinetixCoreConfiguration _Config)
         {
             ProviderWrappers ??= new Dictionary<EKinetixNodeProvider, IProviderWrapper>();
-
-            CreateProvider(_Config.EmoteProvider, _Config.VirtualWorldKey);
+            
+            CreateProvider(_Config.EmoteProvider, _Config.GameAPIKey);
         }
 
       

@@ -4,11 +4,13 @@
 // // </copyright>
 // // ----------------------------------------------------------------------------
 
+using Kinetix.Internal;
+
 namespace Kinetix
 {
-    public class KinetixCoreConfiguration
+    public class KinetixCoreConfiguration: IKinetixConfiguration
     {
-        public string VirtualWorldKey;
+        public string GameAPIKey;
         public ContextualEmoteSO EmoteContexts;
         public EKinetixNodeProvider EmoteProvider = EKinetixNodeProvider.SDK_API;
 
@@ -26,6 +28,9 @@ namespace Kinetix
 
         // Network Configuration        
         public KinetixNetworkConfiguration NetworkConfiguration;
+
+        // How many emotes have to be cached?
+        public int CachedEmotesNb = 10;
         
     }
 }

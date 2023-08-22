@@ -9,9 +9,14 @@ namespace Kinetix.Internal
             return KinetixContextBehaviour.PlayContext(_ContextName);
         }
 
-        public void RegisterEmoteForContext(string _ContextName, string _EmoteUuid)
+        public bool PlayContext(string _PlayerUUID, string _ContextName)
         {
-            KinetixContextBehaviour.RegisterEmoteForContext(_ContextName, _EmoteUuid);
+            return KinetixContextBehaviour.PlayContext(_PlayerUUID, _ContextName);
+        }
+
+        public void RegisterEmoteForContext(string _ContextName, string _EmoteID)
+        {
+            KinetixContextBehaviour.RegisterEmoteForContext(_ContextName, _EmoteID);
         }
 
         public void UnregisterEmoteForContext(string _ContextName)

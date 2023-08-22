@@ -5,6 +5,7 @@
 // // ----------------------------------------------------------------------------
 
 using System;
+using System.Collections.Generic;
 using Kinetix.Internal.Cache;
 using UnityEngine;
 
@@ -16,6 +17,11 @@ namespace Kinetix.Internal
 		/// Event called when Local player is registered
 		/// </summary>
 		public event Action OnRegisteredLocalPlayer;
+
+		/// <summary>
+		/// Event called when a non-local player is registered
+		/// </summary>
+		public event Action OnRegisteredCustomPlayer;
 
 		/// <summary>
 		/// Event called when animation is played from local player
@@ -46,6 +52,7 @@ namespace Kinetix.Internal
 		public void RegisterLocalPlayerAnimator(Animator _Animator)
 		{
 			KinetixAnimationBehaviour.RegisterLocalPlayerAnimator(_Animator);
+			
 			OnRegisteredLocalPlayer?.Invoke();
 		}
 
@@ -57,7 +64,9 @@ namespace Kinetix.Internal
 		public void RegisterLocalPlayerAnimator(Animator _Animator, RootMotionConfig _Config)
 		{
 			KinetixAnimationBehaviour.RegisterLocalPlayerAnimator(_Animator, _Config);
+			
 			OnRegisteredLocalPlayer?.Invoke();
+			
 		}
 
 		/// <summary>
@@ -69,6 +78,7 @@ namespace Kinetix.Internal
 		public void RegisterLocalPlayerCustom(DataBoneTransform _Root, Transform _RootTransform, IPoseInterpreter _PoseInterpreter)
 		{
 			KinetixAnimationBehaviour.RegisterLocalPlayerCustom(_Root, _RootTransform, _PoseInterpreter);
+			
 			OnRegisteredLocalPlayer?.Invoke();
 		}
 
@@ -82,6 +92,7 @@ namespace Kinetix.Internal
 		public void RegisterLocalPlayerCustom(DataBoneTransform _Root, Transform _RootTransform, IPoseInterpreter _PoseInterpreter, RootMotionConfig _Config)
 		{
 			KinetixAnimationBehaviour.RegisterLocalPlayerCustom(_Root, _RootTransform, _PoseInterpreter, _Config);
+			
 			OnRegisteredLocalPlayer?.Invoke();
 		}
 
@@ -94,7 +105,81 @@ namespace Kinetix.Internal
 		public void RegisterLocalPlayerCustom(Avatar _Avatar, Transform _RootTransform, EExportType _ExportType)
 		{
 			KinetixAnimationBehaviour.RegisterLocalPlayerCustom(_Avatar, _RootTransform, _ExportType);
+			
 			OnRegisteredLocalPlayer?.Invoke();
+		}
+
+		/// <summary>
+		/// Register the local player animator with avatar setup to play animation on it 
+		/// </summary>
+		/// <param name="_Animator">Animator of your local character</param>
+		public string RegisterAvatarAnimator(Animator _Animator)
+		{
+			string playerUUID = KinetixAnimationBehaviour.RegisterAvatarAnimator(_Animator);
+			
+			OnRegisteredCustomPlayer?.Invoke();
+			
+			return playerUUID;
+		}
+
+		/// <summary>
+		/// Register the local player animator with avatar setup to play animation on it 
+		/// </summary>
+		/// <param name="_Animator">Animator of your local character</param>
+		/// <param name="_Config">Configuration for the root motion</param>
+		public string RegisterAvatarAnimator(Animator _Animator, RootMotionConfig _Config)
+		{
+			string playerUUID = KinetixAnimationBehaviour.RegisterAvatarAnimator(_Animator, _Config);
+			
+			OnRegisteredCustomPlayer?.Invoke();
+			
+			return playerUUID;
+		}
+
+		/// <summary>
+		/// Register the Local Player with a custom hierarchy
+		/// </summary>
+		/// <param name="_Root">The root of the skeleton's hierarchy. In T pose</param>
+		/// <param name="_RootTransform">The root GameObject of your avatar</param>
+		/// <param name="_PoseInterpreter">The interpretor to apply poses to your avatar</param>
+		public string RegisterAvatarCustom(DataBoneTransform _Root, Transform _RootTransform, IPoseInterpreter _PoseInterpreter)
+		{
+			string playerUUID = KinetixAnimationBehaviour.RegisterAvatarCustom(_Root, _RootTransform, _PoseInterpreter);
+			
+			OnRegisteredCustomPlayer?.Invoke();
+			
+			return playerUUID;
+		}
+
+		/// <summary>
+		/// Register the Local Player with a custom hierarchy
+		/// </summary>
+		/// <param name="_Root">The root of the skeleton's hierarchy. In T pose</param>
+		/// <param name="_RootTransform">The root GameObject of your avatar</param>
+		/// <param name="_PoseInterpreter">The interpretor to apply poses to your avatar</param>
+		/// <param name="_Config">Configuration of the root motion</param>
+		public string RegisterAvatarCustom(DataBoneTransform _Root, Transform _RootTransform, IPoseInterpreter _PoseInterpreter, RootMotionConfig _Config)
+		{
+			string playerUUID = KinetixAnimationBehaviour.RegisterAvatarCustom(_Root, _RootTransform, _PoseInterpreter, _Config);
+			
+			OnRegisteredCustomPlayer?.Invoke();
+			
+			return playerUUID;
+		}
+
+		/// <summary>
+		/// Register the local player configuration for custom animation system.
+		/// </summary>
+		/// <param name="_Avatar">Avatar of your character</param>
+		/// <param name="_RootTransform">Root Transform of your character</param>
+		/// <param name="_ExportType">The type of file for animations to export</param>
+		public string RegisterAvatarCustom(Avatar _Avatar, Transform _RootTransform, EExportType _ExportType)
+		{
+			string playerUUID = KinetixAnimationBehaviour.RegisterAvatarCustom(_Avatar, _RootTransform, _ExportType);
+			
+			OnRegisteredCustomPlayer?.Invoke();
+			
+			return playerUUID;
 		}
 		
 		/// <summary>
@@ -112,6 +197,16 @@ namespace Kinetix.Internal
 		public void PlayAnimationOnLocalPlayer(AnimationIds _AnimationIds)
 		{
 			KinetixAnimationBehaviour.PlayAnimationOnLocalPlayer(_AnimationIds, OnPlayedAnimationLocalPlayer);
+		}
+
+
+		/// <summary>
+		/// Play animation on local player
+		/// </summary>
+		/// <param name="_AnimationIds">IDs of the animation</param>
+		public void PlayAnimationOnAvatar(string _PlayerUUID, AnimationIds _AnimationIds)
+		{
+			KinetixAnimationBehaviour.PlayAnimationOnAvatar(_PlayerUUID, _AnimationIds, OnPlayedAnimationLocalPlayer);
 		}
 		
 		/// <summary>
@@ -178,6 +273,30 @@ namespace Kinetix.Internal
 		{
 			KinetixAnimationBehaviour.LoadLocalPlayerAnimations(_AnimationIds, _LockId, _OnSuccess);
 		}
+
+		/// <summary>
+		/// Load a player animation
+		/// </summary>
+		/// <param name="_PlayerUUID">UUID of player</param>
+		/// <param name="_AnimationIds">IDs of the animation</param>
+		/// <param name="_LockId">Arbitrary Identifier of the component asking for the animation, to pass when unloading the animation</param>
+		/// <param name="_OnSuccess">Callback when successfully loaded animation</param>
+		public void LoadAvatarAnimation(string _PlayerUUID, AnimationIds _AnimationIds, string _LockId, Action _OnSuccess = null)
+		{
+			KinetixAnimationBehaviour.LoadAvatarAnimation(_PlayerUUID, _AnimationIds, _LockId, _OnSuccess);
+		}
+		
+		/// <summary>
+		/// Load player animations
+		/// </summary>
+		/// <param name="_PlayerUUID">UUID of player</param>
+		/// <param name="_AnimationIds">IDs of the animations</param>
+		/// <param name="_LockId">Arbitrary Identifier of the component asking for the animation, to pass when unloading the animation</param>
+		/// <param name="_OnSuccess">Callback when successfully loaded animations</param>
+		public void LoadAvatarAnimations(string _PlayerUUID, AnimationIds[] _AnimationIds, string _LockId, Action _OnSuccess = null)
+		{
+			KinetixAnimationBehaviour.LoadAvatarAnimations(_PlayerUUID, _AnimationIds, _LockId, _OnSuccess);
+		}
 		
 		/// <summary>
 		/// Unload a local player animation
@@ -200,44 +319,15 @@ namespace Kinetix.Internal
 		}
 
 		/// <summary>
-		/// Lock a local player animation, preventing its removal from memory
+		/// Unload player animations
 		/// </summary>
+		/// <param name="_PlayerUUID">Player UUID</param>
 		/// <param name="_AnimationIds">IDs of the animations</param>
 		/// <param name="_LockId">Arbitrary Identifier of the component asking for the animation, to pass when unloading the animation</param>
-		public void LockLocalPlayerAnimation(AnimationIds _Ids, string _LockId)
-        {
-            KinetixAnimationBehaviour.LockLocalPlayerAnimation(_Ids, _LockId);
-        }
-        
-		/// <summary>
-		/// Lock all local player animations, preventing their removal from memory
-		/// </summary>
-		/// <param name="_AnimationIds">IDs of the animations</param>
-		/// <param name="_LockId">Arbitrary Identifier of the component asking for the animation, to pass when unloading the animation</param>
-        public void LockLocalPlayerAnimations(AnimationIds[] _Ids, string _LockId)
-        {
-            KinetixAnimationBehaviour.LockLocalPlayerAnimations(_Ids, _LockId);
-        }
-
-		/// <summary>
-		/// Remove a lock on a local player animation, allowing its removal from memory if all locks are removed
-		/// </summary>
-		/// <param name="_AnimationIds">IDs of the animations</param>
-		/// <param name="_LockId">Arbitrary Identifier of the component asking for the animation, to pass when unloading the animation</param>
-        public void UnlockLocalPlayerAnimation(AnimationIds _Ids, string _LockId)
-        {
-            KinetixAnimationBehaviour.UnlockLocalPlayerAnimation(_Ids, _LockId);
-        }
-        
-		/// <summary>
-		/// Remove a lock on all player animations, allowing their removal from memory if all of their locks are removed
-		/// </summary>
-		/// <param name="_AnimationIds">IDs of the animations</param>
-		/// <param name="_LockId">Arbitrary Identifier of the component asking for the animation, to pass when unloading the animation</param>
-        public void UnlockLocalPlayerAnimations(AnimationIds[] _Ids, string _LockId)
-        {
-            KinetixAnimationBehaviour.UnlockLocalPlayerAnimations(_Ids, _LockId);
-        }
+		public void UnloadAvatarAnimations(string _PlayerUUID, AnimationIds[] _AnimationIds, string _LockId)
+		{
+			KinetixAnimationBehaviour.UnloadAvatarAnimations(_PlayerUUID, _AnimationIds, _LockId);
+		}
 
 		/// <summary>
 		/// Is animation available on local player
@@ -259,11 +349,19 @@ namespace Kinetix.Internal
 			KinetixAnimationBehaviour.GetNotifiedOnAnimationReadyOnLocalPlayer(_Ids, _OnSuccess);
 		}
 
+		/// <summary>
+		/// Returns the KinetixCharacterComponent
+		/// </summary>
+		/// <returns></returns>
 		public KinetixCharacterComponentLocal GetLocalKCC()
 		{
 			return KinetixAnimationBehaviour.GetLocalKCC();
 		}
 
+		public List<string> GetPlayerList()
+		{
+			return KinetixAnimationBehaviour.GetPlayerList();
+		}
         public bool IsLocalPlayerRegistered()
         {
             return KinetixAnimationBehaviour.IsLocalPlayerRegistered();
@@ -273,8 +371,8 @@ namespace Kinetix.Internal
 
 		public KinetixAnimation()
 		{
-			KinetixCoreBehaviour.ManagerLocator.Get<LocalPlayerManager>().OnAnimationStartOnLocalPlayerAnimator += AnimationStartOnLocalPlayerAnimator;
-			KinetixCoreBehaviour.ManagerLocator.Get<LocalPlayerManager>().OnAnimationEndOnLocalPlayerAnimator   += AnimationEndOnLocalPlayerAnimator;
+			KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().OnAnimationStartOnLocalPlayerAnimator += AnimationStartOnLocalPlayerAnimator;
+			KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().OnAnimationEndOnLocalPlayerAnimator   += AnimationEndOnLocalPlayerAnimator;
 		}
 
 		private void AnimationStartOnLocalPlayerAnimator(AnimationIds _AnimationIds)

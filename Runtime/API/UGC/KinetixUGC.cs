@@ -14,11 +14,6 @@ namespace Kinetix.Internal
             return KinetixUGCBehaviour.IsUGCAvailable();
         }
 
-        public void StartPollingForUGC()
-        {
-            KinetixUGCBehaviour.StartPollingForUGC();
-        }
-
         public void StartPollingForNewUGCToken()
         {
             KinetixUGCBehaviour.StartPollingForNewUGCToken();

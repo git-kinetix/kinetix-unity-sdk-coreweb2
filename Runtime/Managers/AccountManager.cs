@@ -14,23 +14,22 @@ namespace Kinetix.Internal
     {
         public Action OnUpdatedAccount;
         public Action OnConnectedAccount;
+        public Action OnDisconnectedAccount;
 
         private List<Account> Accounts;
-        private string        VirtualWorldId;
+        private string        GameAPIKey;
         
-        public UserAccount LoggedAccount
-        {
-            get { return loggedAccount; }
-        }
+        public UserAccount LoggedAccount => loggedAccount;
 
-        private UserAccount loggedAccount;
+        private UserAccount   loggedAccount;
+        private AccountPoller accountPoller;
 
         public AccountManager(ServiceLocator _ServiceLocator, KinetixCoreConfiguration _Config) : base(_ServiceLocator, _Config) {}
 
 
         protected override void Initialize(KinetixCoreConfiguration _Config)
         {
-            Initialize(_Config.VirtualWorldKey);
+            Initialize(_Config.GameAPIKey);
         }
 
         protected void Initialize()
@@ -38,18 +37,19 @@ namespace Kinetix.Internal
             Initialize(string.Empty);
         }
 
-        protected void Initialize(string _VirtualWorldId)
+        protected void Initialize(string _GameAPIKey)
         {
-            Accounts = new List<Account>();
-
-            VirtualWorldId = _VirtualWorldId;
+            GameAPIKey = _GameAPIKey;
+            
+            Accounts      = new List<Account>();
+            accountPoller = new AccountPoller(GameAPIKey);
         }
         
         public async Task<bool> ConnectAccount(string _UserId)
         {
-            if (string.IsNullOrEmpty(VirtualWorldId))
+            if (string.IsNullOrEmpty(GameAPIKey))
             {
-                KinetixDebug.LogWarning("No VirtualWorldKey found, please check the KinetixCoreConfiguration.");
+                KinetixDebug.LogWarning("No GameAPIKey found, please check the KinetixCoreConfiguration.");
 
                 return false;
             }
@@ -80,6 +80,8 @@ namespace Kinetix.Internal
 
             Accounts.Add(loggedAccount);
 
+            accountPoller.StartPolling();
+            
             OnUpdatedAccount?.Invoke();
             OnConnectedAccount?.Invoke();
 
@@ -103,20 +105,23 @@ namespace Kinetix.Internal
 
             RemoveEmotesAndAccount(foundIndex);
             loggedAccount = null;
+            
+            accountPoller.StopPolling();
+            OnDisconnectedAccount?.Invoke();
         }
 
-        public async Task<bool> AssociateEmotesToVirtualWorld(AnimationIds[] emotes)
+        public async Task<bool> AssociateEmotesToVirtualWorld(AnimationIds[] _Emotes)
         {
-            if (String.IsNullOrEmpty(VirtualWorldId))
+            if (String.IsNullOrEmpty(GameAPIKey))
             {
-                KinetixDebug.LogWarning("No VirtualWorldId found, please check the KinetixCoreConfiguration.");
+                KinetixDebug.LogWarning("No GameAPIKey found, please check the KinetixCoreConfiguration.");
 
                 return false;
             }
 
             List<string> emoteIDs = new List<string>();
 
-            foreach (AnimationIds emote in emotes)
+            foreach (AnimationIds emote in _Emotes)
             {
                 emoteIDs.Add(emote.UUID);
             }
@@ -125,7 +130,7 @@ namespace Kinetix.Internal
             {
                 { "Content-type", "application/json" },
                 { "Accept", "application/json" },
-                { "x-api-key", VirtualWorldId }
+                { "x-api-key", GameAPIKey }
             };
 
             bool result;
@@ -146,7 +151,7 @@ namespace Kinetix.Internal
             return result;
         }
 
-        public async Task<bool> AssociateEmotesToUser(AnimationIds emote)
+        public async Task<bool> AssociateEmotesToUser(AnimationIds _Emote)
         {
             if (loggedAccount == null)
             {
@@ -154,13 +159,13 @@ namespace Kinetix.Internal
                     "Unable to find a connected account. Did you use the KinetixCore.Account.ConnectAccount method?");
             }
 
-            if (loggedAccount.HasEmote(emote))
+            if (loggedAccount.HasEmote(_Emote))
             {
                 throw new Exception("Emote is already assigned");
             }
 
             // No exception catched here, 
-            await AssociateEmotesToVirtualWorld(new AnimationIds[] { emote });
+            await AssociateEmotesToVirtualWorld(new AnimationIds[] { _Emote });
 
             if (loggedAccount == null)
             {
@@ -172,11 +177,11 @@ namespace Kinetix.Internal
             {
                 { "Content-type", "application/json" },
                 { "Accept", "application/json" },
-                { "x-api-key", VirtualWorldId }
+                { "x-api-key", GameAPIKey }
             };
 
             string url = KinetixConstants.c_SDK_API_URL + "/v1/users/" + loggedAccount.AccountId + "/emotes/" +
-                         emote.UUID;
+                         _Emote.UUID;
 
             WebRequestDispatcher webRequest = new WebRequestDispatcher();
             try
@@ -185,7 +190,7 @@ namespace Kinetix.Internal
                 if (!response.IsSuccess)
                     return false;
                 
-                await loggedAccount.AddEmoteFromIds(emote);
+                await loggedAccount.AddEmoteFromIds(_Emote);
                 OnUpdatedAccount?.Invoke();
                 return true;
             }
@@ -197,9 +202,9 @@ namespace Kinetix.Internal
 
         private async Task<bool> TryCreateAccount(string _UserId)
         {
-            if (String.IsNullOrEmpty(VirtualWorldId))
+            if (String.IsNullOrEmpty(GameAPIKey))
             {
-                KinetixDebug.LogWarning("No VirtualWorldId found, please check the KinetixCoreConfiguration.");
+                KinetixDebug.LogWarning("No GameAPIKey found, please check the KinetixCoreConfiguration.");
                 return false;
             }
 
@@ -211,7 +216,7 @@ namespace Kinetix.Internal
             {
                 { "Content-type", "application/json" },
                 { "Accept", "application/json" },
-                { "x-api-key", VirtualWorldId }
+                { "x-api-key", GameAPIKey }
             };
             
             try
@@ -229,16 +234,16 @@ namespace Kinetix.Internal
 
         private async Task<bool> AccountExists(string _UserId)
         {
-            if (string.IsNullOrEmpty(VirtualWorldId))
+            if (string.IsNullOrEmpty(GameAPIKey))
             {
-                KinetixDebug.LogWarning("No VirtualWorldId found, please check the KinetixCoreConfiguration.");
+                KinetixDebug.LogWarning("No GameAPIKey found, please check the KinetixCoreConfiguration.");
 
                 return false;
             }
 
             string uri = KinetixConstants.c_SDK_API_URL + "/v1/virtual-world/users/" + _UserId;
 
-            GetRawAPIResultConfig   apiResultOpConfig = new GetRawAPIResultConfig(uri, VirtualWorldId);
+            GetRawAPIResultConfig   apiResultOpConfig = new GetRawAPIResultConfig(uri, GameAPIKey);
             GetRawAPIResult         apiResultOp = new GetRawAPIResult(apiResultOpConfig);
             GetRawAPIResultResponse response = await OperationManagerShortcut.Get().RequestExecution(apiResultOp);
 
@@ -350,9 +355,9 @@ namespace Kinetix.Internal
         }
 
 
-        private void RemoveEmotesAndAccount(int accountIndex)
+        private void RemoveEmotesAndAccount(int _AccountIndex)
         {
-            if (accountIndex == -1)
+            if (_AccountIndex == -1)
                 return;
 
             GetAllUserEmotes(beforeAnimationMetadatas =>
@@ -360,7 +365,7 @@ namespace Kinetix.Internal
                 List<AnimationIds> idsBeforeRemoveWallet =
                     beforeAnimationMetadatas.ToList().Select(metadata => metadata.Ids).ToList();
 
-                Accounts.RemoveAt(accountIndex);
+                Accounts.RemoveAt(_AccountIndex);
 
                 GetAllUserEmotes(afterAnimationMetadatas =>
                 {
@@ -368,8 +373,9 @@ namespace Kinetix.Internal
                         afterAnimationMetadatas.ToList().Select(metadata => metadata.Ids).ToList();
                     idsBeforeRemoveWallet = idsBeforeRemoveWallet.Except(idsAfterRemoveWallet).ToList();
 
-                    KinetixCoreBehaviour.ManagerLocator.Get<LocalPlayerManager>().ForceUnloadLocalPlayerAnimations(idsBeforeRemoveWallet.ToArray());
-                    KinetixCoreBehaviour.ManagerLocator.Get<LocalPlayerManager>().RemoveLocalPlayerEmotesToPreload(idsBeforeRemoveWallet.ToArray());
+                    KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().LocalPlayer.ForceUnloadPlayerAnimations(idsBeforeRemoveWallet.ToArray());
+                    KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().LocalPlayer.RemovePlayerEmotesToPreload(idsBeforeRemoveWallet.ToArray());
+                    
                     OnUpdatedAccount?.Invoke();
                 });
             });

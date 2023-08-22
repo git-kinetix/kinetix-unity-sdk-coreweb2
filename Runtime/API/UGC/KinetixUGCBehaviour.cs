@@ -4,11 +4,6 @@ namespace Kinetix.Internal
 {
     internal static class KinetixUGCBehaviour
     {
-        public static void StartPollingForUGC()
-        {
-            KinetixCoreBehaviour.ManagerLocator.Get<UGCManager>().StartPollingForUGC();
-        }
-
         public static void StartPollingForNewUGCToken()
         {
             KinetixCoreBehaviour.ManagerLocator.Get<UGCManager>().StartPollingForNewUGCToken();

@@ -16,11 +16,11 @@ namespace Kinetix.Utils
 {
     public class SdkApiProviderWrapper : IProviderWrapper
     {
-        private string VirtualWorldAPIKey = string.Empty;
+        private string GameAPIKey = string.Empty;
 
-        public SdkApiProviderWrapper(string _VirtualWorldAPIKey)
+        public SdkApiProviderWrapper(string _GameAPIKey)
         {
-            VirtualWorldAPIKey = _VirtualWorldAPIKey;
+            GameAPIKey = _GameAPIKey;
         }
 
         /// <summary>
@@ -51,7 +51,7 @@ namespace Kinetix.Utils
 
             _AnimationMetadatas ??= new List<AnimationMetadata>();
 
-            MetadataDownloaderConfig   metadataDownloaderConfig = new MetadataDownloaderConfig(uri, VirtualWorldAPIKey);
+            MetadataDownloaderConfig   metadataDownloaderConfig = new MetadataDownloaderConfig(uri, GameAPIKey);
             MetadataDownloader         metadataDownloader       = new MetadataDownloader(metadataDownloaderConfig);
             MetadataDownloaderResponse response = await OperationManagerShortcut.Get().RequestExecution(metadataDownloader);
 
@@ -95,7 +95,7 @@ namespace Kinetix.Utils
 
             string uri = KinetixConstants.c_SDK_API_URL + "/v1/emotes/" + _AnimationIds.UUID;
 
-            GetRawAPIResultConfig   apiResultOpConfig = new GetRawAPIResultConfig(uri, VirtualWorldAPIKey);
+            GetRawAPIResultConfig   apiResultOpConfig = new GetRawAPIResultConfig(uri, GameAPIKey);
             GetRawAPIResult         apiResultOp       = new GetRawAPIResult(apiResultOpConfig);
             GetRawAPIResultResponse response = await OperationManagerShortcut.Get().RequestExecution(apiResultOp);
 

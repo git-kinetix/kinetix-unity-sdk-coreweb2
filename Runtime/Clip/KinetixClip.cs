@@ -68,6 +68,7 @@ namespace Kinetix
 		mouthPressRight,
 		mouthStretchLeft,
 		mouthStretchRight,
+		tongueOut,
         Count
     }
 

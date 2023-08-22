@@ -1,11 +1,12 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using UnityEngine;
 
 namespace Kinetix.Internal
 {
-    internal class UGCManager: AKinetixManager
+    internal class UGCManager : AKinetixManager
     {
         const int FETCH_ANIM_CONTACT_ATTEMPTS = 30;
         const int FETCH_ANIM_REQUEST_TIMEOUT  = 900;
@@ -16,13 +17,17 @@ namespace Kinetix.Internal
         public Action OnUGCTokenExpired;
 
         private bool   EnableUGC = true;
-        private string VirtualWorldId;
+        private string GameAPIKey;
 
         //Cache
         private DateTime lastFetchDate = System.DateTime.MinValue;
         private string   UgcUrl        = string.Empty;
         private string   TokenUUID     = string.Empty;
 
+        //CancellationTokens
+        private CancellationTokenSource tokenCancellationGetUgcUrl;
+        private CancellationTokenSource tokenCancellationPollingForUgc;
+        private CancellationTokenSource tokenCancellationPollingForToken;
 
         [Serializable]
         public class ObjectUGC
@@ -31,19 +36,18 @@ namespace Kinetix.Internal
             public string url;
         }
 
-
         public UGCManager(ServiceLocator _ServiceLocator, KinetixCoreConfiguration _Config) : base(_ServiceLocator, _Config) {}
-
-
+        
         protected override void Initialize(KinetixCoreConfiguration _Config)
         {
-            Initialize(_Config.VirtualWorldKey, _Config.EnableUGC);
+            Initialize(_Config.GameAPIKey, _Config.EnableUGC);
         }
 
-        protected void Initialize(string _VirtualWorldId, bool _EnableUGC)
+
+        protected void Initialize(string _GameAPIKey, bool _EnableUGC)
         {
             EnableUGC      = _EnableUGC;
-            VirtualWorldId = _VirtualWorldId;
+            GameAPIKey = _GameAPIKey;
         }
         
         public bool IsUGCAvailable()
@@ -58,67 +62,44 @@ namespace Kinetix.Internal
             int fetchTimeOut = 5;
 
             //if Now is earlier than lastFetchDate+5 minutes
-            if (UgcUrl == string.Empty ||
-                DateTime.Compare(DateTime.Now, lastFetchDate.AddMinutes(fetchTimeOut)) > 0)
-            {
-                if (KinetixCoreBehaviour.ManagerLocator.Get<AccountManager>().LoggedAccount == null)
-                {
-                    KinetixDebug.LogWarning(
-                        "Unable to find a logged account. Did you use the KineticCore.Account.ConnectAccount method?");
-                    return string.Empty;
-                }
-
-                
-                
-                string uri = KinetixConstants.c_SDK_API_URL + "/v1/process/token?userId=" +
-                             KinetixCoreBehaviour.ManagerLocator.Get<AccountManager>().LoggedAccount.AccountId;
-
-                GetRawAPIResultConfig   apiResultOpConfig = new GetRawAPIResultConfig(uri, VirtualWorldId);
-                GetRawAPIResult         apiResultOp = new GetRawAPIResult(apiResultOpConfig);
-                GetRawAPIResultResponse response = await OperationManagerShortcut.Get().RequestExecution(apiResultOp);
-
-                string jsonUgcUrl = response.json;
-                lastFetchDate = System.DateTime.Now;
-
-                ObjectUGC oUgc = JsonConvert.DeserializeObject<ObjectUGC>(jsonUgcUrl);
-                UgcUrl    = oUgc.url;
-                TokenUUID = oUgc.uuid;
-
+            if (UgcUrl != string.Empty && DateTime.Compare(DateTime.Now, lastFetchDate.AddMinutes(fetchTimeOut)) <= 0) 
                 return UgcUrl;
-            }
-
-            return UgcUrl;
-        }
-
-        public async void StartPollingForUGC()
-        {
+            
             if (KinetixCoreBehaviour.ManagerLocator.Get<AccountManager>().LoggedAccount == null)
             {
                 KinetixDebug.LogWarning(
                     "Unable to find a logged account. Did you use the KineticCore.Account.ConnectAccount method?");
-                return;
+                return string.Empty;
             }
+            
+            string uri = KinetixConstants.c_SDK_API_URL + "/v1/process/token?userId=" +
+                         KinetixCoreBehaviour.ManagerLocator.Get<AccountManager>().LoggedAccount.AccountId;
 
-            string url = KinetixConstants.c_SDK_API_URL + "/v1/users/" + KinetixCoreBehaviour.ManagerLocator.Get<AccountManager>().LoggedAccount.AccountId +
-                         "/emotes";
 
-            float interval = (float)FETCH_ANIM_REQUEST_TIMEOUT / (float)FETCH_ANIM_CONTACT_ATTEMPTS;
-            GetNewUgcEmoteByPollingConfig getNewUgcEmoteConfig =
-                new GetNewUgcEmoteByPollingConfig(url, VirtualWorldId, FETCH_ANIM_REQUEST_TIMEOUT, interval);
-            GetNewUgcEmoteByPolling         operation = new GetNewUgcEmoteByPolling(getNewUgcEmoteConfig);
-            GetNewUgcEmoteByPollingResponse getNewUgcEmoteResponse;
+            GetRawAPIResultConfig   apiResultOpConfig = new GetRawAPIResultConfig(uri, GameAPIKey);
+            GetRawAPIResult         apiResultOp = new GetRawAPIResult(apiResultOpConfig);
 
+            string jsonUgcUrl;
+            
             try
             {
-                getNewUgcEmoteResponse = await OperationManagerShortcut.Get().RequestExecution(operation);
+                tokenCancellationGetUgcUrl = new CancellationTokenSource();
+                GetRawAPIResultResponse response = await OperationManagerShortcut.Get().RequestExecution(apiResultOp, tokenCancellationGetUgcUrl);
+                
+                jsonUgcUrl = response.json;
             }
             catch (Exception)
             {
-                return;
+                return string.Empty;
             }
+            
+            lastFetchDate = System.DateTime.Now;
 
-            KinetixCoreBehaviour.ManagerLocator.Get<AccountManager>().LoggedAccount.AddEmoteFromMetadata(getNewUgcEmoteResponse.newAnimationMetadata);
-            KinetixCoreBehaviour.ManagerLocator.Get<AccountManager>().OnUpdatedAccount?.Invoke();
+            ObjectUGC oUgc = JsonConvert.DeserializeObject<ObjectUGC>(jsonUgcUrl);
+            UgcUrl    = oUgc.url;
+            TokenUUID = oUgc.uuid;
+
+            return UgcUrl;
         }
 
         public async void StartPollingForNewUGCToken()
@@ -129,30 +110,57 @@ namespace Kinetix.Internal
                     "Tried to StartPollingForNewUGCToken without having first called or waited GetUgcUrl");
                 return;
             }
+            
+            if (tokenCancellationPollingForToken != null && !tokenCancellationPollingForToken.IsCancellationRequested)
+            {
+                tokenCancellationPollingForToken?.Cancel();
+                await Task.Yield();
+            }
 
             string url = KinetixConstants.c_SDK_API_URL + "/v1/process/token/" + TokenUUID;
 
             float interval = (float)TOKEN_REQUEST_TIMEOUT / (float)TOKEN_CONTACT_ATTEMPTS;
             GetNewUgcTokenByPollingConfig getNewUgcTokenConfig =
-                new GetNewUgcTokenByPollingConfig(url, VirtualWorldId, TOKEN_REQUEST_TIMEOUT, interval);
+                new GetNewUgcTokenByPollingConfig(url, GameAPIKey, TOKEN_REQUEST_TIMEOUT, interval);
             GetNewUgcTokenByPolling         operation = new GetNewUgcTokenByPolling(getNewUgcTokenConfig);
-            GetNewUgcTokenByPollingResponse getNewUgcTokenResponse;
 
             try
             {
-                getNewUgcTokenResponse = await OperationManagerShortcut.Get().RequestExecution(operation);
+                tokenCancellationPollingForToken = new CancellationTokenSource();
+                await OperationManagerShortcut.Get().RequestExecution(operation, tokenCancellationPollingForToken);
+            }
+            catch (TimeoutException)
+            {
+                TokenUUID = string.Empty;
+                UgcUrl    = string.Empty;
+                OnUGCTokenExpired?.Invoke();
+                return;
             }
             catch (Exception)
             {
                 return;
             }
-
-            if (!getNewUgcTokenResponse.IsTokenOutdated)
-                return;
-
+            
             TokenUUID = string.Empty;
             UgcUrl    = string.Empty;
             OnUGCTokenExpired?.Invoke();
         }
+
+        public void ClearPolling()
+        {
+            TokenUUID     = string.Empty;
+            UgcUrl        = string.Empty;
+            lastFetchDate = System.DateTime.MinValue;
+            
+            if (tokenCancellationGetUgcUrl != null && !tokenCancellationGetUgcUrl.IsCancellationRequested)
+                tokenCancellationGetUgcUrl?.Cancel();
+           
+            if (tokenCancellationPollingForToken != null && !tokenCancellationPollingForToken.IsCancellationRequested)
+                tokenCancellationPollingForToken?.Cancel();
+            
+            if (tokenCancellationPollingForUgc != null && !tokenCancellationPollingForUgc.IsCancellationRequested)
+                tokenCancellationPollingForUgc?.Cancel();
+        }
+
     }
 }

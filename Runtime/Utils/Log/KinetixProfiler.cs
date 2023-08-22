@@ -2,40 +2,106 @@
 #undef KINETIX_PROFILER
 #endif
 
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using Unity.Profiling;
+using System.Diagnostics;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.Profiling;
+using UObject = UnityEngine.Object;
 
 namespace Kinetix.Internal.Utils
 {
 	internal static class KinetixProfiler
 	{
+		internal static bool _isDirty { get; private set; }
+		internal static void OnProfilerViewReloaded() => _isDirty = false;
+
 		internal static bool _isWindowOpen = false;
 		public static bool s_enableCustomProfiler=true;
 
-		internal struct MethodTime
+		[Serializable]
+		internal class CustomStopWatch
 		{
-			public string methodName;
-			public decimal startTime;
-			public decimal endTime;
-			public int parent;
-			public bool HasParent => parent != -1;
-
-			public MethodTime(string methodName, decimal startTime, int parent = -1)
+			private bool isRunning;
+			private long start;
+			private long end;
+			public long jitter;
+			public TimeSpan Elapsed
 			{
-				this.methodName = methodName;
-				this.startTime = startTime;
-				this.endTime = -1;
-				this.parent = parent;
+				get
+				{
+					if (isRunning)
+					{
+						return new TimeSpan(Stopwatch.GetTimestamp() - start - jitter);
+					}
+					else
+					{
+						return new TimeSpan(end - start - jitter);
+					}
+				}
+			}
+
+			internal void Start()
+			{
+				start = Stopwatch.GetTimestamp();
+				isRunning = true;
+			}
+
+			internal void Stop()
+			{
+				isRunning = false;
+				end = Stopwatch.GetTimestamp();
 			}
 		}
 
-		internal static Dictionary<int, int> _traceStackIndex = new Dictionary<int, int>();
-		internal static Dictionary<int, bool> _breakpoints = new Dictionary<int, bool>();
-		internal static Dictionary<int,string> _groupName = new Dictionary<int,string>();
-		internal static HoleList<List<MethodTime>> _traceByGroup = new HoleList<List<MethodTime>>();
+		[Serializable]
+		internal class MethodTime
+		{
+			private static long startupTime;
+
+			[RuntimeInitializeOnLoadMethod]
+			private static void InitializeOnLoad()
+			{
+				startupTime = DateTime.Now.Ticks;
+			}
+
+
+			public TimeSpan startTimeJitter;
+			public TimeSpan endTimeJitter;
+			public TimeSpan startTime;
+			public readonly string methodName;
+			public readonly CustomStopWatch stopwatch;
+			public readonly int parent;
+			public bool HasParent => parent != -1;
+
+			public MethodTime(string methodName, int parent = -1)
+			{
+				this.methodName = methodName;
+				this.parent = parent;
+				stopwatch = new CustomStopWatch();
+			}
+
+			public MethodTime Start()
+			{
+				startTime = new TimeSpan(DateTime.Now.Ticks - startupTime);
+				stopwatch.Start();
+				return this;
+			}
+
+			public MethodTime Stop()
+			{
+				stopwatch.Stop();
+				return this;
+			}
+		}
+
+		volatile internal static Dictionary<int, int> _traceStackIndex = new Dictionary<int, int>();
+		volatile internal static Dictionary<int, bool> _breakpoints = new Dictionary<int, bool>();
+		volatile internal static Dictionary<int,string> _groupName = new Dictionary<int,string>();
+		volatile internal static HoleList<List<MethodTime>> _traceByGroup = new HoleList<List<MethodTime>>();
+
+		public static CustomStopWatch stopwatch = new CustomStopWatch();
 
 		private static ulong groupI = 0;
 
@@ -44,7 +110,7 @@ namespace Kinetix.Internal.Utils
 		/// </summary>
 		/// <param name="name"></param>
 		/// <param name="targetObject"></param>
-		public static void Start(string name, Object targetObject = null)
+		public static void Start(string name, UObject targetObject = null)
 		{
 #if KINETIX_PROFILER
 			Profiler.BeginSample(name, targetObject);
@@ -60,8 +126,11 @@ namespace Kinetix.Internal.Utils
 #if KINETIX_PROFILER
 			if (!s_enableCustomProfiler)
 				return 0;
-
-			lock(_traceByGroup)
+			
+			lock (_groupName)
+			lock (_breakpoints)
+			lock (_traceStackIndex)
+			lock (_traceByGroup)
 			{
 				_traceByGroup.Add(new List<MethodTime>());
 				int latestIndex = _traceByGroup.LatestIndex;
@@ -90,12 +159,21 @@ namespace Kinetix.Internal.Utils
 #if KINETIX_PROFILER
 			if (!s_enableCustomProfiler)
 				return;
-
+			stopwatch.Start();
+			MethodTime methodTime;
+			lock (_traceStackIndex)
 			lock (_traceByGroup)
+			lock (_traceByGroup[group])
 			{
-				_traceByGroup[group].Add(new MethodTime(name, (decimal)Time.timeAsDouble, _traceStackIndex[group]));
+				methodTime = new MethodTime(name, _traceStackIndex[group]);
+				methodTime.Start();
+				
+				_traceByGroup[group].Add(methodTime);
 				_traceStackIndex[group] = _traceByGroup[group].Count - 1;
+
 			}
+			stopwatch.Stop();
+			methodTime.stopwatch.jitter += stopwatch.Elapsed.Ticks;
 #endif
 		}
 
@@ -116,18 +194,24 @@ namespace Kinetix.Internal.Utils
 			if (!s_enableCustomProfiler)
 				return;
 
+			stopwatch.Start();
+			MethodTime methodTime;
+			lock (_traceStackIndex)
 			lock (_traceByGroup)
+			lock (_traceByGroup[group])
 			{
 				int v = _traceStackIndex[group];
 				List<MethodTime> methodTimes = _traceByGroup[group];
 				int count = methodTimes.Count;
 
-				MethodTime methodTime = methodTimes[v];
-				methodTime.endTime = (decimal)Time.timeAsDouble;
+				methodTime = methodTimes[v];
+				methodTime.Stop();
 				methodTimes[v] = methodTime;
 
-				_traceStackIndex[group] = methodTime.parent;	
+				_traceStackIndex[group] = methodTime.parent;
 			}
+			stopwatch.Stop();
+			methodTime.stopwatch.jitter += stopwatch.Elapsed.Ticks;
 #endif
 		}
 
@@ -138,7 +222,11 @@ namespace Kinetix.Internal.Utils
 				return;
 
 			lock (_traceByGroup)
+			lock (_traceStackIndex)
+			lock (_groupName)
+			lock (_breakpoints)
 			{
+				_isDirty = true;
 				if (_isWindowOpen && _breakpoints[group]) return;
 	
 				_traceByGroup.RemoveAt(group);
@@ -146,6 +234,35 @@ namespace Kinetix.Internal.Utils
 				_groupName.Remove(group);
 			}
 #endif
+		}
+
+		internal static Group ExportGroup(int id)
+		{
+			return new Group()
+			{
+				name = _groupName[id],
+				trace = new List<MethodTime>(_traceByGroup[id]),
+				traceStackIndex = _traceStackIndex[id],
+			};
+		}
+
+		internal static void ImportGroup(Group group)
+		{
+			_traceByGroup.Add(group.trace);
+			int latestIndex = _traceByGroup.LatestIndex;
+			_traceStackIndex[latestIndex] = group.traceStackIndex;
+			_breakpoints[latestIndex] = true;
+			_groupName[latestIndex] = "Import#"+group.name;
+
+			_isDirty = true;
+		}
+
+		[Serializable]
+		internal class Group
+		{
+			public string name;
+			public List<MethodTime> trace;
+			public int traceStackIndex;
 		}
 	}
 }
