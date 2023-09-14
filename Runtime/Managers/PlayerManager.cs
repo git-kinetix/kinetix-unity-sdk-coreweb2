@@ -243,6 +243,9 @@ namespace Kinetix.Internal.Cache
 			}
 			catch (Exception e)
 			{
+#if DEV_KINETIX
+				Debug.LogException(e);
+#endif
 				KinetixDebug.LogWarning($"Failed loading animation with id { _KinetixEmote.Ids.UUID } with error : " + e.Message);
 				_OnFailure?.Invoke();
 			}

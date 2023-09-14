@@ -8,6 +8,8 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -90,7 +92,15 @@ namespace Kinetix.Utils
 
             if (request.result != UnityWebRequest.Result.Success)
             {
-                response.Error = request.error;
+                try
+                {
+                    ErrorMessage errorMessage = JsonConvert.DeserializeObject<ErrorMessage>(request.downloadHandler.text);
+                    response.Error = errorMessage.message;
+                }
+                catch (Exception)
+                {
+                    response.Error = request.error;
+                }
                 return response;
             }
 
@@ -108,5 +118,12 @@ namespace Kinetix.Utils
         /// <param name="baseUrl"></param>
         /// <returns></returns>
         public static string FixURL(string baseUrl) => baseUrl?.Replace('\\', '/');
+
+        [Serializable]
+        public class ErrorMessage
+        {
+            [SerializeField]
+            public string message;
+        }
     }
 }

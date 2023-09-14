@@ -3,7 +3,6 @@
 // // Kinetix Unity SDK - Copyright (C) 2022 Kinetix SAS
 // // </copyright>
 // // ----------------------------------------------------------------------------
-// FILE_WEB2
 
 using System;
 using System.Collections.Generic;
@@ -116,4 +115,3 @@ namespace Kinetix.Utils
         }
     }
 }
-

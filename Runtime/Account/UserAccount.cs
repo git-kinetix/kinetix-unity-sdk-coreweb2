@@ -1,4 +1,3 @@
-
 namespace Kinetix.Internal
 {
     public class UserAccount : Account
@@ -6,4 +5,3 @@ namespace Kinetix.Internal
         public UserAccount(string _UserId) : base (_UserId) {}
     }
 }
-
