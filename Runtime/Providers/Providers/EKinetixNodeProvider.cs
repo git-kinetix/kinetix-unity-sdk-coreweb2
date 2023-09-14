@@ -7,6 +7,6 @@
 public enum EKinetixNodeProvider
 {
     SDK_API,
-    NONE,
+    NONE
 }
 

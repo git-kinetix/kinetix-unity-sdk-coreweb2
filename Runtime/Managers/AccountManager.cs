@@ -59,13 +59,18 @@ namespace Kinetix.Internal
                 KinetixDebug.LogWarning("Account is already connected");
             }
 
-            if (!await AccountExists(_UserId))
+            try
             {
-                if (!await TryCreateAccount(_UserId))
+                if (!await AccountExists(_UserId))
                 {
-                    KinetixDebug.LogWarning("Unable to create account !");
-                    return false;
+                    if (!await TryCreateAccount(_UserId))
+                        return false;
                 }
+            }
+            catch (Exception e)
+            {
+                KinetixDebug.LogWarning("Issue while connecting account : " + e.Message);
+                return false;
             }
 
             if (loggedAccount != null)
@@ -78,8 +83,12 @@ namespace Kinetix.Internal
 
             await loggedAccount.FetchMetadatas();
 
+            if (loggedAccount == null)
+                return false;
+
             Accounts.Add(loggedAccount);
 
+            
             accountPoller.StartPolling();
             
             OnUpdatedAccount?.Invoke();
@@ -224,11 +233,13 @@ namespace Kinetix.Internal
                 WebRequestDispatcher webRequest = new WebRequestDispatcher();
 
                 RawResponse response = await webRequest.SendRequest<RawResponse>(url, WebRequestDispatcher.HttpMethod.POST, headers, payload);
+                if (!response.IsSuccess)
+                    throw new Exception(response.Error);
                 return response.IsSuccess;
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                return false;
+                throw e;
             }
         }
 
@@ -237,7 +248,6 @@ namespace Kinetix.Internal
             if (string.IsNullOrEmpty(GameAPIKey))
             {
                 KinetixDebug.LogWarning("No GameAPIKey found, please check the KinetixCoreConfiguration.");
-
                 return false;
             }
 
