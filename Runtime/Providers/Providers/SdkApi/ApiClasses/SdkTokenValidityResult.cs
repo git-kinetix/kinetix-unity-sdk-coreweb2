@@ -1,3 +1,4 @@
+// FILE_WEB2
 namespace Kinetix.Internal
 {
     internal class SdkTokenValidityResult

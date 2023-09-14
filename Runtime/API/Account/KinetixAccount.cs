@@ -18,7 +18,8 @@ namespace Kinetix.Internal
         /// Event called upon account disconnection
         /// </summary>
         public event Action OnDisconnectedAccount;
-        
+
+
         /// <summary>
         /// Connect account with UserId
         /// </summary>
@@ -40,7 +41,7 @@ namespace Kinetix.Internal
         /// Allows a user to use the wanted emote
         /// </summary>
         /// <param name="_EmoteID">AnimationIds of the emote</param>
-        [Obsolete("Please use the overload with the EmoteID as string.", false)]
+        [Obsolete("Please use the overload with (string, Action, Action).", false)]
         public void AssociateEmotesToUser(AnimationIds _EmoteID, Action _OnSuccess = null,
             Action<string>                             _OnFailure = null)
         {
@@ -55,7 +56,10 @@ namespace Kinetix.Internal
         {
             KinetixAccountBehaviour.AssociateEmotesToUser(_EmoteID, _OnSuccess, _OnFailure);
         }
-        
+
+
+
+
         #region Internal
 
         public KinetixAccount()

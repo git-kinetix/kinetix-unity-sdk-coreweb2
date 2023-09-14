@@ -4,25 +4,29 @@
 // // </copyright>
 // // ----------------------------------------------------------------------------
 
+using System.Collections.Generic;
+
 namespace Kinetix.Internal
 {
     public static class KinetixConstants
     {
-        public const  string version                = "1.2.0";
-        public static bool   C_ShouldUGCBeAvailable = true;
+        public const string version = "1.1.0";
+
+        public static bool C_ShouldUGCBeAvailable = true;
         
 #if STAGING_KINETIX
         public static readonly string c_SDK_API_URL = "https://sdk-api.staging.kinetix.tech";
-#elif DEV_KINETIX
-        public static readonly string c_SDK_API_URL = "https://sdk-api.dev.kinetix.tech";
 #else
         public static readonly string c_SDK_API_URL = "https://sdk-api.kinetix.tech";
 #endif
+
 
         public static readonly int c_TimeOutCreateQRCode = 305;
         
         
         #region StreamingAssets
+        
+        public const string C_FreeAnimationsAssetPluginPath = "Packages/com.kinetix.coreweb2/Resources/FreeAnimations";
         
         public static string C_FreeAnimationsManifestPath => "Kinetix/FreeEmoteManifest.json";
         public const string C_FreeAnimationsAssetSAPath = "Assets/StreamingAssets/Kinetix/FreeAnimations";
@@ -31,5 +35,6 @@ namespace Kinetix.Internal
         public const string C_FreeCustomAnimationsAssetSAPath = "Assets/StreamingAssets/Kinetix/CustomFreeAnimations";
         
         #endregion
+
     }
 }

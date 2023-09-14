@@ -4,6 +4,7 @@
 // // </copyright>
 // // ----------------------------------------------------------------------------
 
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -84,6 +85,8 @@ namespace Kinetix.Internal
 
         private EKinetixNodeProvider GetTypeForAccountSpecialization(Account _Account)
         {
+
+
             if (_Account is UserAccount)
                 return EKinetixNodeProvider.SDK_API;
             return EKinetixNodeProvider.NONE;

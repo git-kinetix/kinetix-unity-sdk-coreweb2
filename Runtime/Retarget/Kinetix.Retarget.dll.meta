@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 4cd29453ab567a943ade124d5a30e6e3
+guid: 115ee38a50ef33346a6e78bf390e5c25
 PluginImporter:
   externalObjects: {}
   serializedVersion: 2
@@ -16,31 +16,18 @@ PluginImporter:
     second:
       enabled: 0
       settings:
-        'Exclude ': 1
         Exclude Android: 0
-        Exclude CloudRendering: 1
         Exclude Editor: 0
-        Exclude GameCoreXboxOne: 1
         Exclude Linux64: 0
-        Exclude Lumin: 1
         Exclude OSXUniversal: 0
-        Exclude PS4: 1
-        Exclude PS5: 1
-        Exclude Stadia: 1
-        Exclude Switch: 1
         Exclude WebGL: 1
         Exclude Win: 0
         Exclude Win64: 0
-        Exclude WindowsStoreApps: 1
-        Exclude XboxOne: 1
-        Exclude iOS: 0
-        Exclude tvOS: 1
   - first:
       Android: Android
     second:
       enabled: 1
-      settings:
-        CPU: ARMv7
+      settings: {}
   - first:
       Any: 
     second:
@@ -51,48 +38,33 @@ PluginImporter:
     second:
       enabled: 1
       settings:
-        CPU: AnyCPU
         DefaultValueInitialized: true
-        OS: AnyOS
   - first:
       Standalone: Linux64
     second:
       enabled: 1
-      settings:
-        CPU: None
+      settings: {}
   - first:
       Standalone: OSXUniversal
     second:
       enabled: 1
-      settings:
-        CPU: None
+      settings: {}
   - first:
       Standalone: Win
     second:
       enabled: 1
-      settings:
-        CPU: x86
+      settings: {}
   - first:
       Standalone: Win64
     second:
       enabled: 1
-      settings:
-        CPU: x86_64
+      settings: {}
   - first:
       Windows Store Apps: WindowsStoreApps
     second:
       enabled: 0
       settings:
         CPU: AnyCPU
-  - first:
-      iPhone: iOS
-    second:
-      enabled: 1
-      settings:
-        AddToEmbeddedBinaries: false
-        CPU: AnyCPU
-        CompileFlags: 
-        FrameworkDependencies: 
   userData: 
   assetBundleName: 
   assetBundleVariant: 

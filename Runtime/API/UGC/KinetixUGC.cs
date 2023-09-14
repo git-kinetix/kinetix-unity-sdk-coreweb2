@@ -9,11 +9,6 @@ namespace Kinetix.Internal
         /// </summary>
         public event Action OnUGCTokenExpired;
 
-        public KinetixUGC()
-        {
-            KinetixCoreBehaviour.ManagerLocator.Get<UGCManager>().OnUGCTokenExpired += UGCTokenExpired;
-        }
-        
         public bool IsUGCAvailable()
         {
             return KinetixUGCBehaviour.IsUGCAvailable();
@@ -22,12 +17,16 @@ namespace Kinetix.Internal
         public void StartPollingForNewUGCToken()
         {
             KinetixUGCBehaviour.StartPollingForNewUGCToken();
-
         }
 
         public void GetUgcUrl(Action<string> urlFetchedCallback)
         {
             KinetixUGCBehaviour.GetUgcUrl(urlFetchedCallback);
+        }
+
+        public KinetixUGC()
+        {
+            KinetixCoreBehaviour.ManagerLocator.Get<UGCManager>().OnUGCTokenExpired += UGCTokenExpired;
         }
 
         private void UGCTokenExpired()

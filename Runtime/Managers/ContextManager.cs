@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Kinetix.Internal.Cache;
 using UnityEngine;
 
+
 namespace Kinetix.Internal
 {
     internal class ContextManager: AKinetixManager
@@ -61,7 +62,7 @@ namespace Kinetix.Internal
             if (contexts[_ContextName].EmoteID == string.Empty)
                 return false;
             
-            KinetixCore.Animation.PlayAnimationOnLocalPlayer(contexts[_ContextName].EmoteID);
+            KinetixCore.Animation.PlayAnimationOnLocalPlayer(new AnimationIds(contexts[_ContextName].EmoteID));
 
             return true;
         }
@@ -77,7 +78,7 @@ namespace Kinetix.Internal
             if (contexts[_ContextName].EmoteID == string.Empty)
                 return false;
             
-            KinetixCore.Animation.PlayAnimationOnAvatar(_PlayerUUID, contexts[_ContextName].EmoteID);
+            KinetixCore.Animation.PlayAnimationOnAvatar(_PlayerUUID, new AnimationIds(contexts[_ContextName].EmoteID));
 
             return true;
         }
@@ -120,12 +121,12 @@ namespace Kinetix.Internal
 
         public void LoadContextEmote(AnimationIds _EmoteIds, string _ContextName)
         {     
-            KinetixCore.Animation.LoadLocalPlayerAnimation(_EmoteIds.UUID, LOCK_CONTEXT_ID + "_" + _ContextName);
+            KinetixCore.Animation.LoadLocalPlayerAnimation(_EmoteIds, LOCK_CONTEXT_ID + "_" + _ContextName);
         }
 
         public void UnloadContextEmote(AnimationIds _EmoteIds, string _ContextName)
         {
-            KinetixCore.Animation.UnloadLocalPlayerAnimation(_EmoteIds.UUID, LOCK_CONTEXT_ID + "_" + _ContextName);
+            KinetixCore.Animation.UnloadLocalPlayerAnimation(_EmoteIds, LOCK_CONTEXT_ID + "_" + _ContextName);
         }
 
         public ContextualEmote GetContextEmote(string _ContextName)
@@ -152,7 +153,8 @@ namespace Kinetix.Internal
         {
             return contexts.ContainsKey(_ContextName)
             && contexts[_ContextName].EmoteID != string.Empty
-            && KinetixCore.Animation.IsAnimationAvailableOnLocalPlayer(contexts[_ContextName].EmoteID);
+            && KinetixCore.Animation.IsAnimationAvailableOnLocalPlayer(new AnimationIds(contexts[_ContextName].EmoteID));
         }
     }
 }
+

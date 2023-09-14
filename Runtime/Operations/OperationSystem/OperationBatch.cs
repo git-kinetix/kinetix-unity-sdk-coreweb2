@@ -67,7 +67,7 @@ namespace Kinetix.Internal
             if (source1.Task.IsFaulted)
             {
                 SetOnCompleted();
-                source2.SetException(new Exception(source1.Task.Exception.InnerException.Message));
+                source2.TrySetException(source1.Task.Exception);
                 return;
             }
             if (source1.Task.IsCanceled)
