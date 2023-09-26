@@ -33,6 +33,7 @@ namespace Kinetix.Internal
             KinetixCore.Network   = new KinetixNetwork();
             KinetixCore.UGC       = new KinetixUGC();
             KinetixCore.Context   = new KinetixContext();
+            KinetixCore.Alias     = new KinetixAlias();
             
             KinetixAnalytics.Initialize(_Configuration.EnableAnalytics);
 
@@ -65,7 +66,8 @@ namespace Kinetix.Internal
             managerLocator.Register<UGCManager>(new UGCManager(serviceLocator, _Configuration));
             managerLocator.Register<ContextManager>(new ContextManager(serviceLocator, _Configuration));
             managerLocator.Register<NetworkManager>(new NetworkManager(serviceLocator, _Configuration));
-
+            managerLocator.Register<AliasManager>(new AliasManager(serviceLocator, _Configuration));
+            
             managerLocator.Get<AccountManager>().OnDisconnectedAccount += managerLocator.Get<UGCManager>().ClearPolling;
         }
 
