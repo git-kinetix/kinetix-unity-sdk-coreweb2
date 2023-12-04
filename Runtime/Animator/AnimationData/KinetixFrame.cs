@@ -123,6 +123,9 @@ namespace Kinetix.Internal
 
 			for (int i = 0; i < count; i++)
 			{
+				if (!clip.humanKeys.ContainsKey(humanBones[i]))
+					continue;
+	
 				humanTransforms[i] = clip.humanKeys[humanBones[i]][frame];
 			}
 		}

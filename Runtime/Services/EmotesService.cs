@@ -6,13 +6,11 @@ namespace Kinetix.Internal
     public class EmotesService: IKinetixService
     {
         private Dictionary<string, KinetixEmote> kinetixEmotes;
-        private Queue<AvatarEmotePair> toClearQueue;
         protected ServiceLocator serviceLocator;
 
         public EmotesService(ServiceLocator _ServiceLocator, KinetixCoreConfiguration _Config) 
         {
             kinetixEmotes = new Dictionary<string, KinetixEmote>();
-            toClearQueue = new Queue<AvatarEmotePair>();
             serviceLocator = _ServiceLocator;
         }
 

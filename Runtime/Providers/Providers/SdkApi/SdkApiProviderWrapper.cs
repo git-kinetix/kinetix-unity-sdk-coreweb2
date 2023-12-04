@@ -100,15 +100,18 @@ namespace Kinetix.Utils
 
             string result = response.json;
 
-            SdkApiAsset collection = JsonConvert.DeserializeObject<SdkApiAsset>(result);
-
             try
             {
-                tcs.SetResult(collection.ToAnimationMetadata()); 
+                SdkApiAsset collection = JsonConvert.DeserializeObject<SdkApiAsset>(result);
+                tcs.SetResult(collection.ToAnimationMetadata());
+            }
+            catch (ArgumentNullException e)
+            {
+                tcs.SetException(e);
             }
             catch (Exception e)
             {
-                throw e;
+                tcs.SetException(e);
             }
 
             return await tcs.Task;

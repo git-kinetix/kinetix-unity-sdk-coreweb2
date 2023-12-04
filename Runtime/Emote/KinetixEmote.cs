@@ -49,7 +49,6 @@ namespace Kinetix.Internal
         {            
             if (string.IsNullOrEmpty(PathGLB))
                 return false;
-                
             return File.Exists(PathGLB);
         }
 

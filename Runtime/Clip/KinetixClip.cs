@@ -4,13 +4,9 @@
 // // </copyright>
 // // ----------------------------------------------------------------------------
 
-using System;
-using System.Collections;
+using Kinetix.Internal.Utils;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
 using UnityEngine;
-using UnityEngine.Playables;
 
 namespace Kinetix
 {
@@ -69,13 +65,13 @@ namespace Kinetix
 		mouthStretchLeft,
 		mouthStretchRight,
 		tongueOut,
-        Count
-    }
+		Count
+	}
 
 	/// <summary>
 	/// A structure that represent a keyFrame of a transform
 	/// </summary>
-	public struct TransformData
+	public struct TransformData : IComputeMemorySize
 	{
 		public Vector3? position;
 		public Vector3? scale;
@@ -87,17 +83,34 @@ namespace Kinetix
 			scale = Vector3.one,
 			rotation = Quaternion.identity,
 		};
-	}
+
+        public readonly long MemorySize => position.MemorySize() + scale.MemorySize() + rotation.MemorySize();
+
+        public TransformData CopyNull(TransformData currentFrame)
+        {
+			if (currentFrame.position == null)
+				position = null;
+
+			if (currentFrame.rotation == null)
+				rotation = null;
+
+			if (currentFrame.scale == null)
+				scale = null;
+
+			return this;
+        }
+    }
 
 	/// <summary>
 	/// A frame per frame animation with readable keys.
 	/// </summary>
 	/// <remarks>
-	/// Two kind of animation keys exist:<br/>
+	/// Three kind of animation keys exist:<br/>
 	/// - The <see cref="humanKeys"/> which is the animation for human bones bases on Unity's avatars<br/>
-	/// - The <see cref="resetKeys"/> which are keys to reset non human bones's transform
+	/// - The <see cref="resetKeys"/> which are keys to reset non human bones's transform<br/>
+	/// - The <see cref="blendshapeKeys"/> which are keys to set the blendshapes
 	/// </remarks>
-	public class KinetixClip
+	public class KinetixClip : IComputeMemorySize
 	{
 		/// <summary>
 		/// Duration of the animation.
@@ -123,11 +136,16 @@ namespace Kinetix
 		/// </summary>
 		public string Name { get; set; }
 
-		/// <summary>
-		/// Animation for human bones bases on Unity's avatars.<br/>
-		/// The key is the Unity avatar's bone.
-		/// </summary>
-		public KinetixClipDictionary<HumanBodyBones, TransformData[]> humanKeys;
+		public long MemorySize => Name.MemorySize() + FrameRate.MemorySize() + KeyCount.MemorySize() +
+			MemorySizeUtils.POINTER_SIZE + humanKeys.MemorySize +
+			MemorySizeUtils.POINTER_SIZE + resetKeys.MemorySize +
+			MemorySizeUtils.POINTER_SIZE + blendshapeKeys.MemorySize;
+
+        /// <summary>
+        /// Animation for human bones bases on Unity's avatars.<br/>
+        /// The key is the Unity avatar's bone.
+        /// </summary>
+        public KinetixClipDictionary<HumanBodyBones, TransformData[]> humanKeys;
 
 		/// <summary>
 		/// Keys to reset the non human bones to T-Pose

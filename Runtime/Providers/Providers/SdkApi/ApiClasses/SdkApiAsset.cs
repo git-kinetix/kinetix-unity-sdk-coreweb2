@@ -1,3 +1,7 @@
+using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
+
 namespace Kinetix.Internal
 {
     [System.Serializable]
@@ -7,11 +11,13 @@ namespace Kinetix.Internal
         const         string Animation_Filename        = "animation-v2";
         private const string Animation_Filename_Legacy = "animation";
 
-        public int             id;
-        public string          uuid;
-        public string          name;
-        public string          type;
-        public SignedFile[]    files;
+        public int                                    id;
+        public string                                 uuid;
+        public string                                 name;
+        public string                                 type;
+        public SignedFile[]                           files;
+        public Dictionary<string, AvatarSignedFile[]> avatars;
+
         public System.DateTime createdAt;
 
         public AnimationMetadata ToAnimationMetadata()
@@ -22,6 +28,9 @@ namespace Kinetix.Internal
 
             foreach (SignedFile file in files)
             {
+                if (file.extension == "fbx")
+                        continue;
+        
                 switch (file.name)
                 {
                     case Thumbnail_Filename:
@@ -30,7 +39,7 @@ namespace Kinetix.Internal
                             thumbnailUrl = file.url;
                     }
                         break;
-                    
+
                     case Animation_Filename:
                         animUrl = file.url;
                         break;
@@ -41,8 +50,34 @@ namespace Kinetix.Internal
                 }
             }
 
+            List<AvatarAnimationMetadata> avatarsMetadata = new List<AvatarAnimationMetadata>();
+            foreach (KeyValuePair<string, AvatarSignedFile[]> filesTmp in avatars)
+            {
+                AvatarAnimationMetadata avatarAnimationMetadata = new AvatarAnimationMetadata();
+                avatarAnimationMetadata.AvatarUUID = filesTmp.Key;
+
+                foreach (AvatarSignedFile file in filesTmp.Value)
+                {
+                    if (file.extension == "fbx")
+                        continue;
+
+                    switch (file.name)
+                    {
+                        case Animation_Filename:
+                            avatarAnimationMetadata.AnimationURL = file.url;
+                            break;
+
+                        case Animation_Filename_Legacy:
+                            avatarAnimationMetadata.AnimationURL = file.url;
+                            break;
+                    }
+                }
+                
+                avatarsMetadata.Add(avatarAnimationMetadata);
+            }
+
             string animationURl = string.IsNullOrEmpty(animUrl) ? animUrlLegacy : animUrl;
-            
+
             AnimationMetadata animationMetadata = new AnimationMetadata
             {
                 Ids          = new AnimationIds(uuid),
@@ -52,6 +87,7 @@ namespace Kinetix.Internal
                 IconeURL     = thumbnailUrl,
                 Ownership    = EOwnership.OWNER,
                 CreatedAt    = createdAt,
+                Avatars      = avatarsMetadata
             };
 
             return animationMetadata;

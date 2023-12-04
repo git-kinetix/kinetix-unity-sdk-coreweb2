@@ -119,68 +119,18 @@ namespace Kinetix.Internal
             OnDisconnectedAccount?.Invoke();
         }
 
-        public async Task<bool> AssociateEmotesToVirtualWorld(AnimationIds[] _Emotes)
-        {
-            if (String.IsNullOrEmpty(GameAPIKey))
-            {
-                KinetixDebug.LogWarning("No GameAPIKey found, please check the KinetixCoreConfiguration.");
-
-                return false;
-            }
-
-            List<string> emoteIDs = new List<string>();
-
-            foreach (AnimationIds emote in _Emotes)
-            {
-                emoteIDs.Add(emote.UUID);
-            }
-
-            Dictionary<string, string> headers = new Dictionary<string, string>
-            {
-                { "Content-type", "application/json" },
-                { "Accept", "application/json" },
-                { "x-api-key", GameAPIKey }
-            };
-
-            bool result;
-
-            string        url        = KinetixConstants.c_SDK_API_URL + "/v1/virtual-world/emotes";
-            string        payload    = "{\"uuids\":" + JsonConvert.SerializeObject(emoteIDs) + "}";
-            WebRequestDispatcher webRequest = new WebRequestDispatcher();
-            try
-            {
-                await webRequest.SendRequest<RawResponse>(url, WebRequestDispatcher.HttpMethod.POST, headers, payload);
-                result = true;
-            }
-            catch (Exception)
-            {
-                result = false;
-            }
-
-            return result;
-        }
-
         public async Task<bool> AssociateEmotesToUser(AnimationIds _Emote)
         {
             if (loggedAccount == null)
-            {
                 throw new Exception(
                     "Unable to find a connected account. Did you use the KinetixCore.Account.ConnectAccount method?");
-            }
 
             if (loggedAccount.HasEmote(_Emote))
-            {
                 throw new Exception("Emote is already assigned");
-            }
-
-            // No exception catched here, 
-            await AssociateEmotesToVirtualWorld(new AnimationIds[] { _Emote });
 
             if (loggedAccount == null)
-            {
                 throw new Exception(
                     "Unable to find a connected account. Did you use the KinetixCore.Account.ConnectAccount method?");
-            }
 
             Dictionary<string, string> headers = new Dictionary<string, string>
             {
@@ -192,10 +142,12 @@ namespace Kinetix.Internal
             string url = KinetixConstants.c_SDK_API_URL + "/v1/users/" + loggedAccount.AccountId + "/emotes/" +
                          _Emote.UUID;
 
+
             WebRequestDispatcher webRequest = new WebRequestDispatcher();
             try
             {
                 RawResponse response = await webRequest.SendRequest<RawResponse>(url, WebRequestDispatcher.HttpMethod.POST, headers);
+
                 if (!response.IsSuccess)
                     return false;
                 

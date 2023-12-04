@@ -5,6 +5,7 @@
 // // ----------------------------------------------------------------------------
 using System;
 using UnityEngine;
+using Kinetix.Utils;
 using System.Threading.Tasks;
 using System.Threading;
 
@@ -14,11 +15,21 @@ namespace Kinetix.Internal
     {
         public static async void GetAnimationMetadataByAnimationIds(AnimationIds _Ids, Action<AnimationMetadata> _OnSuccess, Action _OnFailure)
         {
-            if (!KinetixCoreBehaviour.ServiceLocator.Get<EmotesService>().GetEmote(_Ids).HasMetadata())
-                KinetixCoreBehaviour.ServiceLocator.Get<EmotesService>().GetEmote(_Ids).SetMetadata(
-                    await KinetixCoreBehaviour.ServiceLocator.Get<ProviderService>().GetAnimationMetadataOfEmote(_Ids)
-                );
+            try
+            {
+                if (!KinetixCoreBehaviour.ServiceLocator.Get<EmotesService>().GetEmote(_Ids).HasMetadata())
+                    KinetixCoreBehaviour.ServiceLocator.Get<EmotesService>().GetEmote(_Ids).SetMetadata(
+                    
+                    
+                        await KinetixCoreBehaviour.ServiceLocator.Get<ProviderService>().GetAnimationMetadataOfEmote(_Ids)
+                    );
 
+            }
+            catch (Exception)
+            {
+                _OnFailure?.Invoke();
+            }
+           
             _OnSuccess?.Invoke(KinetixCoreBehaviour.ServiceLocator.Get<EmotesService>().GetEmote(_Ids).Metadata);
         }
 

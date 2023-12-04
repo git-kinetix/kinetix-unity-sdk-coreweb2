@@ -4,7 +4,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.Profiling;
@@ -12,48 +11,13 @@ using UObject = UnityEngine.Object;
 
 namespace Kinetix.Internal.Utils
 {
-	internal static class KinetixProfiler
+    internal static class KinetixProfiler
 	{
 		internal static bool _isDirty { get; private set; }
 		internal static void OnProfilerViewReloaded() => _isDirty = false;
 
 		internal static bool _isWindowOpen = false;
 		public static bool s_enableCustomProfiler=true;
-
-		[Serializable]
-		internal class CustomStopWatch
-		{
-			private bool isRunning;
-			private long start;
-			private long end;
-			public long jitter;
-			public TimeSpan Elapsed
-			{
-				get
-				{
-					if (isRunning)
-					{
-						return new TimeSpan(Stopwatch.GetTimestamp() - start - jitter);
-					}
-					else
-					{
-						return new TimeSpan(end - start - jitter);
-					}
-				}
-			}
-
-			internal void Start()
-			{
-				start = Stopwatch.GetTimestamp();
-				isRunning = true;
-			}
-
-			internal void Stop()
-			{
-				isRunning = false;
-				end = Stopwatch.GetTimestamp();
-			}
-		}
 
 		[Serializable]
 		internal class MethodTime
@@ -103,7 +67,9 @@ namespace Kinetix.Internal.Utils
 
 		public static CustomStopWatch stopwatch = new CustomStopWatch();
 
+#if KINETIX_PROFILER
 		private static ulong groupI = 0;
+#endif
 
 		/// <summary>
 		/// Synchronousely sample the cost of your code.

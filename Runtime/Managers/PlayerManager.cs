@@ -95,6 +95,12 @@ namespace Kinetix.Internal.Cache
 			OnRegisterPlayer();
 		}
 
+        public void SetAvatarID(string _AvatarID)
+        {
+            if (KAvatar != null)
+                KAvatar.AvatarID = _AvatarID;
+        }
+        
 		#endregion
 
 		#region LOAD
@@ -168,6 +174,7 @@ namespace Kinetix.Internal.Cache
 			}
 			
 			ForceUnloadPlayerAnimations(downloadedEmotesReadyToPlay.ToArray());
+
 			emotesToPreload.Clear();
 			callbackOnRetargetedAnimationIdOnPlayer.Clear();
 			downloadedEmotesReadyToPlay.Clear();
@@ -204,6 +211,10 @@ namespace Kinetix.Internal.Cache
 			{
 				if (!emotesToPreload.Contains(_KinetixEmote.Ids))
 					emotesToPreload.Add(_KinetixEmote.Ids);
+
+				Debug.Log(downloadedEmotesReadyToPlay.Count);
+				Debug.Log(emotesToPreload.Count);
+
 				return;
 			}
 
@@ -216,10 +227,11 @@ namespace Kinetix.Internal.Cache
 			{
 				// TODO find a better way, this is not sexy at all
 				object retargetingResult;
-
+                
 				if (KAvatar.ExportType == EExportType.KinetixClip)
 				{
-					retargetingResult = await serviceLocator.Get<RetargetingService>().GetRetargetedClipByAvatar<KinetixClip, KinetixClipExporter>(_KinetixEmote, KAvatar, SequencerPriority.Low, false);
+					retargetingResult = await serviceLocator.Get<RetargetingService>().GetRetargetedClipByAvatar<KinetixClip, KinetixClipExporter>(_KinetixEmote, KAvatar, SequencerPriority.Low, 
+					false);
 				}
 				else
 				{

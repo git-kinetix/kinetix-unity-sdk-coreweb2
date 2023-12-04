@@ -7,7 +7,8 @@ namespace Kinetix.Internal
 	public class KinetixAvatar
 	{
 		public AvatarData Avatar;
-		public Transform Root;
+		public Transform  Root;
+        public string     AvatarID;
 
 		public EExportType ExportType;
 
