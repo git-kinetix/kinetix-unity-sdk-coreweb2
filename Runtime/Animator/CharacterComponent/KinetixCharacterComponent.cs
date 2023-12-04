@@ -63,6 +63,7 @@ namespace Kinetix
 
 		// CACHE
 		protected KinetixAvatar kinetixAvatar;
+        
 		protected readonly List<IPoseInterpreter> poseInterpretor = new List<IPoseInterpreter>();
 		protected HumanBodyBones[] characterBones;
 		protected ServiceLocator serviceLocator;

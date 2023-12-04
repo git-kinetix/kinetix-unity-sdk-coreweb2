@@ -21,7 +21,29 @@ namespace Kinetix.Internal
             CheckRetargeting();
             
             bool useWebRequest = false;
-            
+
+            if (!string.IsNullOrEmpty(Config.Avatar.AvatarID))
+            {
+                RetargetTask<TResponseType, TExporter> retargetTask =
+                    RetargetingManager.LoadPreRetargetedAnimation<TResponseType, TExporter>(Config.Avatar.Avatar, Config.Path, Config.CancellationSequencer);
+                TExporter export = await retargetTask.AwaitAll();
+                if (CancellationTokenSource.IsCancellationRequested || Config.CancellationSequencer.canceled)
+                {
+                    
+                    CurrentTaskCompletionSource.TrySetCanceled();
+                    return;
+                }
+                
+                EmoteRetargetingResponse<TResponseType> emoteRetargetingResponse = new EmoteRetargetingResponse<TResponseType>
+                {
+                    RetargetedClip    = export.result,
+                    EstimatedClipSize = export.MemorySize
+                };
+
+                CurrentTaskCompletionSource.SetResult(emoteRetargetingResponse);
+                return;
+            }
+
             RetargetingManager.GetRetargetedAnimationClip<TResponseType, TExporter>(
                             Config.Avatar.Avatar, Config.Path, Config.Priority, Config.CancellationSequencer, (clip, estimationSize) =>
             {

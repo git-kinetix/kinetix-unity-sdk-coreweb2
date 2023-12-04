@@ -10,15 +10,15 @@ using UnityEngine;
 
 namespace Kinetix.Internal
 {
-    public class RetargetingService: IKinetixService
+    public class RetargetingService : IKinetixService
     {
         private readonly Dictionary<KinetixEmoteAvatarPair, EmoteRetargetedData> retargetedEmoteByAvatar;
-        private readonly Dictionary<KinetixEmoteAvatarPair, List<Action>> OnEmoteRetargetedByAvatar;
-        private ServiceLocator serviceLocator;
+        private readonly Dictionary<KinetixEmoteAvatarPair, List<Action>>        OnEmoteRetargetedByAvatar;
+        private          ServiceLocator                                          serviceLocator;
 
         public RetargetingService(ServiceLocator _ServiceLocator)
         {
-            retargetedEmoteByAvatar = new Dictionary<KinetixEmoteAvatarPair, EmoteRetargetedData>();
+            retargetedEmoteByAvatar   = new Dictionary<KinetixEmoteAvatarPair, EmoteRetargetedData>();
             OnEmoteRetargetedByAvatar = new Dictionary<KinetixEmoteAvatarPair, List<Action>>();
 
             serviceLocator = _ServiceLocator;
@@ -32,7 +32,7 @@ namespace Kinetix.Internal
         /// <returns></returns>
         public bool HasAnimationRetargeted(KinetixEmote _Emote, KinetixAvatar _Avatar)
         {
-            KinetixEmoteAvatarPair pair = new KinetixEmoteAvatarPair() { Emote = _Emote, Avatar = _Avatar};
+            KinetixEmoteAvatarPair pair = new KinetixEmoteAvatarPair() { Emote = _Emote, Avatar = _Avatar };
 
             if (!retargetedEmoteByAvatar.ContainsKey(pair))
                 return false;
@@ -52,14 +52,14 @@ namespace Kinetix.Internal
         /// <param name="_OnSucceed"></param>
         public void RegisterCallbacksOnRetargetedByAvatar(KinetixEmote _Emote, KinetixAvatar _Avatar, Action _OnSucceed)
         {
-            KinetixEmoteAvatarPair pair = new KinetixEmoteAvatarPair() { Emote = _Emote, Avatar = _Avatar};
+            KinetixEmoteAvatarPair pair = new KinetixEmoteAvatarPair() { Emote = _Emote, Avatar = _Avatar };
 
             if (HasAnimationRetargeted(_Emote, _Avatar))
             {
                 _OnSucceed?.Invoke();
                 return;
             }
-            
+
             if (!OnEmoteRetargetedByAvatar.ContainsKey(pair))
                 OnEmoteRetargetedByAvatar.Add(pair, new List<Action>());
 
@@ -73,11 +73,11 @@ namespace Kinetix.Internal
         /// <param name="_Avatar"></param>
         private void NotifyCallbackOnRetargetedByAvatar(KinetixEmote _Emote, KinetixAvatar _Avatar)
         {
-            KinetixEmoteAvatarPair pair = new KinetixEmoteAvatarPair() { Emote = _Emote, Avatar = _Avatar};
+            KinetixEmoteAvatarPair pair = new KinetixEmoteAvatarPair() { Emote = _Emote, Avatar = _Avatar };
 
             if (!OnEmoteRetargetedByAvatar.ContainsKey(pair))
                 return;
-            
+
             for (int i = 0; i < OnEmoteRetargetedByAvatar[pair].Count; i++)
             {
                 OnEmoteRetargetedByAvatar[pair][i]?.Invoke();
@@ -98,7 +98,9 @@ namespace Kinetix.Internal
         /// It is only use to for the emote played by the local player.
         /// </param>
         /// <returns>The KinetixClip for the specific Avatar</returns>
-        public async Task<TResponseType> GetRetargetedClipByAvatar<TResponseType, THandler>(KinetixEmote _Emote, KinetixAvatar _Avatar, SequencerPriority _Priority, bool _Force) where THandler : ARetargetExport<TResponseType>, new()
+        public async Task<TResponseType> GetRetargetedClipByAvatar<TResponseType, THandler>(KinetixEmote _Emote, KinetixAvatar _Avatar, SequencerPriority _Priority, bool _Force)
+            where THandler
+            : ARetargetExport<TResponseType>, new()
         {
             if (!_Force && serviceLocator.Get<MemoryService>().HasStorageExceedMemoryLimit())
                 throw new Exception("Not enough storage space available to retarget : " + _Emote.Ids.UUID);
@@ -106,32 +108,32 @@ namespace Kinetix.Internal
             if (!_Force && serviceLocator.Get<MemoryService>().HasRAMExceedMemoryLimit())
                 throw new Exception("Not enough RAM space to retarget : " + _Emote.Ids.UUID);
 
-            KinetixEmoteAvatarPair pair = new KinetixEmoteAvatarPair() { Emote = _Emote, Avatar = _Avatar};
+            KinetixEmoteAvatarPair                    pair             = new KinetixEmoteAvatarPair() { Emote = _Emote, Avatar = _Avatar };
             EmoteRetargetingClipResult<TResponseType> castedClipResult = null;
 
 
             if (retargetedEmoteByAvatar.ContainsKey(pair) && retargetedEmoteByAvatar[pair].clipsByType.ContainsKey(typeof(TResponseType)))
             {
-                castedClipResult = (EmoteRetargetingClipResult<TResponseType>) retargetedEmoteByAvatar[pair].clipsByType[typeof(TResponseType)];
+                castedClipResult = (EmoteRetargetingClipResult<TResponseType>)retargetedEmoteByAvatar[pair].clipsByType[typeof(TResponseType)];
 
                 await castedClipResult.Task.Task;
 
-                return (TResponseType) castedClipResult.Clip;
+                return (TResponseType)castedClipResult.Clip;
             }
-            
+
             // In addition to tyhe CancellationTokenSource of the operation, we add a SequencerCancel, used by the retargeting system itself
-            SequencerCancel sequencerCancelToken = new SequencerCancel();
+            SequencerCancel         sequencerCancelToken          = new SequencerCancel();
             CancellationTokenSource cancellationTokenFileDownload = new CancellationTokenSource();
 
             // First get the GLB file path to give it to the retargeter
             string path = string.Empty;
-            
+
             if (!retargetedEmoteByAvatar.ContainsKey(pair))
             {
                 retargetedEmoteByAvatar.Add(pair, new EmoteRetargetedData()
                 {
                     CancellationTokenFileDownload = cancellationTokenFileDownload,
-                    SequencerCancelToken = sequencerCancelToken
+                    SequencerCancelToken          = sequencerCancelToken
                 });
             }
 
@@ -140,11 +142,10 @@ namespace Kinetix.Internal
                 TaskCompletionSource<EmoteRetargetingResponse<TResponseType>> tcsObj = new TaskCompletionSource<EmoteRetargetingResponse<TResponseType>>();
                 retargetedEmoteByAvatar[pair].clipsByType[typeof(TResponseType)] = new EmoteRetargetingClipResult<TResponseType>(EProgressStatus.PENDING, tcsObj);
             }
-
-
+            
             try
             {
-                path = await GetFilePath(_Emote, cancellationTokenFileDownload);
+                path = await GetFilePath(_Emote, _Avatar.AvatarID, cancellationTokenFileDownload);
             }
             catch (OperationCanceledException e)
             {
@@ -162,10 +163,10 @@ namespace Kinetix.Internal
 
                 if (retargetedEmoteByAvatar.ContainsKey(pair))
                     retargetedEmoteByAvatar.Remove(pair);
-                    
+
                 throw e;
             }
-            
+
             if (string.IsNullOrEmpty(path))
             {
                 throw new Exception("GLB is not available");
@@ -174,36 +175,36 @@ namespace Kinetix.Internal
             // If while the file path operation was executed we have a previous operation result to get, give that result instead of launching a new op
             if (retargetedEmoteByAvatar[pair].clipsByType.ContainsKey(typeof(TResponseType)))
             {
-                castedClipResult = (EmoteRetargetingClipResult<TResponseType>) retargetedEmoteByAvatar[pair].clipsByType[typeof(TResponseType)];
+                castedClipResult = (EmoteRetargetingClipResult<TResponseType>)retargetedEmoteByAvatar[pair].clipsByType[typeof(TResponseType)];
             }
-            
+
             if (castedClipResult != null && castedClipResult.Clip != null)
             {
-                return (TResponseType) castedClipResult.Clip;
+                return (TResponseType)castedClipResult.Clip;
             }
 
             try
             {
                 // Now we can create the retargeting operation itself, that will smartly handle the retargeting of the emote
                 EmoteRetargetingResponse<TResponseType> response = await RequestOperationExecution<TResponseType, THandler>(pair, _Priority, path, sequencerCancelToken);
-                
+
                 if (castedClipResult == null && retargetedEmoteByAvatar[pair].clipsByType.ContainsKey(typeof(TResponseType)))
                 {
-                    castedClipResult = (EmoteRetargetingClipResult<TResponseType>) retargetedEmoteByAvatar[pair].clipsByType[typeof(TResponseType)];
+                    castedClipResult = (EmoteRetargetingClipResult<TResponseType>)retargetedEmoteByAvatar[pair].clipsByType[typeof(TResponseType)];
                 }
 
                 // If the current call is the first to resolve the operation
                 if (castedClipResult != null && castedClipResult.Clip == null)
                 {
                     // Once the operation is finished we cache the result
-                    castedClipResult.Clip = response.RetargetedClip;
+                    castedClipResult.Clip   = response.RetargetedClip;
                     castedClipResult.Status = EProgressStatus.COMPLETED;
 
                     retargetedEmoteByAvatar[pair].clipsByType[typeof(TResponseType)] = castedClipResult;
-                    retargetedEmoteByAvatar[pair].SizeInBytes = response.EstimatedClipSize;
+                    retargetedEmoteByAvatar[pair].SizeInBytes                        = response.EstimatedClipSize;
 
-                    serviceLocator.Get<MemoryService>().AddRamAllocation(response.EstimatedClipSize); 
-                    serviceLocator.Get<MemoryService>().OnFileStopBeingUsed(_Emote.Ids.UUID);   
+                    serviceLocator.Get<MemoryService>().AddRamAllocation(response.EstimatedClipSize);
+                    serviceLocator.Get<MemoryService>().OnFileStopBeingUsed(_Emote.Ids.UUID);
                 }
 
                 // And invoke callbacks in case they were awaited by UI before the core was initialized
@@ -223,9 +224,9 @@ namespace Kinetix.Internal
             {
                 if (retargetedEmoteByAvatar.ContainsKey(pair))
                     retargetedEmoteByAvatar.Remove(pair);
-                    
+
                 throw e;
-            }    
+            }
         }
 
         /// <summary>
@@ -239,16 +240,17 @@ namespace Kinetix.Internal
         /// <typeparam name="TResponseType"></typeparam>
         /// <typeparam name="THandler"></typeparam>
         /// <returns></returns>
-        private async Task<EmoteRetargetingResponse<TResponseType>> RequestOperationExecution<TResponseType, THandler>(KinetixEmoteAvatarPair _EmoteAvatarPair, SequencerPriority _Priority, string path, SequencerCancel cancelToken) where THandler : ARetargetExport<TResponseType>, new()
+        private async Task<EmoteRetargetingResponse<TResponseType>> RequestOperationExecution<TResponseType, THandler>(KinetixEmoteAvatarPair _EmoteAvatarPair, SequencerPriority _Priority,
+            string path, SequencerCancel cancelToken) where THandler : ARetargetExport<TResponseType>, new()
         {
-            EmoteRetargetingConfig emoteRetargetingConfig = new EmoteRetargetingConfig(_EmoteAvatarPair.Emote, _EmoteAvatarPair.Avatar, _Priority, path, cancelToken);
-            EmoteRetargeting<TResponseType, THandler> emoteRetargeting = new EmoteRetargeting<TResponseType, THandler>(emoteRetargetingConfig);
-        
+            EmoteRetargetingConfig                    emoteRetargetingConfig = new EmoteRetargetingConfig(_EmoteAvatarPair.Emote, _EmoteAvatarPair.Avatar, _Priority, path, cancelToken);
+            EmoteRetargeting<TResponseType, THandler> emoteRetargeting       = new EmoteRetargeting<TResponseType, THandler>(emoteRetargetingConfig);
+
             retargetedEmoteByAvatar[_EmoteAvatarPair].CancellationTokenFileDownload = emoteRetargeting.CancellationTokenSource;
 
             EmoteRetargetingResponse<TResponseType> response = await OperationManagerShortcut.Get().RequestExecution<EmoteRetargetingConfig, EmoteRetargetingResponse<TResponseType>>(emoteRetargeting);
-        
-            EmoteRetargetingClipResult<TResponseType> castedClipResult = (EmoteRetargetingClipResult<TResponseType>) retargetedEmoteByAvatar[_EmoteAvatarPair].clipsByType[typeof(TResponseType)];
+
+            EmoteRetargetingClipResult<TResponseType> castedClipResult = (EmoteRetargetingClipResult<TResponseType>)retargetedEmoteByAvatar[_EmoteAvatarPair].clipsByType[typeof(TResponseType)];
             castedClipResult.Task.SetResult(response);
 
             return response;
@@ -259,11 +261,11 @@ namespace Kinetix.Internal
         /// </summary>
         /// <param name="_Emote"></param>
         /// <returns></returns>
-        public async Task<string> GetFilePath(KinetixEmote _Emote, CancellationTokenSource cancellationToken)
+        public async Task<string> GetFilePath(KinetixEmote _Emote, string _AvatarID, CancellationTokenSource cancellationToken)
         {
             try
             {
-                string filename = _Emote.Ids.UUID + ".glb";
+                string filename = _Emote.Ids.UUID + _AvatarID + ".glb";
                 string filePath = Path.Combine(PathConstants.CacheAnimationsPath, filename);
 
                 if (!_Emote.HasMetadata())
@@ -279,14 +281,16 @@ namespace Kinetix.Internal
                     return _Emote.PathGLB;
                 }
 
-                FileDownloaderConfig fileDownloadOperationConfig = new FileDownloaderConfig(_Emote.Metadata.AnimationURL, filePath);
-                FileDownloader fileDownloadOperation = new FileDownloader(fileDownloadOperationConfig);
+                string url = _Emote.Metadata.AnimationURL;
+                if (!string.IsNullOrEmpty(_AvatarID))
+                    url = _Emote.Metadata.Avatars.First(avatar => avatar.AvatarUUID == _AvatarID).AnimationURL;
+                FileDownloaderConfig fileDownloadOperationConfig = new FileDownloaderConfig(url, filePath);
+                FileDownloader       fileDownloadOperation       = new FileDownloader(fileDownloadOperationConfig);
 
                 FileDownloaderResponse response = await OperationManagerShortcut.Get().RequestExecution<FileDownloaderConfig, FileDownloaderResponse>(fileDownloadOperation, cancellationToken);
 
                 _Emote.PathGLB = response.path;
                 serviceLocator.Get<MemoryService>().AddStorageAllocation(_Emote.PathGLB);
-                
             }
             catch (OperationCanceledException e)
             {
@@ -294,9 +298,9 @@ namespace Kinetix.Internal
             }
             catch (Exception e)
             {
+
                 throw e;
             }
-            
             
             return _Emote.PathGLB;
         }
@@ -323,8 +327,8 @@ namespace Kinetix.Internal
             if (_Avatar == null)
                 return;
 
-            KinetixEmoteAvatarPair pair = new KinetixEmoteAvatarPair() { Emote = _Emote, Avatar = _Avatar};
-            
+            KinetixEmoteAvatarPair pair = new KinetixEmoteAvatarPair() { Emote = _Emote, Avatar = _Avatar };
+
             if (!retargetedEmoteByAvatar.ContainsKey(pair))
                 return;
 
@@ -333,13 +337,13 @@ namespace Kinetix.Internal
 
             retargetedEmoteByAvatar[pair].CancellationTokenFileDownload?.Cancel();
             retargetedEmoteByAvatar[pair].SequencerCancelToken?.Cancel();
-            
+
             EmoteRetargetedData retargetedData = retargetedEmoteByAvatar[pair];
             foreach (EmoteRetargetingClipResult emoteRetargetingClipResult in retargetedData.clipsByType.Values)
             {
                 emoteRetargetingClipResult.Dispose();
             }
-            
+
             serviceLocator.Get<MemoryService>().RemoveRamAllocation(retargetedData.SizeInBytes);
 
             KinetixDebug.Log("[UNLOADED] Animation : " + pair.Emote.Ids);
@@ -364,7 +368,7 @@ namespace Kinetix.Internal
                     ClearAvatar(kvp.Key.Emote, kvp.Key.Avatar);
             }
         }
-        
+
         #endregion
     }
 }

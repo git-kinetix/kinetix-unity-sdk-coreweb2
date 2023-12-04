@@ -56,6 +56,17 @@ namespace Kinetix.Internal
 			
 			OnRegisteredLocalPlayer?.Invoke();
 		}
+        
+        /// <summary>
+        /// Register the local player animator with avatar setup to play animation on it 
+        /// </summary>
+        /// <param name="_Animator">Animator of your local character</param>
+        public void RegisterLocalPlayerAnimator(Animator _Animator, string _AvatarID)
+        {
+            KinetixAnimationBehaviour.RegisterLocalPlayerAnimator(_Animator, _AvatarID);
+			
+            OnRegisteredLocalPlayer?.Invoke();
+        }
 
 		/// <summary>
 		/// Register the local player animator with avatar setup to play animation on it 
@@ -64,11 +75,20 @@ namespace Kinetix.Internal
 		/// <param name="_Config">Configuration for the root motion</param>
 		public void RegisterLocalPlayerAnimator(Animator _Animator, RootMotionConfig _Config)
 		{
-			KinetixAnimationBehaviour.RegisterLocalPlayerAnimator(_Animator, _Config);
-			
-			OnRegisteredLocalPlayer?.Invoke();
-			
-		}
+			KinetixAnimationBehaviour.RegisterLocalPlayerAnimator(_Animator, null, _Config);
+            OnRegisteredLocalPlayer?.Invoke();
+        }
+        
+        /// <summary>
+        /// Register the local player animator with avatar setup to play animation on it 
+        /// </summary>
+        /// <param name="_Animator">Animator of your local character</param>
+        /// <param name="_Config">Configuration for the root motion</param>
+        public void RegisterLocalPlayerAnimator(Animator _Animator, string _AvatarID, RootMotionConfig _Config)
+        {
+            KinetixAnimationBehaviour.RegisterLocalPlayerAnimator(_Animator, _AvatarID, _Config);
+            OnRegisteredLocalPlayer?.Invoke();
+        }
 
 		/// <summary>
 		/// Register the Local Player with a custom hierarchy
@@ -189,6 +209,14 @@ namespace Kinetix.Internal
 		public void UnregisterLocalPlayer()
 		{
 			KinetixAnimationBehaviour.UnregisterLocalPlayer();
+		}
+
+		/// <summary>
+		/// Unregister a player animator.
+		/// </summary>
+		public void UnregisterAvatar(string _PlayerUUID)
+		{
+			KinetixAnimationBehaviour.UnregisterAvatar(_PlayerUUID);
 		}
 		
 		/// <summary>

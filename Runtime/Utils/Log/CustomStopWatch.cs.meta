@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+<<<<<<<< HEAD:Assets/Plugins/Kinetix/Core/Runtime/Utils/Log/CustomStopWatch.cs.meta
+guid: 3927c96256ea5b241be911b552b66116
+========
+guid: 925e1cf1bf10b1a4c84865cea143aa64
+>>>>>>>> origin/1.3.0:Assets/Plugins/Kinetix/Core/Runtime/Utils/Log/IComputeMemorySize.cs.meta
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

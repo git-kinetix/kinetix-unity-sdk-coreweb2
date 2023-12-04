@@ -5,8 +5,7 @@
 // // ----------------------------------------------------------------------------
 
 using System;
-using System.Threading.Tasks;
-using Kinetix.Internal;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Kinetix
@@ -30,5 +29,14 @@ namespace Kinetix
 		public DateTime CreatedAt;
 
 		#endregion
+
+        public List<AvatarAnimationMetadata> Avatars;
+    }
+
+    [Serializable]
+    public class AvatarAnimationMetadata
+    {
+        public string AvatarUUID;
+        public string AnimationURL;
     }
 }

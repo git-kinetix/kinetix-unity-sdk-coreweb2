@@ -19,17 +19,18 @@ namespace Kinetix.Internal
         /// Register the Local Player Animator
         /// </summary>
         /// <param name="_Animator">Animator of the Local Player</param>
-        public static void RegisterLocalPlayerAnimator(Animator _Animator)
+        public static void RegisterLocalPlayerAnimator(Animator _Animator, string _AvatarID = null)
         {
-            RegisterLocalPlayerAnimator(_Animator, null);
+            RegisterLocalPlayerAnimator(_Animator, _AvatarID, null);
         }
+        
 
         /// <summary>
         /// Register the Local Player Animator
         /// </summary>
         /// <param name="_Animator">Animator of the Local Player</param>
         /// <param name="_Config">Configuration of the root motion</param>
-        public static void RegisterLocalPlayerAnimator(Animator _Animator, RootMotionConfig _Config)
+        public static void RegisterLocalPlayerAnimator(Animator _Animator, string _AvatarID, RootMotionConfig _Config)
         {
             if (KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().LocalPlayer != null &&
                 KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().LocalPlayer.KAvatar != null)
@@ -40,6 +41,7 @@ namespace Kinetix.Internal
             
             string playerUUID = KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().AddPlayerCharacterComponent(_Animator, _Config, true);
             
+            KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().GetPlayerManager(playerUUID).SetAvatarID(_AvatarID);
             KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().SetLocalPlayer(playerUUID);
         }
 
@@ -61,7 +63,7 @@ namespace Kinetix.Internal
 		/// <param name="_RootTransform">The root GameObject of your avatar</param>
 		/// <param name="_PoseInterpreter">The interpretor to apply poses to your avatar</param>
 		/// <param name="_Config">Configuration of the root motion</param>
-		public static void RegisterLocalPlayerCustom(DataBoneTransform _Root, Transform _RootTransform, IPoseInterpreter _PoseInterpreter, RootMotionConfig _Config)
+		public static void RegisterLocalPlayerCustom(DataBoneTransform _Root, Transform _RootTransform, IPoseInterpreter _PoseInterpreter, RootMotionConfig _Config, string _AvatarID = null)
 		{
             if (KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().LocalPlayer != null &&
                 KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().LocalPlayer.KAvatar != null)
@@ -72,6 +74,7 @@ namespace Kinetix.Internal
             
             string playerUUID = KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().AddPlayerCharacterComponent(_Root, _RootTransform, _PoseInterpreter, _Config, true);
             
+            KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().GetPlayerManager(playerUUID).SetAvatarID(_AvatarID);
             KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().SetLocalPlayer(playerUUID);
         }
 
@@ -164,6 +167,14 @@ namespace Kinetix.Internal
         public static void UnregisterLocalPlayer()
         {
             KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().UnregisterLocalPlayer();
+        }
+
+        /// <summary>
+        /// Unregister a player
+        /// </summary>
+        public static void UnregisterAvatar(string _PlayerUUID)
+        {
+            KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().UnregisterPlayer(_PlayerUUID);
         }
 
         #endregion

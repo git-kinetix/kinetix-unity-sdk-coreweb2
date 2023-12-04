@@ -186,9 +186,10 @@ namespace Kinetix.Internal
 
 			string path = armature.name;
 			Transform parent = armature.transform.parent;
-			while (parent != root.transform)
+			while (parent != root.transform && parent != null)
 			{
 				path = parent.name + "/" + path;
+				parent = parent.parent;
 			}
 
 			return path;

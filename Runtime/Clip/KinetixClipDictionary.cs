@@ -4,10 +4,10 @@
 // // </copyright>
 // // ----------------------------------------------------------------------------
 
+using Kinetix.Internal.Utils;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 
 namespace Kinetix
 {
@@ -19,7 +19,7 @@ namespace Kinetix
 	/// <remarks>
 	/// The accessor is reaonly. To write in the dictionary, please refer to methods in <see cref="KinetixClip"/>
 	/// </remarks>
-	public class KinetixClipDictionary<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>
+	public class KinetixClipDictionary<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>, IComputeMemorySize
 	{
 		private readonly Dictionary<TKey, TValue> dictionary;
 
@@ -47,7 +47,9 @@ namespace Kinetix
             internal set => dictionary[key] = value;
         }
 
-        public Dictionary<TKey, TValue> GetDictionary() => dictionary;
+		public long MemorySize => dictionary.MemorySize();
+
+		public Dictionary<TKey, TValue> GetDictionary() => dictionary;
 
 		//----------------------------//
 		// Dictionary methods replica //
