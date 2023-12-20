@@ -125,7 +125,7 @@ namespace Kinetix.Internal
 			{
 				if (!clip.humanKeys.ContainsKey(humanBones[i]))
 					continue;
-	
+          
 				humanTransforms[i] = clip.humanKeys[humanBones[i]][frame];
 			}
 		}

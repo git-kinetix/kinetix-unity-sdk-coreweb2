@@ -8,7 +8,7 @@ namespace Kinetix.Internal
 {
     public static class KinetixConstants
     {
-        public const  string version                = "1.3.0";
+        public const  string version                = "1.4.0";
         public static bool   C_ShouldUGCBeAvailable = true;
         
 #if STAGING_KINETIX

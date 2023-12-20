@@ -358,7 +358,7 @@ namespace Kinetix.Internal
 			if (!playEnabled)
 				return;
 
-			effect.Update();
+			effect.Update(); //This is basically for outer effects like "soft stop"
 
 			if (softStopTime.HasValue)
 			{
@@ -374,33 +374,36 @@ namespace Kinetix.Internal
 			if (samplersCount == 0)
 				return;
 
+			//--------- Get frames from samplers ---------// 
 			bool isMainNull;
 			KinetixClipSampler sampler;
 			List<KinetixFrame> frames = new List<KinetixFrame>( Enumerable.Repeat<KinetixFrame>(null, samplersCount) );
 
+			//Get main sampler
 			while (true)
 			{
 				sampler = samplers[0];
 
-				if (sampler.Ended) //Security
+				if (sampler.Ended) //Security (a sampler should never end before the update)
 					return;
 
 				isMainNull =
 					(frames[0] = sampler.Update(deltaTime))
 					== null;
 				
-				if (sampler.Ended)
+				if (sampler.Ended) //Main sampler ended
 				{
 					SamplerEnded(0);
 					frames.RemoveAt(0);
-					if (--samplersCount == 0)
+					if (--samplersCount == 0) //All samplers ended
 						return;
 					continue;
 				}
 
-				break;
+				break; //Completed successfully
 			}
 
+			//Get frames from each remaining samplers 
 			for (int i = samplersCount - 1; i >= 1; i--)
 			{
 				sampler = samplers[i];
@@ -409,14 +412,15 @@ namespace Kinetix.Internal
 			
 				if (sampler.Ended)
 				{
-					frames.RemoveAt(i);
+					frames.RemoveAt(i); //frames[i] should equal null so we need to remove it to avoid null exception
 					SamplerEnded(i);
 				}
 			}
 
-			if (isMainNull)
+			if (isMainNull) //Main sampler gave a null frame, this happens to cap animation on a certain frame rate
 				return;
 
+			//Compute effect and send frame
 			KinetixFrame frame = effect.ModifyFrame(frames.ToArray());
 			OnPlayedFrame?.Invoke(frame);
 		}

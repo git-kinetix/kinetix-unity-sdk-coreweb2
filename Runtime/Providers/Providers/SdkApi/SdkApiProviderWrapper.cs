@@ -13,108 +13,108 @@ using UnityEngine;
 
 namespace Kinetix.Utils
 {
-    public class SdkApiProviderWrapper : IProviderWrapper
-    {
-        private string GameAPIKey = string.Empty;
+	public class SdkApiProviderWrapper : IProviderWrapper
+	{
+		private string GameAPIKey = string.Empty;
 
-        public SdkApiProviderWrapper(string _GameAPIKey)
-        {
-            GameAPIKey = _GameAPIKey;
-        }
+		public SdkApiProviderWrapper(string _GameAPIKey)
+		{
+			GameAPIKey = _GameAPIKey;
+		}
 
-        /// <summary>
-        /// Make a Web Request to get all the NFTs Metadata of the User's Wallet
-        /// </summary>
-        public async Task<AnimationMetadata[]> GetAnimationsMetadataOfOwner(string _AccountId)
-        {
-            TaskCompletionSource<AnimationMetadata[]> tcs = new TaskCompletionSource<AnimationMetadata[]>();
+		/// <summary>
+		/// Make a Web Request to get all the NFTs Metadata of the User's Wallet
+		/// </summary>
+		public async Task<AnimationMetadata[]> GetAnimationsMetadataOfOwner(string _AccountId)
+		{
+			TaskCompletionSource<AnimationMetadata[]> tcs = new TaskCompletionSource<AnimationMetadata[]>();
 
-            try
-            {
-                GetAnimationsMetadataOfOwnerInternal(_AccountId, null, null, (metadatas) =>
-                {
-                    tcs.SetResult(metadatas);   
-                });
-            }
-            catch (Exception e)
-            {
-                tcs.SetException(e);
-            }
-            
-            return await tcs.Task;
-        }
+			try
+			{
+				GetAnimationsMetadataOfOwnerInternal(_AccountId, null, null, (metadatas) =>
+				{
+					tcs.SetResult(metadatas);   
+				});
+			}
+			catch (Exception e)
+			{
+				tcs.SetException(e);
+			}
+			
+			return await tcs.Task;
+		}
 
-        private async void GetAnimationsMetadataOfOwnerInternal(string _AccountId, List<AnimationMetadata> _AnimationMetadatas = null, string _PageKey = null, Action<AnimationMetadata[]> _OnSuccess = null)
-        {
-            string uri = KinetixConstants.c_SDK_API_URL + "/v1/users/" + _AccountId + "/emotes";
+		private async void GetAnimationsMetadataOfOwnerInternal(string _AccountId, List<AnimationMetadata> _AnimationMetadatas = null, string _PageKey = null, Action<AnimationMetadata[]> _OnSuccess = null)
+		{
+			string uri = KinetixConstants.c_SDK_API_URL + "/v1/users/" + _AccountId + "/emotes";
 
-            _AnimationMetadatas ??= new List<AnimationMetadata>();
+			_AnimationMetadatas ??= new List<AnimationMetadata>();
 
-            MetadataDownloaderConfig   metadataDownloaderConfig = new MetadataDownloaderConfig(uri, GameAPIKey);
-            MetadataDownloader         metadataDownloader       = new MetadataDownloader(metadataDownloaderConfig);
-            MetadataDownloaderResponse response = await OperationManagerShortcut.Get().RequestExecution(metadataDownloader);
+			MetadataDownloaderConfig   metadataDownloaderConfig = new MetadataDownloaderConfig(uri, GameAPIKey);
+			MetadataDownloader         metadataDownloader       = new MetadataDownloader(metadataDownloaderConfig);
+			MetadataDownloaderResponse response = await OperationManagerShortcut.Get().RequestExecution(metadataDownloader);
 
-           
-            string result = response.json;
+		   
+			string result = response.json;
 
-            SdkApiUserAsset[] collection = JsonConvert.DeserializeObject<SdkApiUserAsset[]>(result);
+			SdkApiUserAsset[] collection = JsonConvert.DeserializeObject<SdkApiUserAsset[]>(result);
 
-            if (collection == null)
-            {
-                KinetixDebug.LogWarning("API provided no results when fetching owner's emotes");
-                return;
-            }
+			if (collection == null)
+			{
+				KinetixDebug.LogWarning("API provided no results when fetching owner's emotes");
+				return;
+			}
 
-            try
-            {
-                for (int i = 0; i < collection.Length; i++)
-                {
-                    AnimationMetadata metadata = collection[i].ToAnimationMetadata();
+			try
+			{
+				for (int i = 0; i < collection.Length; i++)
+				{
+					AnimationMetadata metadata = collection[i].ToAnimationMetadata();
 
-                    if (metadata != null)
-                        _AnimationMetadatas.Add(metadata);
-                }
-                
-                _OnSuccess?.Invoke(_AnimationMetadatas.ToArray());
-                
-            }
-            catch (Exception e)
-            {
-                throw e;
-            }
-        }
+					if (metadata != null)
+						_AnimationMetadatas.Add(metadata);
+				}
+				
+				_OnSuccess?.Invoke(_AnimationMetadatas.ToArray());
+				
+			}
+			catch (Exception e)
+			{
+				throw e;
+			}
+		}
 
 
-        /// <summary>
-        /// Make a Web Request to get metadata of specific Emote
-        /// </summary>
-        public async Task<AnimationMetadata> GetAnimationMetadataOfEmote(AnimationIds _AnimationIds)
-        {
-            TaskCompletionSource<AnimationMetadata> tcs = new TaskCompletionSource<AnimationMetadata>();
+		/// <summary>
+		/// Make a Web Request to get metadata of specific Emote
+		/// </summary>
+		public async Task<AnimationMetadata> GetAnimationMetadataOfEmote(AnimationIds _AnimationIds)
+		{
+			TaskCompletionSource<AnimationMetadata> tcs = new TaskCompletionSource<AnimationMetadata>();
 
-            string uri = KinetixConstants.c_SDK_API_URL + "/v1/emotes/" + _AnimationIds.UUID;
+			string uri = KinetixConstants.c_SDK_API_URL + "/v1/emotes/" + _AnimationIds.UUID;
 
-            GetRawAPIResultConfig   apiResultOpConfig = new GetRawAPIResultConfig(uri, GameAPIKey);
-            GetRawAPIResult         apiResultOp       = new GetRawAPIResult(apiResultOpConfig);
-            GetRawAPIResultResponse response = await OperationManagerShortcut.Get().RequestExecution(apiResultOp);
+			GetRawAPIResultConfig   apiResultOpConfig = new GetRawAPIResultConfig(uri, GameAPIKey);
+			GetRawAPIResult         apiResultOp       = new GetRawAPIResult(apiResultOpConfig);
+			GetRawAPIResultResponse response = await OperationManagerShortcut.Get().RequestExecution(apiResultOp);
 
-            string result = response.json;
+			string result = response.json;
 
-            try
-            {
-                SdkApiAsset collection = JsonConvert.DeserializeObject<SdkApiAsset>(result);
-                tcs.SetResult(collection.ToAnimationMetadata());
-            }
-            catch (ArgumentNullException e)
-            {
-                tcs.SetException(e);
-            }
-            catch (Exception e)
-            {
-                tcs.SetException(e);
-            }
+			try
+			{
+				SdkApiAsset collection = JsonConvert.DeserializeObject<SdkApiAsset>(result);
+				tcs.SetResult(collection.ToAnimationMetadata());
+			}
+			catch (ArgumentNullException e)
+			{
+				tcs.SetException(e);
+			}
+			catch (Exception e)
+			{
+				tcs.SetException(e);
+			}
 
-            return await tcs.Task;
-        }
-    }
+			return await tcs.Task;
+		}
+	}
 }
