@@ -30,7 +30,7 @@ namespace Kinetix
 
 		#endregion
 
-        public List<AvatarAnimationMetadata> Avatars;
+        public List<AvatarAnimationMetadata> Avatars = new List<AvatarAnimationMetadata>();
     }
 
     [Serializable]

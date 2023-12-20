@@ -7,7 +7,6 @@
 using System;
 using UnityEngine;
 using Kinetix.Internal;
-using System.Collections.Generic;
 using Kinetix.Internal.Utils;
 using Kinetix.Internal.Retargeting;
 
@@ -21,13 +20,22 @@ namespace Kinetix
 	{
 		const float OUTER_BLEND_DURATION = 0.35f;
 
+		/// <summary>
+		/// Called when networking data are available
+		/// </summary>
+		public event Action<KinetixNetworkDataRaw> OnNetworkingData;
+
 		private SimulationSampler sampler;
 		private KinetixFrame currentFrame;
+		private KinetixNetworkDataRaw currentNetworkData;
 
 		/// <inheritdoc/>
 		public override void Init(ServiceLocator _ServiceLocator, KinetixAvatar kinetixAvatar, RootMotionConfig _RootMotionConfig)
 		{
 			base.Init(_ServiceLocator, kinetixAvatar, _RootMotionConfig);
+
+			networkSampler.OnSerializeData += NetworkSampler_OnSerializeData;
+
 			sampler = new SimulationSampler();
 			sampler.OnQueueStart              += Sampler_OnQueueStart             ;
 			sampler.OnQueueStop               += Sampler_OnQueueStop              ;
@@ -50,34 +58,23 @@ namespace Kinetix
 
 		/// <summary>
 		/// Get the current frame animation if it exists.<br/>
-		/// See also <seealso cref="IsPoseAvailable"/> to know if a pose is available
 		/// </summary>
 		/// <returns>Returns the pose in a sampleable format</returns>
 		public KinetixFrame GetRawPose() => currentFrame;
 		
 		/// <summary>
-		/// Get the raw pose in a format suitable for the network
+		/// Get the data in a format suitable for the network
 		/// </summary>
-		/// <returns>Returns the pose in a network format</returns>
-		public byte[] GetSerializedPose()
+		public KinetixNetworkDataRaw GetNetworkedData()
 		{
-			return GetNetworkedPose()?.ToByteArray();
-		}
-
-		/// <summary>
-		/// Get the raw pose in a format suitable for the network
-		/// </summary>
-		/// <returns>Returns the pose in a network format</returns>
-		protected KinetixNetworkedPose GetNetworkedPose()
-		{
-			if (!IsPoseAvailable()) 
+			if (!IsDataAvailable()) 
 				return null;
 
-			return networkSampler.GetPose(currentFrame);
+			return currentNetworkData;
 		}
 
 		/// <inheritdoc/>
-		public override bool IsPoseAvailable() => currentFrame != null && networkSampler.IsPlaying;
+		public bool IsDataAvailable() => currentNetworkData != null;
 	
 		/// <summary>
 		/// Play an animation on the current player
@@ -180,6 +177,7 @@ namespace Kinetix
 				}
 			}
 
+			networkSampler.OnPlayStart(obj);
 			Call_OnAnimationStart(obj.animationIds);
 		}
 
@@ -196,13 +194,12 @@ namespace Kinetix
 				}
 			}
 
+			networkSampler.OnPlayEnd();
 			Call_OnAnimationEnd(obj.animationIds);
 		}
 
 		private void Sampler_OnQueueStart()
 		{
-			networkSampler.StartPose();
-
 			if (AutoPlay)
 			{
 				int count = poseInterpretor.Count;
@@ -215,8 +212,6 @@ namespace Kinetix
 
 		private void Sampler_OnQueueStop()
 		{
-			networkSampler.StopPose();
-
 			if (AutoPlay)
 			{
 				int count = poseInterpretor.Count;
@@ -239,11 +234,21 @@ namespace Kinetix
 
 			return poseInterpretor[0].GetPose();
 		}
+
+		private void NetworkSampler_OnSerializeData(KinetixNetworkDataRaw obj)
+		{
+			currentNetworkData = obj;
+			OnNetworkingData?.Invoke(obj);
+		}
 		#endregion
 
 		public override void Dispose()
 		{
 			base.Dispose();
+			OnNetworkingData = null;
+
+			networkSampler.OnSerializeData -= NetworkSampler_OnSerializeData;
+
 			sampler.OnQueueStart     -= Sampler_OnQueueStart     ;
 			sampler.OnQueueStop      -= Sampler_OnQueueStop      ;
 			sampler.OnAnimationStart -= Sampler_OnAnimationStart ;

@@ -1,6 +1,8 @@
+using System;
 
 namespace Kinetix
 {
+    [Obsolete("Network Configuration is now unused and will be removed in next version")]
     public class KinetixNetworkConfiguration
     {
         public float MaxWaitTimeBeforeEmoteExpiration;

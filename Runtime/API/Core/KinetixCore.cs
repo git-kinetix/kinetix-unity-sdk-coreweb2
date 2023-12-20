@@ -37,7 +37,9 @@ namespace Kinetix
         public static KinetixAnimation Animation { get; internal set; }
         public static KinetixNetwork   Network   { get; internal set; }
         public static KinetixUGC       UGC       { get; internal set; }
+        [Obsolete("Context feaure is no longer supported and will be removed in next version")]
         public static KinetixContext   Context   { get; internal set; }
+        [Obsolete("Alias feaure is no longer supported and will be removed in next version")]
         public static KinetixAlias     Alias     { get; internal set; }
 
         #endregion

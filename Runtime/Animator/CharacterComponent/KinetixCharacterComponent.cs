@@ -58,7 +58,8 @@ namespace Kinetix
 		public string GUID => _guid;
 		private string _guid;
 
-		internal NetworkPoseSampler networkSampler;
+		internal protected KinetixNetworkSampler networkSampler;
+
 		protected KinetixCharacterComponentBehaviour behaviour;
 
 		// CACHE
@@ -71,18 +72,20 @@ namespace Kinetix
 		/// <summary>
 		/// Init the Character
 		/// </summary>
-		/// <param name="kinetixAvatar">The avatar to use for the animation</param>
+		/// <param name="_ServiceLocator">The service locator</param>
+		/// <param name="_KinetixAvatar">The avatar to use for the animation</param>
 		public void Init(ServiceLocator _ServiceLocator, KinetixAvatar _KinetixAvatar)
 			=> Init(_ServiceLocator, _KinetixAvatar, null);
 
 		/// <summary>
 		/// Init the Character
 		/// </summary>
+		/// <param name="_ServiceLocator">The service locator</param>
 		/// <param name="_KinetixAvatar">The avatar to use for the animation</param>
 		/// <param name="rootMotionConfig">Configuration of the root motion</param>
 		public virtual void Init(ServiceLocator _ServiceLocator, KinetixAvatar _KinetixAvatar, RootMotionConfig rootMotionConfig)
 		{
-			//networkSampler = new NetworkPoseSampler(this, GetComponent<Animator>(), clipSampler);
+			networkSampler = new KinetixNetworkSampler();
 			behaviour = _KinetixAvatar.Root.gameObject.AddComponent<KinetixCharacterComponentBehaviour>();
 			behaviour._kcc = this;
 			behaviour.OnUpdate += Update;
@@ -108,8 +111,7 @@ namespace Kinetix
 			}
 			//----//
 
-			networkSampler = new NetworkPoseSampler(serviceLocator, characterBones);
-
+			networkSampler = new KinetixNetworkSampler();
 		}
 
 		/// <summary>
@@ -118,12 +120,6 @@ namespace Kinetix
 		protected virtual void Update() { }
 
 		#region Abstract
-
-		/// <summary>
-		/// Check if a pose is available
-		/// </summary>
-		/// <returns>Return true if a pose is available</returns>
-		public abstract bool IsPoseAvailable();
 
 		#endregion
 

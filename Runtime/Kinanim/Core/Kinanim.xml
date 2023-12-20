@@ -1,0 +1,369 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Kinanim</name>
+    </assembly>
+    <members>
+        <member name="T:Kinetix.Internal.Kinanim.Compression.InterpoCompression">
+            <summary>
+            Remove frames that can be interpolated
+            </summary>
+        </member>
+        <member name="F:Kinetix.Internal.Kinanim.Compression.InterpoCompression.DEFAULT_BATCH_SIZE">
+            <summary>
+            Default value for maxFramePerLerp in constructor. 
+            </summary>
+        </member>
+        <member name="F:Kinetix.Internal.Kinanim.Compression.InterpoCompression.MIN_LERP_ACCURACY">
+            <summary>
+            Don't allow frames in interpolations to have more than 2% error
+            </summary>
+        </member>
+        <member name="F:Kinetix.Internal.Kinanim.Compression.InterpoCompression.MIN_LERP_ACCURACY_FOOT">
+            <summary>
+            Don't allow frames in interpolations to have more than 1% error
+            </summary>
+        </member>
+        <member name="F:Kinetix.Internal.Kinanim.Compression.InterpoCompression.lastNonCompressedFrame">
+            <summary>
+            Decompression position
+            </summary>
+        </member>
+        <member name="F:Kinetix.Internal.Kinanim.Compression.InterpoCompression.lastNonCompressedBlendshape">
+            <summary>
+            Decompression position for blendshapes
+            </summary>
+        </member>
+        <member name="P:Kinetix.Internal.Kinanim.Compression.InterpoCompression.Target">
+            <summary>
+            Target to compress
+            </summary>
+            <remarks>
+            Compression will be apply to the target directly.<br/>
+            Clone your datas before if you need to keep your uncompressed frame<br/>
+            (ex: for reading the animation)
+            </remarks>
+        </member>
+        <member name="P:Kinetix.Internal.Kinanim.Compression.InterpoCompression.MaxUncompressedFrame">
+            <inheritdoc/>
+        </member>
+        <member name="P:Kinetix.Internal.Kinanim.Compression.InterpoCompression.MaxUncompressedTransforms">
+            <inheritdoc/>
+        </member>
+        <member name="P:Kinetix.Internal.Kinanim.Compression.InterpoCompression.MaxUncompressedBlendshapes">
+            <inheritdoc/>
+        </member>
+        <member name="M:Kinetix.Internal.Kinanim.Compression.InterpoCompression.CalculateMaxUncompressedProperties">
+            <summary>
+            Calculates <see cref="F:Kinetix.Internal.Kinanim.Compression.InterpoCompression._maxUncompressedTransforms"/> and <see cref="F:Kinetix.Internal.Kinanim.Compression.InterpoCompression._maxUncompressedBlendshapes"/>
+            </summary>
+        </member>
+        <member name="T:Kinetix.Internal.Kinanim.Compression.IKinanimCompression">
+            <summary>
+            Interface to implement algorythm that remove (compression) / add (decompression) frames to the Kinanim
+            </summary>
+        </member>
+        <member name="P:Kinetix.Internal.Kinanim.Compression.IKinanimCompression.MaxUncompressedFrame">
+            <summary>
+            Maximum frame where we are certain everything is uncompressed
+            </summary>
+        </member>
+        <member name="P:Kinetix.Internal.Kinanim.Compression.IKinanimCompression.MaxUncompressedTransforms">
+            <summary>
+            Maximum frame where we are certain every transform are uncompressed
+            </summary>
+        </member>
+        <member name="P:Kinetix.Internal.Kinanim.Compression.IKinanimCompression.MaxUncompressedBlendshapes">
+            <summary>
+            Maximum frame where we are certain every blendshapes are uncompressed
+            </summary>
+        </member>
+        <member name="M:Kinetix.Internal.Kinanim.Compression.IKinanimCompression.Compress">
+            <summary>
+            Called once, compress every frame of the <see cref="F:Kinetix.Internal.Kinanim.KinanimData.content"/>
+            </summary>
+        </member>
+        <member name="M:Kinetix.Internal.Kinanim.Compression.IKinanimCompression.DecompressFrame(System.UInt32)">
+            <summary>
+            Called when a new batch of frame have been imported
+            </summary>
+            <param name="loadedFrameCount">Number of frame imported</param>
+        </member>
+        <member name="T:Kinetix.Internal.Kinanim.KinanimTransform">
+            <summary>
+            All possible transforms
+            </summary>
+        </member>
+        <member name="T:Kinetix.Internal.Kinanim.KinanimData">
+            <summary>
+            Data of a kinanim file
+            </summary>
+        </member>
+        <member name="F:Kinetix.Internal.Kinanim.KinanimData.KinanimHeader.version">
+            <summary>
+            Version of the file formate
+            </summary>
+        </member>
+        <member name="F:Kinetix.Internal.Kinanim.KinanimData.KinanimHeader.frameRate">
+            <summary>
+            Play rate of frames
+            </summary>
+        </member>
+        <member name="P:Kinetix.Internal.Kinanim.KinanimData.KinanimHeader.FrameCount">
+            <summary>
+            Number of frames
+            </summary>
+        </member>
+        <member name="P:Kinetix.Internal.Kinanim.KinanimData.KinanimHeader.FrameSizes">
+            <summary>
+            Binary size of frames in the file
+            </summary>
+        </member>
+        <member name="P:Kinetix.Internal.Kinanim.KinanimData.KinanimHeader.BinarySize">
+            <summary>
+            Size in byte of the header.<br/>
+            Retrieved during <see cref="M:Kinetix.Internal.Kinanim.KinanimImporter.ReadHeader(System.IO.BinaryReader)"/>.
+            </summary>
+        </member>
+        <member name="F:Kinetix.Internal.Kinanim.KinanimData.KinanimHeader.keyTypes">
+            <summary>
+            The type of keys used
+            </summary>
+        </member>
+        <member name="F:Kinetix.Internal.Kinanim.KinanimData.KinanimHeader.hasBlendshapes">
+            <summary>
+            If the animation has blendshapes or not
+            </summary>
+        </member>
+        <member name="T:Kinetix.Internal.Kinanim.KinanimExporter">
+            <summary>
+            Export a <see cref="T:Kinetix.Internal.Kinanim.KinanimData"/> as a file.kinanim
+            </summary>
+        </member>
+        <member name="F:Kinetix.Internal.Kinanim.KinanimExporter.header">
+            <summary>
+            Method provider for writing the header data
+            </summary>
+        </member>
+        <member name="F:Kinetix.Internal.Kinanim.KinanimExporter.content">
+            <summary>
+            Method provider for writing the content data
+            </summary>
+        </member>
+        <member name="F:Kinetix.Internal.Kinanim.KinanimExporter.compression">
+            <summary>
+            Lossy compression algorythm to use for the kinanim
+            </summary>
+        </member>
+        <member name="M:Kinetix.Internal.Kinanim.KinanimExporter.Content.System#IDisposable#Dispose">
+            <inheritdoc/>
+        </member>
+        <member name="M:Kinetix.Internal.Kinanim.KinanimExporter.Frame.WriteTransform(Kinetix.Internal.Kinanim.KinanimData.TransformData)">
+            <remarks>Remark, this method is private since transforms are declared in a specific order with a fixed count</remarks>
+        </member>
+        <member name="M:Kinetix.Internal.Kinanim.KinanimExporter.Frame.System#IDisposable#Dispose">
+            <inheritdoc/>
+        </member>
+        <member name="T:Kinetix.Internal.Kinanim.KinanimImporter">
+            <summary>
+            Import a <see cref="T:Kinetix.Internal.Kinanim.KinanimData"/> from a file.kinanim
+            </summary>
+            <remarks>
+            The system coordinate used in the kinanim is : X left, Y up, Z forward
+            </remarks>
+        </member>
+        <member name="P:Kinetix.Internal.Kinanim.KinanimImporter.HighestImportedFrame">
+            <summary>
+            Highest frame id that has been imported
+            </summary>
+        </member>
+        <member name="P:Kinetix.Internal.Kinanim.KinanimImporter.Result">
+            <summary>
+            Imported data
+            </summary>
+        </member>
+        <member name="F:Kinetix.Internal.Kinanim.KinanimImporter.compression">
+            <summary>
+            Lossy compression algorythm to use to decompress (interpolate) the kinanim
+            </summary>
+        </member>
+        <member name="M:Kinetix.Internal.Kinanim.KinanimImporter.#ctor(Kinetix.Internal.Kinanim.Compression.IKinanimCompression)">
+            <summary>
+            Import a <see cref="T:Kinetix.Internal.Kinanim.KinanimData"/> from a file.kinanim
+            </summary>
+            <param name="compression">Lossy compression algorythm to use to decompress (interpolate) the kinanim</param>
+        </member>
+        <member name="M:Kinetix.Internal.Kinanim.KinanimImporter.ReadHeader(System.IO.Stream)">
+            <summary>
+            Read the header of the kinanim file
+            </summary>
+            <param name="stream">Stream (auto disposed)</param>
+        </member>
+        <member name="M:Kinetix.Internal.Kinanim.KinanimImporter.ReadHeader(System.IO.BinaryReader)">
+            <summary>
+            Read the header of the kinanim file
+            </summary>
+            <param name="reader">Binary reader (not disposed)</param>
+        </member>
+        <member name="M:Kinetix.Internal.Kinanim.KinanimImporter.ReadFrames(System.IO.Stream)">
+            <summary>
+            Read all frames contained inside the stream
+            </summary>
+            <param name="stream">Stream (auto disposed)</param>
+        </member>
+        <member name="M:Kinetix.Internal.Kinanim.KinanimImporter.ReadFrames(System.IO.BinaryReader)">
+            <summary>
+            Read all frames contained inside the reader
+            </summary>
+            <param name="reader">Binary reader (not disposed)</param>
+        </member>
+        <member name="M:Kinetix.Internal.Kinanim.KinanimImporter.ReadFrame(System.IO.Stream)">
+            <summary>
+            Read 1 frame contained inside the stream
+            </summary>
+            <param name="stream">Stream (auto disposed)</param>
+        </member>
+        <member name="M:Kinetix.Internal.Kinanim.KinanimImporter.ReadFrame(System.IO.BinaryReader)">
+            <summary>
+            Read 1 frame contained inside the reader
+            </summary>
+            <param name="reader">Binary reader (not disposed)</param>
+        </member>
+        <member name="M:Kinetix.Internal.Kinanim.KinanimImporter.ReadVersion(System.IO.BinaryReader)">
+            <summary>
+            Get version from the reader
+            </summary>
+        </member>
+        <member name="M:Kinetix.Internal.Kinanim.KinanimImporter.ReadFrameRate(System.IO.BinaryReader)">
+            <summary>
+            Get frameRate from the reader
+            </summary>
+        </member>
+        <member name="M:Kinetix.Internal.Kinanim.KinanimImporter.ReadFrameCountAndSizes(System.IO.BinaryReader)">
+            <summary>
+            Get frameCount and binary size of frames from the reader
+            </summary>
+        </member>
+        <member name="M:Kinetix.Internal.Kinanim.KinanimImporter.ReadKeyTypes(System.IO.BinaryReader)">
+            <summary>
+            Get type of key of each transform from the reader
+            </summary>
+        </member>
+        <member name="M:Kinetix.Internal.Kinanim.KinanimImporter.ReadHasBlendshapes(System.IO.BinaryReader)">
+            <summary>
+            Get if the animation contains blendshapes or not
+            </summary>
+        </member>
+        <member name="M:Kinetix.Internal.Kinanim.KinanimImporter.ComputeUncompressedFrameSize(System.Int32,System.Int32)">
+            <summary>
+            <see cref="P:Kinetix.Internal.Kinanim.KinanimImporter.UncompressedHeader"/>
+            </summary>
+            <param name="minFrame"></param>
+            <param name="maxFrame"></param>
+        </member>
+        <member name="M:Kinetix.Internal.Kinanim.KinanimImporter.ReadFile(System.IO.Stream)">
+            <summary>
+            Read a full file from a stream
+            </summary>
+            <remarks>
+            This method cannot read partial files.<br/>
+            See also <seealso cref="M:Kinetix.Internal.Kinanim.KinanimImporter.ReadHeader(System.IO.Stream)"/> or <seealso cref="M:Kinetix.Internal.Kinanim.KinanimImporter.ReadFrames(System.IO.Stream)"/>
+            </remarks>
+            <param name="stream">Stream (auto disposed)</param>
+        </member>
+        <member name="T:Kinetix.Internal.Kinanim.Numerics.HammingWeight">
+            <summary>
+            Calculate the number of binary '1' in the byte / short / integer / long
+            </summary>
+        </member>
+        <member name="T:Kinetix.Internal.Kinanim.Numerics.Vector4F">
+            <summary>
+            Represent a quaternion
+            </summary>
+        </member>
+        <member name="T:Kinetix.Internal.Kinanim.Numerics.V4Utils">
+            <summary>
+            Quaternion utils
+            </summary>
+        </member>
+        <member name="M:Kinetix.Internal.Kinanim.Numerics.V4Utils.Normalize(Kinetix.Internal.Kinanim.Numerics.Vector4F)">
+            <summary>
+            Make the quaternion's length to 1
+            </summary>
+            <param name="a"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Kinetix.Internal.Kinanim.Numerics.V4Utils.Dot(Kinetix.Internal.Kinanim.Numerics.Vector4F,Kinetix.Internal.Kinanim.Numerics.Vector4F)">
+            <summary>
+            Dot product between a and b
+            </summary>
+            <param name="a"></param>
+            <param name="b"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Kinetix.Internal.Kinanim.Numerics.V4Utils.Accuracy(Kinetix.Internal.Kinanim.Numerics.Vector4F,Kinetix.Internal.Kinanim.Numerics.Vector4F)">
+            <summary>
+            Get a number between 0 and 1 defining how close the vectors are to each other.<br/>
+            0 means it's not the same, 1 means it's the same.
+            </summary>
+            <param name="a"></param>
+            <param name="b"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Kinetix.Internal.Kinanim.Numerics.V4Utils.AngleAxis(Kinetix.Internal.Kinanim.Numerics.Vector4F,System.Single@,Kinetix.Internal.Kinanim.Numerics.Vector3F@)">
+            <summary>
+            Get angle and axis of rotation
+            </summary>
+            <param name="q"></param>
+            <param name="angle"></param>
+            <param name="axis"></param>
+        </member>
+        <member name="M:Kinetix.Internal.Kinanim.Numerics.V4Utils.IsApproximately(Kinetix.Internal.Kinanim.Numerics.Vector4F,Kinetix.Internal.Kinanim.Numerics.Vector4F,System.Single)">
+            <summary>
+            Check if 2 quaternions are close
+            </summary>
+            <param name="a"></param>
+            <param name="b"></param>
+            <param name="threshold">Number between 0 and 1 describing how close the quaternion must be.<br/>0 meaning "exactly the same".</param>
+            <returns></returns>
+        </member>
+        <member name="M:Kinetix.Internal.Kinanim.Numerics.V4Utils.IsApproximately(System.Nullable{Kinetix.Internal.Kinanim.Numerics.Vector4F},System.Nullable{Kinetix.Internal.Kinanim.Numerics.Vector4F},System.Single)">
+            <summary>
+            Check if 2 quaternions are close
+            </summary>
+            <param name="a"></param>
+            <param name="b"></param>
+            <param name="threshold">Number between 0 and 1 describing how close the quaternion must be.<br/>0 meaning "exactly the same".</param>
+            <returns></returns>
+        </member>
+        <member name="M:Kinetix.Internal.Kinanim.Numerics.V4Utils.Lerp(Kinetix.Internal.Kinanim.Numerics.Vector4F,Kinetix.Internal.Kinanim.Numerics.Vector4F,System.Single)">
+            <summary>
+            Interpolate linearely between 2 quaternions
+            </summary>
+            <param name="a"></param>
+            <param name="b"></param>
+            <param name="t">Time between 0 and 1.<br/>0 will return <paramref name="a"/> and 1 will return <paramref name="b"/>.</param>
+            <returns></returns>
+        </member>
+        <member name="M:Kinetix.Internal.Kinanim.Numerics.V4Utils.SLerp(Kinetix.Internal.Kinanim.Numerics.Vector4F,Kinetix.Internal.Kinanim.Numerics.Vector4F,System.Single)">
+            <summary>
+            Spherical linear interpolation of a rotation
+            </summary>
+            <param name="a"></param>
+            <param name="b"></param>
+            <param name="t"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Kinetix.Internal.Kinanim.Numerics.V4Utils.QuatMulp(Kinetix.Internal.Kinanim.Numerics.Vector4F,Kinetix.Internal.Kinanim.Numerics.Vector4F)">
+            <summary>Returns the quaternion that results from multiplying two quaternions together.</summary>
+            <param name="value1">The first quaternion.</param>
+            <param name="value2">The second quaternion.</param>
+            <returns>The product quaternion.</returns>
+        </member>
+        <member name="T:Kinetix.Internal.Kinanim.Utils.CustomHalf">
+            <summary>
+            Converter from float to short with a precision of 3 digits
+            </summary>
+        </member>
+    </members>
+</doc>

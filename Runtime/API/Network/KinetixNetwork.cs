@@ -38,15 +38,46 @@ namespace Kinetix.Internal
             return KinetixNetworkBehaviour.GetRemoteKCC(_RemotePeerID);
         }
 
+		/// <summary>
+		/// Register remote peer Animator.
+		/// </summary>
+		/// <param name="_RemotePeerUUID">UUID of the remote peer in the room</param>
+		/// <param name="_Animator">Animator of the remote peer</param>
+		public void RegisterRemotePeerAnimator(string _RemotePeerUUID, Animator _Animator)
+		{
+			KinetixNetworkBehaviour.RegisterRemotePeer(_RemotePeerUUID, _Animator);
+		}
 
         /// <summary>
         /// Register remote peer Animator.
         /// </summary>
         /// <param name="_RemotePeerUUID">UUID of the remote peer in the room</param>
         /// <param name="_Animator">Animator of the remote peer</param>
-        public void RegisterRemotePeerAnimator(string _RemotePeerUUID, Animator _Animator)
+        public void RegisterRemotePeerAnimator(string _RemotePeerUUID, Animator _Animator, string _AvatarID)
         {
-            KinetixNetworkBehaviour.RegisterRemotePeer(_RemotePeerUUID, _Animator);
+            KinetixNetworkBehaviour.RegisterRemotePeer(_RemotePeerUUID, _Animator, _AvatarID);
+        }
+
+		/// <summary>
+		/// Register remote peer Animator.
+		/// </summary>
+		/// <param name="_RemotePeerUUID">UUID of the remote peer in the room</param>
+		/// <param name="_Animator">Animator of the remote peer</param>
+		/// <param name="_Config">Configuration for the root motion</param>
+		public void RegisterRemotePeerAnimator(string _RemotePeerUUID, Animator _Animator, RootMotionConfig _Config)
+		{
+			KinetixNetworkBehaviour.RegisterRemotePeer(_RemotePeerUUID, _Animator, _Config);
+		}
+
+		/// <summary>
+		/// Register remote peer Animator.
+		/// </summary>
+		/// <param name="_RemotePeerUUID">UUID of the remote peer in the room</param>
+		/// <param name="_Animator">Animator of the remote peer</param>
+		/// <param name="_Config">Configuration for the root motion</param>
+		public void RegisterRemotePeerAnimator(string _RemotePeerUUID, Animator _Animator, string _AvatarID, RootMotionConfig _Config)
+        {
+            KinetixNetworkBehaviour.RegisterRemotePeer(_RemotePeerUUID, _Animator, _AvatarID, _Config);
         }
 
 		/// <summary>

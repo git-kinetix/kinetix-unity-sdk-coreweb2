@@ -39,18 +39,8 @@ namespace Kinetix.Internal
         /// <summary>
         /// Allows a user to use the wanted emote
         /// </summary>
-        /// <param name="_EmoteID">AnimationIds of the emote</param>
-        [Obsolete("Please use the overload with the EmoteID as string.", false)]
-        public void AssociateEmotesToUser(AnimationIds _EmoteID, Action _OnSuccess = null,
-            Action<string>                             _OnFailure = null)
-        {
-            KinetixAccountBehaviour.AssociateEmotesToUser(_EmoteID.UUID, _OnSuccess, _OnFailure);
-        }
-
-        /// <summary>
-        /// Allows a user to use the wanted emote
-        /// </summary>
         /// <param name="_EmoteID">UUID (unique id) of the emote</param>
+        [Obsolete("Kinetix SDK no longer supports emote association, this will be removed in the next version")]
         public void AssociateEmotesToUser(string _EmoteID, Action _OnSuccess = null, Action<string> _OnFailure = null)
         {
             KinetixAccountBehaviour.AssociateEmotesToUser(_EmoteID, _OnSuccess, _OnFailure);

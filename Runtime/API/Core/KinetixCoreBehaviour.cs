@@ -48,6 +48,7 @@ namespace Kinetix.Internal
             serviceLocator.Register<EmotesService>(new EmotesService(serviceLocator, _Configuration));
             serviceLocator.Register<LockService>(new LockService());
             serviceLocator.Register<MemoryService>(new MemoryService(_Configuration));
+            serviceLocator.Register<LoadAnimService>(new LoadAnimService(serviceLocator));
             serviceLocator.Register<AssetService>(new AssetService());
             serviceLocator.Register<RetargetingService>(new RetargetingService(serviceLocator));
             serviceLocator.Register<ProviderService>(new ProviderService(_Configuration));

@@ -13,7 +13,22 @@ namespace Kinetix.Internal.Network
     {
         public static void RegisterRemotePeer(string _RemotePeerID, Animator _Animator)
         {
-            KinetixCoreBehaviour.ManagerLocator.Get<NetworkManager>().RegisterRemotePeerAnimator(_RemotePeerID, _Animator);
+            KinetixCoreBehaviour.ManagerLocator.Get<NetworkManager>().RegisterRemotePeerAnimator(_RemotePeerID, _Animator, null);
+        }
+
+        public static void RegisterRemotePeer(string _RemotePeerID, Animator _Animator, string _AvatarID)
+        {
+            KinetixCoreBehaviour.ManagerLocator.Get<NetworkManager>().RegisterRemotePeerAnimator(_RemotePeerID, _Animator, _AvatarID);
+        }
+
+        public static void RegisterRemotePeer(string _RemotePeerID, Animator _Animator, RootMotionConfig _RootMotionConfig)
+        {
+            KinetixCoreBehaviour.ManagerLocator.Get<NetworkManager>().RegisterRemotePeerAnimator(_RemotePeerID, _Animator, null, _RootMotionConfig);
+        }
+
+        public static void RegisterRemotePeer(string _RemotePeerID, Animator _Animator, string _AvatarID, RootMotionConfig _RootMotionConfig)
+        {
+            KinetixCoreBehaviour.ManagerLocator.Get<NetworkManager>().RegisterRemotePeerAnimator(_RemotePeerID, _Animator, _AvatarID, _RootMotionConfig);
         }
         
         public static void RegisterRemotePeerCustom(string _RemotePeerID, DataBoneTransform _Root, Transform _RootTransform, IPoseInterpreter _PoseInterpreter)

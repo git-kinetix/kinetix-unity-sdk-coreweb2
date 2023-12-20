@@ -34,7 +34,7 @@ namespace Kinetix.Internal
 
 		protected void Initialize(KinetixNetworkConfiguration Configuration)
 		{
-			PeerByUUID                            = new Dictionary<string, KinetixPeer>();
+			PeerByUUID = new Dictionary<string, KinetixPeer>();
 
 
 			// Setting configuration
@@ -47,17 +47,20 @@ namespace Kinetix.Internal
 			SetConfiguration(Configuration);
 		}
 
-		public void RegisterRemotePeerAnimator(string _RemotePeerID, Animator _Animator)
+		public void RegisterRemotePeerAnimator(string _RemotePeerID, Animator _Animator, string _AvatarID)
+			=> RegisterRemotePeerAnimator(_RemotePeerID, _Animator, _AvatarID, null);
+
+		public void RegisterRemotePeerAnimator(string _RemotePeerID, Animator _Animator, string _AvatarID, RootMotionConfig _RootMotion)
 		{
 			KinetixCharacterComponentRemote kcc = new KinetixCharacterComponentRemote();
 			KinetixAvatar kinetixAvatar = new KinetixAvatar()
 			{
-				Root =
-					_Animator == null ? null : _Animator.transform,
+				Root     = _Animator == null ? null : _Animator.transform,
+				AvatarID = _AvatarID,
 			};
 			kinetixAvatar.Avatar = new AvatarData(_Animator.avatar, kinetixAvatar.Root);
 
-			kcc.Init(serviceLocator, kinetixAvatar);
+			kcc.Init(serviceLocator, kinetixAvatar, _RootMotion);
 
 			kcc.RegisterPoseInterpreter(new AnimatorPoseInterpetor(_Animator, _Animator.avatar, _Animator.GetComponentsInChildren<SkinnedMeshRenderer>().GetARKitRenderers()));
 			kcc.AutoPlay = true;
