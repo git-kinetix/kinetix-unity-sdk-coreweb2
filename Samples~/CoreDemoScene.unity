@@ -492,7 +492,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   stepDisplayController: {fileID: 2070150286}
-  myAnimator: {fileID: 0}
+  myAnimator: {fileID: 7353378581659715502}
   apiKeyField: {fileID: 2515123121379881523}
   usernameField: {fileID: 1496609033}
   usernameLabel: {fileID: 2041033278}
@@ -822,3 +822,8 @@ PrefabInstance:
       objectReference: {fileID: 9100000, guid: c96782fbf7ec6474e92ac3eebf8a1cd2, type: 2}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 781eca217c1e4bb4b832bc92e52415eb, type: 3}
+--- !u!95 &7353378581659715502 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 7359098741034963413, guid: 781eca217c1e4bb4b832bc92e52415eb, type: 3}
+  m_PrefabInstance: {fileID: 7353378581659715501}
+  m_PrefabAsset: {fileID: 0}
