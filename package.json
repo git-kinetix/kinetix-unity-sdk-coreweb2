@@ -1,8 +1,15 @@
 {
   "name": "com.kinetix.coreweb2",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "displayName": "Kinetix Core",
   "description": "Kinetix Core SDK",
+  "samples": [
+    {
+        "displayName": "Kinetix Core Samples",
+        "description": "Contains an example of how to integrate User Generated Emotes in your games",
+        "path": "Samples~/"
+    }
+  ],
   "author": {
     "name": "Kinetix",
     "url": "https://www.kinetix.tech"
