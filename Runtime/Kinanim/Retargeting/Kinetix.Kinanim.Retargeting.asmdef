@@ -9,8 +9,8 @@
     "allowUnsafeCode": false,
     "overrideReferences": true,
     "precompiledReferences": [
-        "Kinanim.dll",
-        "Kinetix.Retarget.dll"
+        "Kinetix.Retarget.dll",
+        "Kinetix.Kinanim.Core.dll"
     ],
     "autoReferenced": true,
     "defineConstraints": [],
