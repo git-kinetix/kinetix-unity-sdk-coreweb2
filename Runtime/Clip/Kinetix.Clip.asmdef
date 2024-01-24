@@ -2,7 +2,7 @@
     "name": "Kinetix.Clip",
     "rootNamespace": "",
     "references": [
-        "GUID:6344665ee267b5e4c80087a65e25780a"
+        "Kinetix.Internal.Utils"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
