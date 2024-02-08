@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Unity.IO.LowLevel.Unsafe;
 using UnityEngine;
 
 namespace Kinetix.Internal
@@ -25,6 +26,7 @@ namespace Kinetix.Internal
             string animUrl       = string.Empty;
             string animUrlLegacy = string.Empty;
             string thumbnailUrl  = string.Empty;
+            Dictionary<string, string> urlByFormat = new Dictionary<string, string>();
 
             foreach (SignedFile file in files)
             {
@@ -41,6 +43,7 @@ namespace Kinetix.Internal
                         break;
 
                     case Animation_Filename:
+                        urlByFormat["." + file.extension] = file.url;
                         animUrl = file.url;
                         break;
 
@@ -87,7 +90,8 @@ namespace Kinetix.Internal
                 IconeURL     = thumbnailUrl,
                 Ownership    = EOwnership.OWNER,
                 CreatedAt    = createdAt,
-                Avatars      = avatarsMetadata
+                Avatars      = avatarsMetadata,
+                UrlByFormat = urlByFormat
             };
 
             return animationMetadata;

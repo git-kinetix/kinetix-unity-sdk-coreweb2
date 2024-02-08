@@ -153,6 +153,13 @@ namespace Kinetix.Internal
             player.PlayAnimation(_Ids, _OnPlayedAnimation);
         }
 
+        public void PlayAnimation(string _PlayerUUID, AnimationIds _Ids, Action<AnimationIds> _OnPlayedAnimation, string _ForcedExtension)
+        {
+            PlayerManager player = players.Find((player) => player.UUID == _PlayerUUID);
+
+            player.PlayAnimation(_Ids, _OnPlayedAnimation, _ForcedExtension);
+        }
+
         public KinetixCharacterComponentLocal GetLocalKCC()
         {
             return localPlayer?.GetKCC();

@@ -1,5 +1,6 @@
 using Kinetix.Internal.Retargeting.AnimationData;
 using System;
+using UnityEngine;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -25,6 +26,32 @@ namespace Kinetix.Internal
 			};
 		}
 
+		public AAnimLoader[] GetLoadersForExtension(string _Extension = "")
+		{
+			AAnimLoader[] loaders;
+
+			switch(_Extension)
+			{
+				case "glb":
+					loaders = new AAnimLoader[]
+					{
+						new GLBLoader(serviceLocator),
+						new KinanimLoader(serviceLocator), //The order is important, it defines the search priority
+					};
+					break;
+				default:
+				case "kinanim":
+					loaders = new AAnimLoader[]
+					{
+						new KinanimLoader(serviceLocator), //The order is important, it defines the search priority
+						new GLBLoader(serviceLocator),
+					};
+					break;
+			}
+
+			return loaders;
+		}
+
 		/// <summary>
 		/// Get a frame indexer for the emote. (= load animation)<br/>
 		/// Download the file if needed
@@ -35,7 +62,22 @@ namespace Kinetix.Internal
 		/// <returns>Indexer of the loaded animation</returns>
 		/// <exception cref="ArgumentNullException"></exception>
 		/// <exception cref="Exception"></exception>
-		public async Task<(RuntimeRetargetFrameIndexer, bool isRT3K)> GetFrameIndexer(KinetixEmote emote, CancellationTokenSource cancellationToken, string avatarId = null)
+		public async Task<(RuntimeRetargetFrameIndexer, bool isRT3K)> GetFrameIndexer(KinetixEmote emote, CancellationTokenSource cancellationToken, string avatarId = null) 
+		{
+			return await GetFrameIndexer(emote, cancellationToken, avatarId, loaders);
+		}
+
+		/// <summary>
+		/// Get a frame indexer for the emote. (= load animation)<br/>
+		/// Download the file if needed
+		/// </summary>
+		/// <param name="emote">Emote to load</param>
+		/// <param name="cancellationToken">Cancel token</param>
+		/// <param name="avatarId">RT3K avatar id</param>
+		/// <returns>Indexer of the loaded animation</returns>
+		/// <exception cref="ArgumentNullException"></exception>
+		/// <exception cref="Exception"></exception>
+		public async Task<(RuntimeRetargetFrameIndexer, bool isRT3K)> GetFrameIndexer(KinetixEmote emote, CancellationTokenSource cancellationToken, string avatarId = null, AAnimLoader[] _WantedLoaders = null, bool _ForceDownload = false)
 		{
 			if (cancellationToken == null)
 				throw new ArgumentNullException(nameof(cancellationToken));
@@ -50,20 +92,31 @@ namespace Kinetix.Internal
 			if (emote.HasValidPath(avatarId))
 				return (await LoadAnimation(emote, avatarId == null ? emote.FilePath : emote.RT3KPath[avatarId], cancellationToken, avatarId), avatarId != null);
 
+			if (_WantedLoaders == null)
+				_WantedLoaders = loaders;
+			
 			//Check if exists in storage but has never been loaded once
 			AAnimLoader loader;
-			int loaderCount = loaders.Length;
+			int loaderCount = _WantedLoaders.Length;
 			for (int i = 0; i < loaderCount; i++)
 			{
-				loader = loaders[i];
+				loader = _WantedLoaders[i];
 				if (loader.ExistInLocal(emote.Ids.UUID, avatarId))
 				{
 					return (await LoadAnimation(emote, loader.GetFilePath(emote.Ids.UUID, avatarId), cancellationToken, avatarId, loader), avatarId != null);
 				}
+
+				if (_ForceDownload)
+					break;
 			}
 
+			string forcedExtension = string.Empty;
+
+			if (_WantedLoaders != null && _WantedLoaders.Length > 0 && _ForceDownload)
+				forcedExtension = _WantedLoaders[0].Extension;
+		
 			//Try to download rt3k
-			(bool success, RuntimeRetargetFrameIndexer result) = await TryDownload(emote, cancellationToken, avatarId);
+			(bool success, RuntimeRetargetFrameIndexer result) = await TryDownload(emote, cancellationToken, avatarId, forcedExtension);
 			if (success)
 				return (result, avatarId != null);
 
@@ -77,15 +130,18 @@ namespace Kinetix.Internal
 				for (int i = 0; i < loaderCount; i++)
 				{
 					//Check if exists in storage but has never been loaded once
-					loader = loaders[i];
+					loader = _WantedLoaders[i];
 					if (loader.ExistInLocal(emote.Ids.UUID, null))
 					{
 						return (await LoadAnimation(emote, loader.GetFilePath(emote.Ids.UUID, null), cancellationToken, null, loader), false);
 					}
-				}
 
+					if (_ForceDownload)
+						break;
+				}
+				
 				//Try to download
-				(success, result) = await TryDownload(emote, null);
+				(success, result) = await TryDownload(emote, null, forcedExtension);
 				if (success)
 					return (result, false);
 			}
@@ -104,7 +160,7 @@ namespace Kinetix.Internal
 			return await loader.Load(emote, filepath, cancellationToken, avatarId);
 		}
 
-		private async Task<(bool success, RuntimeRetargetFrameIndexer result)> TryDownload(KinetixEmote emote, CancellationTokenSource cancellationToken, string avatarId = null)
+		private async Task<(bool success, RuntimeRetargetFrameIndexer result)> TryDownload(KinetixEmote emote, CancellationTokenSource cancellationToken, string avatarId = null, string extensionWanted = "")
 		{
 			if (emote == null)
 				throw new ArgumentNullException(nameof(emote));
@@ -116,6 +172,8 @@ namespace Kinetix.Internal
 				if (url == null)
 					return (false, null);
 			}
+			else if (extensionWanted != string.Empty)
+				url = emote.Metadata.UrlByFormat[extensionWanted];
 			else
 				url = emote.Metadata.AnimationURL;
 

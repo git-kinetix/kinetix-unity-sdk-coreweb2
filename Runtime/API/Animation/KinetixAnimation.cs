@@ -248,6 +248,17 @@ namespace Kinetix.Internal
         {
             KinetixAnimationBehaviour.PlayAnimationOnAvatar(_PlayerUUID, new AnimationIds(_EmoteID), OnPlayedAnimationLocalPlayer);
         }
+
+		/// <summary>
+		/// Play animation on local player with a specific format (glb / kinanim)
+		/// </summary>
+		/// <param name="_PlayerUUID"></param>
+		/// <param name="_EmoteID"></param>
+		/// <param name="_ForceExtension"></param>
+		public void PlayAnimationOnAvatar(string _PlayerUUID, string _EmoteID, string _ForceExtension = "")
+        {
+            KinetixAnimationBehaviour.PlayAnimationOnAvatar(_PlayerUUID, new AnimationIds(_EmoteID), OnPlayedAnimationLocalPlayer, _ForceExtension);
+        }
 		
 		/// <summary>
 		/// Play animations on local player
