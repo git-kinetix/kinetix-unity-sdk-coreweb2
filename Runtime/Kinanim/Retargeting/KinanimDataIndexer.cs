@@ -8,7 +8,7 @@ namespace Kinetix.Internal.Retargeting.AnimationData
 {
 	public class KinanimDataIndexer : RuntimeRetargetFrameIndexer<KinanimImporter>
 	{
-		public KinanimDataIndexer(KinanimImporter dataSource) : base(dataSource) {}
+		public KinanimDataIndexer(KinanimImporter dataSource, bool isRT3k) : base(dataSource, isRT3k) {}
 
 		///<inheritdoc/>
 		protected override void InternalInit()

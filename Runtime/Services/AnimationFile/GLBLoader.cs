@@ -17,7 +17,7 @@ namespace Kinetix.Internal
 		public override async Task<RuntimeRetargetFrameIndexer> Load(KinetixEmote emote, string filepath, CancellationTokenSource cancellationToken, string avatarId)
 		{
 			GLTFUtility.AnimationJson[] animations = await RetargetingManager.LoadGLB(filepath);
-			RuntimeRetargetFrameIndexer indexer = new GLBDataIndexer( animations[0] );
+			RuntimeRetargetFrameIndexer indexer = new GLBDataIndexer( animations[0], !string.IsNullOrEmpty(avatarId));
 			indexer.Init();
 			indexer.UpdateIndexCount();
 

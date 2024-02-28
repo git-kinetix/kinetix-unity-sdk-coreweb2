@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Kinetix.Internal.Utils;
 
 namespace Kinetix.Internal
 {
@@ -173,13 +174,13 @@ namespace Kinetix.Internal
 					return (false, null);
 			}
 			else if (extensionWanted != string.Empty)
-				url = emote.Metadata.UrlByFormat[extensionWanted];
+				url = emote.Metadata.UrlByFormat.ValueOrDefault(extensionWanted, emote.Metadata.AnimationURL);
 			else
 				url = emote.Metadata.AnimationURL;
 
 			AAnimLoader loader = GetLoaderFromFilepath(url);
 
-			RuntimeRetargetFrameIndexer downloaded = await loader.Download(emote, url, cancellationToken);
+			RuntimeRetargetFrameIndexer downloaded = await loader.Download(emote, url, cancellationToken, avatarId);
 			serviceLocator.Get<MemoryService>().TagFileAsBeingInUse(emote.Ids.UUID);
 			serviceLocator.Get<MemoryService>().AddStorageAllocation(emote.FilePath);
 

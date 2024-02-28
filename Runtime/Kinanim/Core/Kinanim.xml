@@ -6,12 +6,17 @@
     <members>
         <member name="T:Kinetix.Internal.Kinanim.Compression.InterpoCompression">
             <summary>
-            Remove frames that can be interpolated
+            Algorythm that removes frames which can be interpolated
             </summary>
         </member>
         <member name="F:Kinetix.Internal.Kinanim.Compression.InterpoCompression.DEFAULT_BATCH_SIZE">
             <summary>
             Default value for maxFramePerLerp in constructor. 
+            </summary>
+        </member>
+        <member name="F:Kinetix.Internal.Kinanim.Compression.InterpoCompression.EPSILON">
+            <summary>
+            A small number
             </summary>
         </member>
         <member name="F:Kinetix.Internal.Kinanim.Compression.InterpoCompression.MIN_LERP_ACCURACY">
@@ -24,25 +29,38 @@
             Don't allow frames in interpolations to have more than 1% error
             </summary>
         </member>
+        <member name="F:Kinetix.Internal.Kinanim.Compression.InterpoCompression.LERP_ACCURACY">
+            <summary>
+            A dictionary to get accuracy for specific transform
+            </summary>
+        </member>
+        <member name="F:Kinetix.Internal.Kinanim.Compression.InterpoCompression.transformPriorityOrder">
+            <summary>
+            The order in which we should compute each transform
+            </summary>
+        </member>
+        <member name="F:Kinetix.Internal.Kinanim.Compression.InterpoCompression.transformParent">
+            <summary>
+            Gives the parrent of a transform
+            </summary>
+        </member>
+        <member name="F:Kinetix.Internal.Kinanim.Compression.InterpoCompression.transformChildren">
+            <summary>
+            Gives the children of a transform
+            </summary>
+        </member>
         <member name="F:Kinetix.Internal.Kinanim.Compression.InterpoCompression.lastNonCompressedFrame">
             <summary>
-            Decompression position
+            Decompression position (= last frame that is decompressed)
             </summary>
         </member>
         <member name="F:Kinetix.Internal.Kinanim.Compression.InterpoCompression.lastNonCompressedBlendshape">
             <summary>
-            Decompression position for blendshapes
+            Decompression position for blendshapes (= last frame that is decompressed)
             </summary>
         </member>
         <member name="P:Kinetix.Internal.Kinanim.Compression.InterpoCompression.Target">
-            <summary>
-            Target to compress
-            </summary>
-            <remarks>
-            Compression will be apply to the target directly.<br/>
-            Clone your datas before if you need to keep your uncompressed frame<br/>
-            (ex: for reading the animation)
-            </remarks>
+            <inheritdoc/>
         </member>
         <member name="P:Kinetix.Internal.Kinanim.Compression.InterpoCompression.MaxUncompressedFrame">
             <inheritdoc/>
@@ -52,6 +70,80 @@
         </member>
         <member name="P:Kinetix.Internal.Kinanim.Compression.InterpoCompression.MaxUncompressedBlendshapes">
             <inheritdoc/>
+        </member>
+        <member name="F:Kinetix.Internal.Kinanim.Compression.InterpoCompression.maxFramePerLerp">
+            <summary>
+            Maximum frame per interpolation<br/>
+            <br/>
+            For example: Interpolation from 2 to 5 has 6 frames
+            </summary>
+        </member>
+        <member name="F:Kinetix.Internal.Kinanim.Compression.InterpoCompression.threshold">
+            <summary>
+            A value between 0 and 1 that will result in more or less compression
+            </summary>
+        </member>
+        <member name="F:Kinetix.Internal.Kinanim.Compression.InterpoCompression.blendshapeThrshold">
+            <summary>
+            A value between 0 and 1 for checking the distance between 2 blendshape values
+            </summary>
+        </member>
+        <member name="M:Kinetix.Internal.Kinanim.Compression.InterpoCompression.#ctor(System.UInt64,System.Single,System.Single)">
+            <summary>
+            Constructor of <see cref="T:Kinetix.Internal.Kinanim.Compression.InterpoCompression"/>
+            </summary>
+            <param name="maxFramePerLerp">
+            Maximum frame per interpolation<br/>
+            <br/>
+            For example: Interpolation from 2 to 5 has 6 frames
+            </param>
+            <param name="threshold">
+            A value between 0 and 1 that will result in more or less compression
+            </param>
+            <param name="blendshapeThrshold">
+            A value between 0 and 1 for checking the distance between 2 blendshape values
+            </param>
+        </member>
+        <member name="M:Kinetix.Internal.Kinanim.Compression.InterpoCompression.CalculateThreshold(System.Single,System.Int32)">
+            <summary>
+            Get a threshold for quaternion threshold calculations based on average movement quantity
+            </summary>
+            <returns>
+            Returns a lower number if the average movement quantity is higher.
+            </returns>
+        </member>
+        <member name="M:Kinetix.Internal.Kinanim.Compression.InterpoCompression.CalculateMovement(Kinetix.Internal.Kinanim.KinanimTransform,Kinetix.Internal.Kinanim.KinanimData.FrameData[],System.Int32,System.Int32)">
+            <summary>
+            Get global movement from <see cref="M:Kinetix.Internal.Kinanim.Numerics.V4Utils.Accuracy(Kinetix.Internal.Kinanim.Numerics.Vector4F,Kinetix.Internal.Kinanim.Numerics.Vector4F)"/>
+            </summary>
+            <param name="tr">Transform to get its movement</param>
+            <param name="frames">List of frames</param>
+            <param name="from">Start frame index</param>
+            <param name="to">End frame index</param>
+            <returns>
+            Returns the sum of the quantity of movement from a frame to another<br/>
+            </returns>
+            <remarks>
+            <b>Remark:</b>
+            Being based on a dot product, the maximum possible value is <code><see langword="int"/> max = <paramref name="to"/> - <paramref name="from"/> + 1</code> 
+            </remarks>
+            <exception cref="T:System.ArgumentNullException"></exception>
+        </member>
+        <member name="M:Kinetix.Internal.Kinanim.Compression.InterpoCompression.Compress">
+            <inheritdoc/>
+        </member>
+        <member name="M:Kinetix.Internal.Kinanim.Compression.InterpoCompression.DecompressFrame(System.UInt32)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Kinetix.Internal.Kinanim.Compression.InterpoCompression.GlobalAccuracy(Kinetix.Internal.Kinanim.KinanimTransform,Kinetix.Internal.Kinanim.KinanimData.FrameData,Kinetix.Internal.Kinanim.KinanimData.FrameData,Kinetix.Internal.Kinanim.Numerics.Vector4F,Kinetix.Internal.Kinanim.Numerics.Vector4F)">
+            <summary>
+            Get the accuracy of each child end bone in global context and average them
+            </summary>
+        </member>
+        <member name="M:Kinetix.Internal.Kinanim.Compression.InterpoCompression.GlobalAccuracyInternal(Kinetix.Internal.Kinanim.KinanimTransform,Kinetix.Internal.Kinanim.KinanimData.FrameData,Kinetix.Internal.Kinanim.KinanimData.FrameData,Kinetix.Internal.Kinanim.Numerics.Vector4F,Kinetix.Internal.Kinanim.Numerics.Vector4F,System.Nullable{Kinetix.Internal.Kinanim.Numerics.Vector4F},System.Nullable{Kinetix.Internal.Kinanim.Numerics.Vector4F})">
+            <summary>
+            Get the accuracy of each child end bone in global context
+            </summary>
         </member>
         <member name="M:Kinetix.Internal.Kinanim.Compression.InterpoCompression.CalculateMaxUncompressedProperties">
             <summary>
@@ -77,6 +169,16 @@
             <summary>
             Maximum frame where we are certain every blendshapes are uncompressed
             </summary>
+        </member>
+        <member name="P:Kinetix.Internal.Kinanim.Compression.IKinanimCompression.Target">
+            <summary>
+            Target animation to compress
+            </summary>
+            <remarks>
+            Compression will be apply to the target directly.<br/>
+            Clone your datas before if you need to keep your uncompressed frame<br/>
+            (ex: for reading the animation)
+            </remarks>
         </member>
         <member name="M:Kinetix.Internal.Kinanim.Compression.IKinanimCompression.Compress">
             <summary>
