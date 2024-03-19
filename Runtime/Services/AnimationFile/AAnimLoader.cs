@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Kinetix.Internal
 {
-    internal abstract class AAnimLoader
+    public abstract class AAnimLoader
 	{
 		public abstract string Extension { get; }
 		protected readonly ServiceLocator serviceLocator;

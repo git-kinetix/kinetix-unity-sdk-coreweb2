@@ -212,9 +212,6 @@ namespace Kinetix.Internal.Cache
 				if (!emotesToPreload.Contains(_KinetixEmote.Ids))
 					emotesToPreload.Add(_KinetixEmote.Ids);
 
-				Debug.Log(downloadedEmotesReadyToPlay.Count);
-				Debug.Log(emotesToPreload.Count);
-
 				return;
 			}
 
@@ -495,6 +492,19 @@ namespace Kinetix.Internal.Cache
 
 			if (playAutomaticallyOnAnimator)
 				KinetixCharacterComponent.PlayAnimation(_AnimationsIds);
+			else
+				_OnPlayedAnimation?.Invoke(_AnimationsIds);
+		}
+
+		public void PlayAnimation(AnimationIds _AnimationsIds, Action<AnimationIds> _OnPlayedAnimation, string _ForcedExtension = "")
+		{
+			if (KinetixCharacterComponent == null)
+			{
+				return;
+			}
+
+			if (playAutomaticallyOnAnimator)
+				KinetixCharacterComponent.PlayAnimation(_AnimationsIds, _ForcedExtension);
 			else
 				_OnPlayedAnimation?.Invoke(_AnimationsIds);
 		}

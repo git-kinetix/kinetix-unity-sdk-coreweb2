@@ -25,6 +25,7 @@ namespace Kinetix
         #region URL
 
 		public string AnimationURL;
+        public Dictionary<string, string> UrlByFormat = new Dictionary<string, string>();
         public string IconeURL;
 		public DateTime CreatedAt;
 
@@ -38,5 +39,5 @@ namespace Kinetix
     {
         public string AvatarUUID;
         public string AnimationURL;
-    }
+    }   
 }

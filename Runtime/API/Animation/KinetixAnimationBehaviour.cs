@@ -190,6 +190,11 @@ namespace Kinetix.Internal
         {
             KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().PlayAnimation(_PlayerUUID, _Ids, _OnPlayedAnimation);
         }
+
+        public static void PlayAnimationOnAvatar(string _PlayerUUID, AnimationIds _Ids, Action<AnimationIds> _OnPlayedAnimation, string _ForcedExtension = "")
+        {
+            KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().PlayAnimation(_PlayerUUID, _Ids, _OnPlayedAnimation, _ForcedExtension);
+        }
         
         public static void PlayAnimationQueueOnLocalPlayer(AnimationIds[] _Ids, bool _Loop = false, Action<AnimationIds[]> _OnPlayedAnimation = null)
         {

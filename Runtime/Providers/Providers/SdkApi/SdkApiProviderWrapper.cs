@@ -100,6 +100,8 @@ namespace Kinetix.Utils
 
 			string result = response.json;
 
+			Debug.Log(result);
+
 			try
 			{
 				SdkApiAsset collection = JsonConvert.DeserializeObject<SdkApiAsset>(result);

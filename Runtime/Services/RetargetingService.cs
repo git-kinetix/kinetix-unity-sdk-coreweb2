@@ -113,7 +113,7 @@ namespace Kinetix.Internal
 		/// It is only use to for the emote played by the local player.
 		/// </param>
 		/// <returns>The KinetixClip for the specific Avatar</returns>
-		public async Task<TResponseType> GetRetargetedClipByAvatar<TResponseType, THandler>(KinetixEmote _Emote, KinetixAvatar _Avatar, SequencerPriority _Priority, bool _Force)
+		public async Task<TResponseType> GetRetargetedClipByAvatar<TResponseType, THandler>(KinetixEmote _Emote, KinetixAvatar _Avatar, SequencerPriority _Priority, bool _Force, string _ExtensionForced = "")
 			where THandler
 			: ARetargetExport<TResponseType>, new()
 		{
@@ -184,7 +184,15 @@ namespace Kinetix.Internal
 			bool rt3k;
 			try
 			{
-				(indexer, rt3k) = await serviceLocator.Get<LoadAnimService>().GetFrameIndexer(_Emote, cancellationTokenDownload, _Avatar.AvatarID);
+				AAnimLoader[] loaders = null;
+
+				if (_ExtensionForced != string.Empty)
+				{
+					loaders = serviceLocator.Get<LoadAnimService>().GetLoadersForExtension(_ExtensionForced);
+				}
+
+				(indexer, rt3k) = await serviceLocator.Get<LoadAnimService>().GetFrameIndexer(_Emote, cancellationTokenDownload, _Avatar.AvatarID, loaders, true);
+
 				if (indexer == null)
 					throw new Exception("Couldn't find any download URL");
 			}

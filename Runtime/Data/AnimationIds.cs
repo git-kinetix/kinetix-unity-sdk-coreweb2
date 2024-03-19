@@ -59,8 +59,6 @@ public class AnimationIds
 
     public EKinetixNodeProvider GetExpectedProvider()
     {
-        if (UUID != string.Empty)
-            return EKinetixNodeProvider.SDK_API;
-        return EKinetixNodeProvider.NONE;
+        return EKinetixNodeProvider.SDK_API;
     }
 }

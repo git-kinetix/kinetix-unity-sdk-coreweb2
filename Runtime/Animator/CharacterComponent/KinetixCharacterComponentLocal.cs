@@ -80,7 +80,7 @@ namespace Kinetix
 		/// Play an animation on the current player
 		/// </summary>
 		/// <param name="_AnimationIds">IDs of the animation</param>
-		public async void PlayAnimation(AnimationIds _AnimationIds)
+		public async void PlayAnimation(AnimationIds _AnimationIds, string _ForcedExtension = "")
 		{
 			if (_AnimationIds?.UUID == null)
 			{
@@ -89,7 +89,7 @@ namespace Kinetix
 			}
 
 			KinetixEmote emote = KinetixCoreBehaviour.ServiceLocator.Get<EmotesService>().GetEmote(_AnimationIds);
-			KinetixClip clip = await KinetixCoreBehaviour.ServiceLocator.Get<RetargetingService>().GetRetargetedClipByAvatar<KinetixClip, KinetixClipExporter>(emote, kinetixAvatar, SequencerPriority.VeryHigh, true);
+			KinetixClip clip = await KinetixCoreBehaviour.ServiceLocator.Get<RetargetingService>().GetRetargetedClipByAvatar<KinetixClip, KinetixClipExporter>(emote, kinetixAvatar, SequencerPriority.VeryHigh, true, _ForcedExtension);
 
 			if (clip == null)
 			{

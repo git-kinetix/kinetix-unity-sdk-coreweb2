@@ -33,7 +33,7 @@ namespace Kinetix.Internal
 			}
 			else
 			{
-				data = GetStartDataFromEmote(filepath, new FileStream(filepath, FileMode.Open)); //Import header and some frames
+				data = GetStartDataFromEmote(filepath, new FileStream(filepath, FileMode.Open), avatarId); //Import header and some frames
 			}
 
 			//Download remaining frames
@@ -52,7 +52,7 @@ namespace Kinetix.Internal
 			ByteRangeDownloaderResponse response = await OperationManagerShortcut.Get().RequestExecution(fileDownloadOperation, cancellationToken);
 			
 			string filepath = GetFilePath(emote.Ids.UUID, avatarId);
-			KinanimServiceData data = GetStartDataFromEmote(filepath, new MemoryStream(response.bytes)); //Import header and some frames
+			KinanimServiceData data = GetStartDataFromEmote(filepath, new MemoryStream(response.bytes), avatarId); //Import header and some frames
 			data.exporter.WriteHeader(data.indexer.dataSource.UncompressedHeader);
 
 			//Write frames we created
@@ -120,7 +120,7 @@ namespace Kinetix.Internal
 		/// <param name="filepath"></param>
 		/// <param name="readStream">*Auto disposed</param>
 		/// <returns></returns>
-		private KinanimServiceData GetStartDataFromEmote(string filepath, Stream readStream)
+		private KinanimServiceData GetStartDataFromEmote(string filepath, Stream readStream, string avatarId)
 		{
 			KinanimServiceData data;
 			//Import Header and extra frames
@@ -132,7 +132,7 @@ namespace Kinetix.Internal
 			readStream.Dispose();
 
 			//Set local dictionary with : KinanimDataIndexer
-			KinanimDataIndexer indexer = new KinanimDataIndexer(importer);
+			KinanimDataIndexer indexer = new KinanimDataIndexer(importer, !string.IsNullOrEmpty(avatarId));
 			indexer.Init();
 			indexer.UpdateIndexCount();
 			data = new KinanimServiceData(indexer, new KinanimExporter(new FileStream(filepath, FileMode.Append, FileAccess.Write)));

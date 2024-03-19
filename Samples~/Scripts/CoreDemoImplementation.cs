@@ -5,7 +5,6 @@
 // // ----------------------------------------------------------------------------
 using UnityEngine;
 using Kinetix;
-using Kinetix.UI;
 using System.Collections;
 using UnityEngine.UI;
 using TMPro;
