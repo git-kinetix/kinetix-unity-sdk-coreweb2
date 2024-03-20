@@ -14,9 +14,7 @@
     "precompiledReferences": [
         "Newtonsoft.Json.dll",
         "Kinetix.Retarget.dll",
-        "Kinanim.dll",
-        "Kinetix.Clip.dll",
-        "Kinetix.Internal.Utils.dll"
+        "Kinanim.dll"
     ],
     "autoReferenced": true,
     "defineConstraints": [],

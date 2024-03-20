@@ -10,8 +10,7 @@
     "overrideReferences": true,
     "precompiledReferences": [
         "Kinetix.Retarget.dll",
-        "Kinanim.dll",
-        "Kinetix.Clip.dll"
+        "Kinanim.dll"
     ],
     "autoReferenced": true,
     "defineConstraints": [],
