@@ -11,6 +11,7 @@
     "precompiledReferences": [
         "Kinetix.Retarget.dll",
         "Kinanim.dll",
+        "Kinetix.Internal.Utils.dll",
         "Kinetix.Clip.dll"
     ],
     "autoReferenced": true,

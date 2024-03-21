@@ -43,7 +43,7 @@ namespace Kinetix.Internal
                         break;
 
                     case Animation_Filename:
-                        urlByFormat["." + file.extension] = file.url;
+                        urlByFormat["." + file.extension.ToLower()] = file.url;
                         animUrl = file.url;
                         break;
 
@@ -56,8 +56,11 @@ namespace Kinetix.Internal
             List<AvatarAnimationMetadata> avatarsMetadata = new List<AvatarAnimationMetadata>();
             foreach (KeyValuePair<string, AvatarSignedFile[]> filesTmp in avatars)
             {
-                AvatarAnimationMetadata avatarAnimationMetadata = new AvatarAnimationMetadata();
-                avatarAnimationMetadata.AvatarUUID = filesTmp.Key;
+                AvatarAnimationMetadata avatarAnimationMetadata = new AvatarAnimationMetadata
+                {
+					UrlByFormat = new Dictionary<string, string>(),
+					AvatarUUID = filesTmp.Key
+                };
 
                 foreach (AvatarSignedFile file in filesTmp.Value)
                 {
@@ -67,11 +70,13 @@ namespace Kinetix.Internal
                     switch (file.name)
                     {
                         case Animation_Filename:
-                            avatarAnimationMetadata.AnimationURL = file.url;
+							avatarAnimationMetadata.UrlByFormat["." + file.extension.ToLower()] = file.url;
+							avatarAnimationMetadata.AnimationURL = file.url;
                             break;
 
                         case Animation_Filename_Legacy:
-                            avatarAnimationMetadata.AnimationURL = file.url;
+							avatarAnimationMetadata.UrlByFormat["." + file.extension.ToLower()] = file.url;
+							avatarAnimationMetadata.AnimationURL = file.url;
                             break;
                     }
                 }

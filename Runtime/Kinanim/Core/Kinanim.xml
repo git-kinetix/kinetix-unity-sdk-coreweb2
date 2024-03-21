@@ -295,6 +295,16 @@
             </summary>
             <param name="compression">Lossy compression algorythm to use to decompress (interpolate) the kinanim</param>
         </member>
+        <member name="P:Kinetix.Internal.Kinanim.KinanimImporter.UncompressedHeader">
+            <summary>
+            Contains data of frames when uncompressed
+            </summary>
+        </member>
+        <member name="M:Kinetix.Internal.Kinanim.KinanimImporter.MoveHeaderToUncompressedHeader">
+            <summary>
+            Move Result.header to UncompressedHeader and set "Result.header" to a new header
+            </summary>
+        </member>
         <member name="M:Kinetix.Internal.Kinanim.KinanimImporter.ReadHeader(System.IO.Stream)">
             <summary>
             Read the header of the kinanim file

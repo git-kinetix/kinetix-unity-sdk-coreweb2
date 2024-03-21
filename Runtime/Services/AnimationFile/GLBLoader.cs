@@ -16,6 +16,8 @@ namespace Kinetix.Internal
 
 		public override async Task<RuntimeRetargetFrameIndexer> Load(KinetixEmote emote, string filepath, CancellationTokenSource cancellationToken, string avatarId)
 		{
+			EnsureDirectoryExist(filepath);
+
 			GLTFUtility.AnimationJson[] animations = await RetargetingManager.LoadGLB(filepath);
 			RuntimeRetargetFrameIndexer indexer = new GLBDataIndexer( animations[0], !string.IsNullOrEmpty(avatarId));
 			indexer.Init();
@@ -27,6 +29,8 @@ namespace Kinetix.Internal
 		public override async Task<RuntimeRetargetFrameIndexer> Download(KinetixEmote emote, string url, CancellationTokenSource cancellationToken, string avatarId = null)
 		{
 			string filepath = GetFilePath(emote.Ids.UUID, avatarId);
+			EnsureDirectoryExist(filepath);
+
 			FileDownloaderConfig fileDownloadOperationConfig = new FileDownloaderConfig(url, filepath);
 			FileDownloader fileDownloadOperation = new FileDownloader(fileDownloadOperationConfig);
 

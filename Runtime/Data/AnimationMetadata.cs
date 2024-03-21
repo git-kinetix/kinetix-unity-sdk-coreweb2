@@ -39,5 +39,6 @@ namespace Kinetix
     {
         public string AvatarUUID;
         public string AnimationURL;
-    }   
+		public Dictionary<string, string> UrlByFormat = new Dictionary<string, string>();
+	}   
 }

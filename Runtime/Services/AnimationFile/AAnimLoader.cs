@@ -6,15 +6,15 @@ using System.Threading.Tasks;
 
 namespace Kinetix.Internal
 {
-    public abstract class AAnimLoader
+	public abstract class AAnimLoader
 	{
 		public abstract string Extension { get; }
 		protected readonly ServiceLocator serviceLocator;
 
 		public AAnimLoader(ServiceLocator _ServiceLocator)
 		{
-            serviceLocator = _ServiceLocator;
-        }
+			serviceLocator = _ServiceLocator;
+		}
 
 		/// <summary>
 		/// Load the animation from local path
@@ -35,5 +35,13 @@ namespace Kinetix.Internal
 			return Path.Combine(PathConstants.CacheAnimationsPath, filename);
 		}
 		public bool ExistInLocal(string emoteId, string avatarId = null) => File.Exists(GetFilePath(emoteId, avatarId));
+
+		public string EnsureDirectoryExist(string path)
+		{
+			string dir = Path.GetDirectoryName(path);
+			if (!Directory.Exists(dir))
+				Directory.CreateDirectory(dir);
+			return path;
+		}
 	}
 }

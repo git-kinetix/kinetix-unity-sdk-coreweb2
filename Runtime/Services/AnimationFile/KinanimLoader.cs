@@ -24,12 +24,14 @@ namespace Kinetix.Internal
 
 		public override string Extension => KinanimData.FILE_EXTENSION;
 
-		public override Task<RuntimeRetargetFrameIndexer> Load(KinetixEmote emote, string filepath, CancellationTokenSource cancellationToken, string avatarId = null)
+		public override async Task<RuntimeRetargetFrameIndexer> Load(KinetixEmote emote, string filepath, CancellationTokenSource cancellationToken, string avatarId = null)
 		{
+			EnsureDirectoryExist(filepath);
+
 			if (kinanimIndexerByFilepath.TryGetValue(filepath, out KinanimServiceData data))
 			{
 				if (data.exporter != null) data.exporter.Dispose();
-				data.exporter = new KinanimExporter(new FileStream(filepath, FileMode.Append, FileAccess.Write));
+				data.exporter = new KinanimExporter(new FileStream(filepath, FileMode.OpenOrCreate, FileAccess.Write));
 			}
 			else
 			{
@@ -37,11 +39,13 @@ namespace Kinetix.Internal
 			}
 
 			//Download remaining frames
-			_ = AsyncDownloadRemainingFrames(data, emote.GetAnimationURLOrFallback(avatarId), null)
+			string url = emote.GetAnimationURLOrNull(KinanimData.FILE_EXTENSION, avatarId) ?? emote.GetAnimationURLOrNull(KinanimData.FILE_EXTENSION, null);
+			await
+				AsyncDownloadRemainingFrames(data, url, null, true)
 				.Catch((e) => KinetixDebug.LogException(e))
 				.Then(() => { data.exporter.Dispose(); });
 
-			return Task.FromResult<RuntimeRetargetFrameIndexer>(data.indexer);
+			return await Task.FromResult<RuntimeRetargetFrameIndexer>(data.indexer);
 		}
 
 		public override async Task<RuntimeRetargetFrameIndexer> Download(KinetixEmote emote, string url, CancellationTokenSource cancellationToken, string avatarId = null)
@@ -52,6 +56,8 @@ namespace Kinetix.Internal
 			ByteRangeDownloaderResponse response = await OperationManagerShortcut.Get().RequestExecution(fileDownloadOperation, cancellationToken);
 			
 			string filepath = GetFilePath(emote.Ids.UUID, avatarId);
+			EnsureDirectoryExist(filepath);
+
 			KinanimServiceData data = GetStartDataFromEmote(filepath, new MemoryStream(response.bytes), avatarId); //Import header and some frames
 			data.exporter.WriteHeader(data.indexer.dataSource.UncompressedHeader);
 
@@ -66,15 +72,18 @@ namespace Kinetix.Internal
 			data.exporter.content.WriteFrames(new ArraySegment<KinanimData.FrameData>(data.indexer.dataSource.Result.content.frames, 0, maxFrame + 1).ToArray(), data.indexer.dataSource.Result.header.hasBlendshapes, 0);
 
 			//Download remaining frames
-			_ = AsyncDownloadRemainingFrames(data, emote.GetAnimationURLOrFallback(avatarId), null)
+			_ = AsyncDownloadRemainingFrames(data, url, null, false)
 				.Catch(KinetixDebug.LogException)
 				.Then(data.exporter.Dispose);
 
 			return data.indexer;
 		}
 
-		async Task AsyncDownloadRemainingFrames(KinanimServiceData kinanim, string url, CancellationTokenSource cancellationTokenDownload)
+		private async Task AsyncDownloadRemainingFrames(KinanimServiceData kinanim, string url, CancellationTokenSource cancellationTokenDownload, bool downloadHeader)
 		{
+			if (downloadHeader)
+				await GetServerHeader(kinanim.indexer, url, null);
+
 			// Create a separate task that will load each chunk
 			//
 			// DL() :
@@ -90,7 +99,7 @@ namespace Kinetix.Internal
 			//    BinaryReader
 			//    ReadFrames / 
 			//	  KinanimDataIndexer.IndexFrames();
-		
+
 			int remainingFrames = kinanim.indexer.dataSource.Result.header.FrameCount - (kinanim.indexer.dataSource.HighestImportedFrame + 1);
 			int chunkCount = Mathf.CeilToInt(remainingFrames / (float)InterpoCompression.DEFAULT_BATCH_SIZE);
 			for (int chunk = 0; chunk < chunkCount; chunk++)
@@ -135,7 +144,7 @@ namespace Kinetix.Internal
 			KinanimDataIndexer indexer = new KinanimDataIndexer(importer, !string.IsNullOrEmpty(avatarId));
 			indexer.Init();
 			indexer.UpdateIndexCount();
-			data = new KinanimServiceData(indexer, new KinanimExporter(new FileStream(filepath, FileMode.Append, FileAccess.Write)));
+			data = new KinanimServiceData(indexer, new KinanimExporter(new FileStream(filepath, FileMode.OpenOrCreate, FileAccess.Write)));
 
 			if (!(readStream is FileStream))
 				data.exporter.OverrideHeader(data.indexer.dataSource.UncompressedHeader); //Frame size changed so we need to rewrite the header
@@ -143,6 +152,20 @@ namespace Kinetix.Internal
 			kinanimIndexerByFilepath[filepath] = data;
 			return data;
 		}	
+
+		private async Task GetServerHeader(KinanimDataIndexer indexer, string url, CancellationTokenSource cancellationToken)
+		{
+			ByteRangeDownloaderConfig fileDownloadOperationConfig = new ByteRangeDownloaderConfig(url, 0, indexer.dataSource.Result.header.BinarySize);
+			ByteRangeDownloader fileDownloadOperation = new ByteRangeDownloader(fileDownloadOperationConfig);
+
+			ByteRangeDownloaderResponse response = await OperationManagerShortcut.Get().RequestExecution(fileDownloadOperation, cancellationToken);
+
+			//Import frames
+			MemoryStream stream = new MemoryStream(response.bytes);
+			indexer.dataSource.MoveHeaderToUncompressedHeader();
+			indexer.dataSource.ReadHeader(stream);
+			indexer.UpdateIndexCount();
+		}
 
 		private async Task LoadBatchFrameKinanim(KinanimDataIndexer indexer, string url, int frameCount, CancellationTokenSource cancellationToken)
 		{

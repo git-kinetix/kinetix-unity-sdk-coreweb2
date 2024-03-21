@@ -65,17 +65,21 @@ namespace Kinetix.Internal
 		}
 
 
-		public string GetAnimationURLOrFallback(string avatarId)
-		{
-			return GetAnimationURLOrNull(avatarId) ?? Metadata.AnimationURL;
-		}
-
 		public string GetAnimationURLOrNull(string avatarId = null)
 		{
 			if (avatarId == null)
 				return Metadata.AnimationURL;
 
 			return Metadata.Avatars.FirstOrDefault(First)?.AnimationURL;
+			bool First(AvatarAnimationMetadata avatar) => avatar.AvatarUUID == avatarId;
+		}
+		
+		public string GetAnimationURLOrNull(string extension, string avatarId)
+		{
+			if (avatarId == null)
+				return Metadata.UrlByFormat[extension];
+
+			return Metadata.Avatars.FirstOrDefault(First)?.UrlByFormat[extension];
 			bool First(AvatarAnimationMetadata avatar) => avatar.AvatarUUID == avatarId;
 		}
 	}
