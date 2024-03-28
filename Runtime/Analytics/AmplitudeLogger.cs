@@ -68,10 +68,10 @@ namespace Kinetix.Internal
                 case UnityWebRequest.Result.ConnectionError:
                 case UnityWebRequest.Result.DataProcessingError:
                 case UnityWebRequest.Result.ProtocolError:
-                    Debug.Log("ERROR: " + uwr.error);
+                    KinetixDebug.Log("ERROR: " + uwr.error);
                     break;
                 case UnityWebRequest.Result.Success:
-                    Debug.Log("Received: " + uwr.downloadHandler.text);
+                    KinetixDebug.Log("Received: " + uwr.downloadHandler.text);
                     break;
             }
         }
