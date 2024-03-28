@@ -40,10 +40,14 @@ namespace Kinetix.Internal
 
 			//Download remaining frames
 			string url = emote.GetAnimationURLOrNull(KinanimData.FILE_EXTENSION, avatarId) ?? emote.GetAnimationURLOrNull(KinanimData.FILE_EXTENSION, null);
-			await
-				AsyncDownloadRemainingFrames(data, url, null, true)
-				.Catch((e) => KinetixDebug.LogException(e))
-				.Then(() => { data.exporter.Dispose(); });
+
+			if (data.indexer.dataSource.HighestImportedFrame < data.indexer.dataSource.Result.header.FrameCount - 1)
+			{
+				await
+					AsyncDownloadRemainingFrames(data, url, null, true)
+					.Catch((e) => KinetixDebug.LogException(e))
+					.Then(() => { data.exporter.Dispose(); });
+			}
 
 			return await Task.FromResult<RuntimeRetargetFrameIndexer>(data.indexer);
 		}
