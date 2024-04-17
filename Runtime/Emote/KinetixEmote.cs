@@ -40,13 +40,13 @@ namespace Kinetix.Internal
 		/// Check if emote has a valid GLB Path in storage in order to import it
 		/// </summary>
 		/// <returns>True if path exists</returns>
-		public bool HasValidPath(string avatarId = null)
+		public bool HasValidPath(string _AvatarId = null)
 		{
-			string FilePath = avatarId == null ? this.FilePath : RT3KPath.ValueOrDefault(avatarId);
+			string filePath = _AvatarId == null ? this.FilePath : RT3KPath.ValueOrDefault(_AvatarId);
 			
-			if (string.IsNullOrEmpty(FilePath))
+			if (string.IsNullOrEmpty(filePath))
 				return false;
-			return File.Exists(FilePath);
+			return File.Exists(filePath);
 		}
 
 		public void ClearAvatar(KinetixAvatar _Avatar)
@@ -64,23 +64,27 @@ namespace Kinetix.Internal
 			return KinetixCoreBehaviour.ServiceLocator.Get<RetargetingService>().HasAnimationRetargeted(this, _Avatar);
 		}
 
-
-		public string GetAnimationURLOrNull(string avatarId = null)
+		public AvatarAnimationMetadata GetAvatarMetadata(string _AvatarId)
 		{
-			if (avatarId == null)
+			return Metadata.Avatars.FirstOrDefault(First);
+			bool First(AvatarAnimationMetadata avatar) => avatar.AvatarUUID == _AvatarId;
+		}
+
+		public string GetAnimationURLOrNull(string _AvatarId = null)
+		{
+			if (_AvatarId == null)
 				return Metadata.AnimationURL;
 
-			return Metadata.Avatars.FirstOrDefault(First)?.AnimationURL;
-			bool First(AvatarAnimationMetadata avatar) => avatar.AvatarUUID == avatarId;
+			return GetAvatarMetadata(_AvatarId)?.AnimationURL;
 		}
 		
-		public string GetAnimationURLOrNull(string extension, string avatarId)
+		public string GetAnimationURLOrNull(string _Extension, string _AvatarId)
 		{
-			if (avatarId == null)
-				return Metadata.UrlByFormat[extension];
+			if (_AvatarId == null)
+				return Metadata.UrlByFormat[_Extension];
 
-			return Metadata.Avatars.FirstOrDefault(First)?.UrlByFormat[extension];
-			bool First(AvatarAnimationMetadata avatar) => avatar.AvatarUUID == avatarId;
+			return GetAvatarMetadata(_AvatarId)?.UrlByFormat[_Extension];
+			bool First(AvatarAnimationMetadata avatar) => avatar.AvatarUUID == _AvatarId;
 		}
 	}
 }

@@ -72,7 +72,7 @@ namespace Kinetix.Internal
 					toReturn = previousFrame;
 				}
 				//If current frame isn't different and the sample is MAIN, the sample returns null
-				//this is usefull to calibrate every sampler on MAIN's framerate (main will return null when it doesn't need 
+				//this is usefull to calibrate every sampler on MAIN's framerate (main will return null when it doesn't need)
 			}
 			else
 			{

@@ -10,35 +10,37 @@ using UnityEngine;
 
 namespace Kinetix
 {
-    [Serializable]
-    public class AnimationMetadata
-    {
+	[Serializable]
+	public class AnimationMetadata
+	{
 		[SerializeField]
-        public EOwnership Ownership;
-        
+		public EOwnership Ownership;
+		
 		[SerializeField]
-        public AnimationIds Ids;
+		public AnimationIds Ids;
 
 		public string Name;
 		public string Description;
+		public bool Partial => string.IsNullOrEmpty(AnimationURL);
 
-        #region URL
+		#region URL
 
 		public string AnimationURL;
-        public Dictionary<string, string> UrlByFormat = new Dictionary<string, string>();
-        public string IconeURL;
+		public Dictionary<string, string> UrlByFormat = new Dictionary<string, string>();
+		public string IconeURL;
 		public DateTime CreatedAt;
 
 		#endregion
 
-        public List<AvatarAnimationMetadata> Avatars = new List<AvatarAnimationMetadata>();
-    }
+		public List<AvatarAnimationMetadata> Avatars = new List<AvatarAnimationMetadata>();
+	}
 
     [Serializable]
     public class AvatarAnimationMetadata
     {
         public string AvatarUUID;
         public string AnimationURL;
+        public string IconUrl;
 		public Dictionary<string, string> UrlByFormat = new Dictionary<string, string>();
 	}   
 }

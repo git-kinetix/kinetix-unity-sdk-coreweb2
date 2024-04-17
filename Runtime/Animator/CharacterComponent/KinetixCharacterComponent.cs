@@ -52,12 +52,6 @@ namespace Kinetix
 		public virtual bool AutoPlay { get => _autoPlay; set => _autoPlay = value; }
 		private bool _autoPlay = false;
 
-		/// <summary>
-		/// Unique identifier of the character
-		/// </summary>
-		public string GUID => _guid;
-		private string _guid;
-
 		internal protected KinetixNetworkSampler networkSampler;
 
 		protected KinetixCharacterComponentBehaviour behaviour;
@@ -91,7 +85,6 @@ namespace Kinetix
 			behaviour.OnUpdate += Update;
 
 			this.kinetixAvatar = _KinetixAvatar;
-			_guid = Guid.NewGuid().ToString();
 
 			AvatarData avatar = _KinetixAvatar.Avatar;
 

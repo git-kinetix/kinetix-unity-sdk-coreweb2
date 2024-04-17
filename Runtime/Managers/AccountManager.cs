@@ -119,48 +119,6 @@ namespace Kinetix.Internal
             OnDisconnectedAccount?.Invoke();
         }
 
-        public async Task<bool> AssociateEmotesToUser(AnimationIds _Emote)
-        {
-            if (loggedAccount == null)
-                throw new Exception(
-                    "Unable to find a connected account. Did you use the KinetixCore.Account.ConnectAccount method?");
-
-            if (loggedAccount.HasEmote(_Emote))
-                throw new Exception("Emote is already assigned");
-
-            if (loggedAccount == null)
-                throw new Exception(
-                    "Unable to find a connected account. Did you use the KinetixCore.Account.ConnectAccount method?");
-
-            Dictionary<string, string> headers = new Dictionary<string, string>
-            {
-                { "Content-type", "application/json" },
-                { "Accept", "application/json" },
-                { "x-api-key", GameAPIKey }
-            };
-
-            string url = KinetixConstants.c_SDK_API_URL + "/v1/users/" + loggedAccount.AccountId + "/emotes/" +
-                         _Emote.UUID;
-
-
-            WebRequestDispatcher webRequest = new WebRequestDispatcher();
-            try
-            {
-                RawResponse response = await webRequest.SendRequest<RawResponse>(url, WebRequestDispatcher.HttpMethod.POST, headers);
-
-                if (!response.IsSuccess)
-                    return false;
-                
-                await loggedAccount.AddEmoteFromIds(_Emote);
-                OnUpdatedAccount?.Invoke();
-                return true;
-            }
-            catch (Exception e)
-            {
-                throw e;
-            }
-        }
-
         private async Task<bool> TryCreateAccount(string _UserId)
         {
             if (String.IsNullOrEmpty(GameAPIKey))

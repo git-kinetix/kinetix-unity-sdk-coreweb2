@@ -39,9 +39,6 @@ namespace Kinetix
         public static KinetixUGC       UGC       { get; internal set; }
         [Obsolete("Context feaure is no longer supported and will be removed in next version")]
         public static KinetixContext   Context   { get; internal set; }
-        [Obsolete("Alias feaure is no longer supported and will be removed in next version")]
-        public static KinetixAlias     Alias     { get; internal set; }
-
         #endregion
     }
 }

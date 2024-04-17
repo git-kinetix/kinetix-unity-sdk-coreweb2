@@ -25,7 +25,8 @@ namespace Kinetix.Internal
 
             GetRawAPIResultResponse apiResponse = new GetRawAPIResultResponse
             {
-                json = json
+                json = json,
+                raw = response
             };
 
             CurrentTaskCompletionSource.SetResult(apiResponse);

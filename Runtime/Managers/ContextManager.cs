@@ -55,10 +55,10 @@ namespace Kinetix.Internal
             if (!contexts.ContainsKey(_ContextName))
                 return false;
             
-            if (_ContextName == string.Empty)
+            if (string.IsNullOrWhiteSpace(_ContextName))
                 return false;
 
-            if (contexts[_ContextName].EmoteID == string.Empty)
+            if (string.IsNullOrEmpty(contexts[_ContextName].EmoteID))
                 return false;
             
             KinetixCore.Animation.PlayAnimationOnLocalPlayer(contexts[_ContextName].EmoteID);
@@ -71,10 +71,10 @@ namespace Kinetix.Internal
             if (!contexts.ContainsKey(_ContextName))
                 return false;
             
-            if (_ContextName == string.Empty)
+            if (string.IsNullOrWhiteSpace(_ContextName))
                 return false;
 
-            if (contexts[_ContextName].EmoteID == string.Empty)
+            if (string.IsNullOrEmpty(contexts[_ContextName].EmoteID))
                 return false;
             
             KinetixCore.Animation.PlayAnimationOnAvatar(_PlayerUUID, contexts[_ContextName].EmoteID);

@@ -112,8 +112,9 @@ namespace Kinetix.Internal
 		/// /!\ Be really cautious with this parameter as we keep a stable memory management.
 		/// It is only use to for the emote played by the local player.
 		/// </param>
+		/// <param name="_AwaitAll">If true, wait for the entire animation to load</param>
 		/// <returns>The KinetixClip for the specific Avatar</returns>
-		public async Task<TResponseType> GetRetargetedClipByAvatar<TResponseType, THandler>(KinetixEmote _Emote, KinetixAvatar _Avatar, SequencerPriority _Priority, bool _Force, string _ExtensionForced = "")
+		public async Task<TResponseType> GetRetargetedClipByAvatar<TResponseType, THandler>(KinetixEmote _Emote, KinetixAvatar _Avatar, SequencerPriority _Priority, bool _Force, string _ExtensionForced = "", bool _AwaitAll = false)
 			where THandler
 			: ARetargetExport<TResponseType>, new()
 		{
@@ -185,14 +186,15 @@ namespace Kinetix.Internal
 			try
 			{
 				AAnimLoader[] loaders = null;
-
-				if (_ExtensionForced != string.Empty)
+				bool isForced = _ExtensionForced != string.Empty;
+				
+				if (isForced)
 				{
 					loaders = serviceLocator.Get<LoadAnimService>().GetLoadersForExtension(_ExtensionForced);
 				}
-
-				(indexer, rt3k) = await serviceLocator.Get<LoadAnimService>().GetFrameIndexer(_Emote, cancellationTokenDownload, _Avatar.AvatarID, loaders, true);
-
+				
+				(indexer, rt3k) = await serviceLocator.Get<LoadAnimService>().GetFrameIndexer(_Emote, cancellationTokenDownload, _Avatar.AvatarID, loaders, isForced);
+				
 				if (indexer == null)
 					throw new Exception("Couldn't find any download URL");
 			}
@@ -232,7 +234,7 @@ namespace Kinetix.Internal
 			try
 			{
 				// Now we can create the retargeting operation itself, that will smartly handle the retargeting of the emote
-				EmoteRetargetingResponse<TResponseType> response = await RequestOperationExecution<TResponseType, THandler>(pair, _Priority, indexer, sequencerCancelToken, rt3k);
+				EmoteRetargetingResponse<TResponseType> response = await RequestOperationExecution<TResponseType, THandler>(pair, _Priority, indexer, sequencerCancelToken, rt3k, _AwaitAll);
 			
 				if (castedClipResult == null && retargetedEmoteByAvatar[pair].clipsByType.ContainsKey(typeof(TResponseType)))
 				{
@@ -283,13 +285,14 @@ namespace Kinetix.Internal
 		/// <param name="_Indexer"></param>
 		/// <param name="_RT3K"></param>
 		/// <param name="_CancelToken"></param>
+		/// <param name="_AwaitAll">If true, wait for the entire animation to load</param>
 		/// <typeparam name="TResponseType"></typeparam>
 		/// <typeparam name="THandler"></typeparam>
 		/// <returns></returns>
-		private async Task<EmoteRetargetingResponse<TResponseType>> RequestOperationExecution<TResponseType, THandler>(KinetixEmoteAvatarPair _EmoteAvatarPair, SequencerPriority _Priority, RuntimeRetargetFrameIndexer _Indexer, SequencerCancel _CancelToken, bool _RT3K)
+		private async Task<EmoteRetargetingResponse<TResponseType>> RequestOperationExecution<TResponseType, THandler>(KinetixEmoteAvatarPair _EmoteAvatarPair, SequencerPriority _Priority, RuntimeRetargetFrameIndexer _Indexer, SequencerCancel _CancelToken, bool _RT3K, bool _AwaitAll)
 			where THandler : ARetargetExport<TResponseType>, new()
 		{
-			EmoteRetargetingConfig                    emoteRetargetingConfig = new EmoteRetargetingConfig(_EmoteAvatarPair.Emote, _EmoteAvatarPair.Avatar, _Priority, _Indexer, _CancelToken, _RT3K);
+			EmoteRetargetingConfig                    emoteRetargetingConfig = new EmoteRetargetingConfig(_EmoteAvatarPair.Emote, _EmoteAvatarPair.Avatar, _Priority, _Indexer, _CancelToken, _RT3K, _AwaitAll);
 			EmoteRetargeting<TResponseType, THandler> emoteRetargeting       = new EmoteRetargeting<TResponseType, THandler>(emoteRetargetingConfig);
 
 			retargetedEmoteByAvatar[_EmoteAvatarPair].CancellationTokenFileDownload = emoteRetargeting.CancellationTokenSource;

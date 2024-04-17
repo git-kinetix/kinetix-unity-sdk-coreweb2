@@ -66,15 +66,31 @@ namespace Kinetix.Internal
         }
 
         /// <summary>
-        /// Make a Web Request to get metadata of a specific NFT
+        /// Make a Web Request to get metadata of a specific emote
         /// </summary>
-        /// <param name="_AnimationIds">Animation Ids</param>
+        /// <param name="_AnimationIds">Id of the animation</param>
         public async Task<AnimationMetadata> GetAnimationMetadataOfEmote(AnimationIds _AnimationIds)
         {
             try
             {
-                AnimationMetadata     emoteMetadata = await ProviderWrappers[_AnimationIds.GetExpectedProvider()].GetAnimationMetadataOfEmote(_AnimationIds);
-                return emoteMetadata;
+                return await ProviderWrappers[_AnimationIds.GetExpectedProvider()].GetAnimationMetadataOfEmote(_AnimationIds);
+            }
+            catch (Exception e)
+            {
+                throw e;
+            }
+        }
+
+		/// <summary>
+		/// Make a Web Request to get metadata of a specific emote
+		/// </summary>
+		/// <param name="_AnimationIds">Id of the animation</param>
+		/// <param name="_AvatarUUID">Id of the avatar</param>
+		public async Task<AnimationMetadata> GetAnimationMetadataOfEmote(AnimationIds _AnimationIds, string _AvatarUUID, AnimationMetadata _Metadata)
+        {
+            try
+            {
+                return await ProviderWrappers[_AnimationIds.GetExpectedProvider()].GetAnimationMetadataOfAvatar(_AnimationIds, _AvatarUUID, _Metadata);
             }
             catch (Exception e)
             {

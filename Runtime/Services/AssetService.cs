@@ -21,12 +21,19 @@ namespace Kinetix.Internal
             MonoBehaviourHelper.Instance.OnDestroyEvent += OnDestroy;
         }
         
-        public async Task<Sprite> LoadIcon(AnimationIds _Ids, CancellationTokenSource cancelToken = null)
+        public async Task<Sprite> LoadIcon(AnimationIds _Ids, string _AvatarID, CancellationTokenSource cancelToken = null)
         {
             KinetixEmote emote = KinetixCoreBehaviour.ServiceLocator.Get<EmotesService>().GetEmote(_Ids);
             if (!emote.HasMetadata())
                 return null;
-            if (string.IsNullOrEmpty(emote.Metadata.IconeURL))
+
+            string url = null;
+            if (!string.IsNullOrEmpty(_AvatarID))
+                url = emote.GetAvatarMetadata(_AvatarID)?.IconUrl;
+
+            url ??= emote.Metadata.IconeURL;
+
+			if (string.IsNullOrEmpty(url))
                 return null;
 
             if (IconSpritesByIds.ContainsKey(_Ids))
@@ -37,7 +44,7 @@ namespace Kinetix.Internal
             
             try
             {
-                IconDownloaderConfig iconOperationConfig = new IconDownloaderConfig(emote.Metadata.IconeURL);
+                IconDownloaderConfig iconOperationConfig = new IconDownloaderConfig(url);
                 IconDownloader iconOperation = new IconDownloader(iconOperationConfig);
 
                 IconDownloaderResponse response = await OperationManagerShortcut.Get().RequestExecution<IconDownloaderConfig, IconDownloaderResponse>(iconOperation, cancelToken);

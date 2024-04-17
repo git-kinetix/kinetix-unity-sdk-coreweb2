@@ -29,29 +29,58 @@ namespace Kinetix.Internal
 
 		public AAnimLoader[] GetLoadersForExtension(string _Extension = "")
 		{
-			AAnimLoader[] loaders;
+			_Extension = _Extension.ToLowerInvariant();
 
-			switch(_Extension)
+			AAnimLoader[] loaders = this.loaders.OrderByDescending(OrderByDescending).ToArray();
+			bool OrderByDescending(AAnimLoader loader)
+			{
+				string loaderExtension = loader.Extension.ToLowerInvariant();
+				_Extension = _Extension.ToLowerInvariant();
+
+				if (loaderExtension.StartsWith("."))
+				{
+					if (!_Extension.StartsWith("."))
+						_Extension = "." + _Extension;
+				}
+				else
+				{
+					if (_Extension.StartsWith("."))
+						_Extension = _Extension.Substring(1);
+				}
+
+
+
+				return loaderExtension == _Extension;
+			}
+
+			// The code above is basically the code bellow but
+			// - More modular
+			// - Doesn't recreate loaders
+			// - Take into account all loaders
+			//
+			/*switch(_Extension)
 			{
 				case "glb":
 					loaders = new AAnimLoader[]
 					{
 						new GLBLoader(serviceLocator),
-						new KinanimLoader(serviceLocator), //The order is important, it defines the search priority
+						new KinanimLoader(serviceLocator),
 					};
 					break;
 				default:
 				case "kinanim":
 					loaders = new AAnimLoader[]
 					{
-						new KinanimLoader(serviceLocator), //The order is important, it defines the search priority
+						new KinanimLoader(serviceLocator),
 						new GLBLoader(serviceLocator),
 					};
 					break;
-			}
+			}*/
 
 			return loaders;
+			
 		}
+
 
 		/// <summary>
 		/// Get a frame indexer for the emote. (= load animation)<br/>
@@ -107,6 +136,7 @@ namespace Kinetix.Internal
 					return (await LoadAnimation(emote, loader.GetFilePath(emote.Ids.UUID, avatarId), cancellationToken, avatarId, loader), avatarId != null);
 				}
 
+				//Wait to get first loader
 				if (_ForceDownload)
 					break;
 			}
@@ -142,7 +172,7 @@ namespace Kinetix.Internal
 				}
 				
 				//Try to download
-				(success, result) = await TryDownload(emote, null, forcedExtension);
+				(success, result) = await TryDownload(emote, null, extensionWanted: forcedExtension);
 				if (success)
 					return (result, false);
 			}

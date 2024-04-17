@@ -46,9 +46,19 @@ namespace Kinetix.Internal
 
 			try
 			{
-				await GetRetargetTask(useWebRequest)
-				.AwaitFrame(60)
-				.Then(RetargetCallBack);
+				RetargetTask<TResponseType, TExporter> retargetTask = GetRetargetTask(useWebRequest);
+				if (Config.AwaitAll)
+				{
+					await retargetTask
+					.AwaitAll()
+					.Then(RetargetCallBack);
+				}
+				else
+				{
+					await retargetTask
+					.AwaitFrame(60)
+					.Then(RetargetCallBack);
+				}
 
 				await CurrentTaskCompletionSource.Task;
 			}
@@ -57,8 +67,13 @@ namespace Kinetix.Internal
 				KinetixDebug.LogException(e);
 			}
 
-			void RetargetCallBack(TExporter exporter)
+			async Task RetargetCallBack(TExporter exporter)
 			{
+				if (Config.AwaitAll)
+				{
+					await Task.Delay(20); //Give a bit of delay to release the file
+				}
+
 				TResponseType clip = exporter.result;
 				long estimationSize = exporter.MemorySize;
 
@@ -90,8 +105,6 @@ namespace Kinetix.Internal
 
 		private RetargetTask<TResponseType, TExporter> GetPreRetargetTask(bool useWebRequest)
 		{
-			//TODO: Implement Indexer for PreRetarget
-
 			if (Config.Indexer != null)
 				return RetargetingManager.LoadPreRetargetedAnimation<TResponseType, TExporter>(Config.Avatar.Avatar, Config.Indexer, Config.CancellationSequencer, useWebRequest:useWebRequest);
 			
