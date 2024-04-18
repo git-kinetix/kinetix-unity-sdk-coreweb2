@@ -36,12 +36,20 @@ namespace Kinetix.Internal
 		}
 		public bool ExistInLocal(string emoteId, string avatarId = null) => File.Exists(GetFilePath(emoteId, avatarId));
 
-		public string EnsureDirectoryExist(string path)
-		{
-			string dir = Path.GetDirectoryName(path);
-			if (!Directory.Exists(dir))
-				Directory.CreateDirectory(dir);
-			return path;
+		/// <summary>
+		/// Create directory for <paramref name="filepath"/> if it doesn't exists
+		/// </summary>
+		/// <param name="filepath">Path to the file contained within the directory</param>
+        public string EnsureDirectoryExists(string filepath)
+        {
+			string directoryName = Path.GetDirectoryName(filepath);
+
+			if (!Directory.Exists(directoryName))
+			{
+				Directory.CreateDirectory(directoryName);
+			}
+
+			return filepath;
 		}
 	}
 }

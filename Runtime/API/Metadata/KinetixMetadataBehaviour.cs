@@ -5,7 +5,6 @@
 // // ----------------------------------------------------------------------------
 using System;
 using UnityEngine;
-using Kinetix.Utils;
 using System.Threading.Tasks;
 using System.Threading;
 
@@ -13,24 +12,44 @@ namespace Kinetix.Internal
 {
     internal static class KinetixMetadataBehaviour
     {
-        public static async void GetAnimationMetadataByAnimationIds(AnimationIds _Ids, Action<AnimationMetadata> _OnSuccess, Action _OnFailure)
+        public static async void GetAnimationMetadataByAnimationIds(AnimationIds _Ids, string _AvatarUUID, Action<AnimationMetadata> _OnSuccess, Action _OnFailure)
         {
-            try
+            EmotesService emotesService = KinetixCoreBehaviour.ServiceLocator.Get<EmotesService>();
+            KinetixEmote kinetixEmote;
+            if (_AvatarUUID != null)
             {
-                if (!KinetixCoreBehaviour.ServiceLocator.Get<EmotesService>().GetEmote(_Ids).HasMetadata())
-                    KinetixCoreBehaviour.ServiceLocator.Get<EmotesService>().GetEmote(_Ids).SetMetadata(
-                    
-                    
-                        await KinetixCoreBehaviour.ServiceLocator.Get<ProviderService>().GetAnimationMetadataOfEmote(_Ids)
-                    );
+                try
+                {
+                    kinetixEmote = emotesService.GetEmote(_Ids);
+                    if (kinetixEmote.Metadata == null || kinetixEmote.GetAvatarMetadata(_AvatarUUID) != null )
+                        kinetixEmote.SetMetadata(
+                            await KinetixCoreBehaviour.ServiceLocator.Get<ProviderService>().GetAnimationMetadataOfEmote(_Ids, _AvatarUUID, kinetixEmote.Metadata)
+                        );
 
+                }
+                catch (Exception)
+                {
+                    _OnFailure?.Invoke();
+                }
             }
-            catch (Exception)
+            else
             {
-                _OnFailure?.Invoke();
+                try
+                {
+                    kinetixEmote = emotesService.GetEmote(_Ids);
+                    if (!kinetixEmote.HasMetadata() || kinetixEmote.Metadata.Partial)
+                        kinetixEmote.SetMetadata(
+                            await KinetixCoreBehaviour.ServiceLocator.Get<ProviderService>().GetAnimationMetadataOfEmote(_Ids)
+                        );
+
+                }
+                catch (Exception)
+                {
+                    _OnFailure?.Invoke();
+                }
             }
            
-            _OnSuccess?.Invoke(KinetixCoreBehaviour.ServiceLocator.Get<EmotesService>().GetEmote(_Ids).Metadata);
+            _OnSuccess?.Invoke(emotesService.GetEmote(_Ids).Metadata);
         }
 
         public static void IsAnimationOwnedByUser(AnimationIds _Ids, Action<bool> _OnSuccess, Action _OnFailure)
@@ -59,7 +78,26 @@ namespace Kinetix.Internal
             {
                 try
                 {
-                    Sprite sprite = await KinetixCoreBehaviour.ServiceLocator.Get<AssetService>().LoadIcon(_Ids, cancelToken);
+                    Sprite sprite = await KinetixCoreBehaviour.ServiceLocator.Get<AssetService>().LoadIcon(_Ids, null, cancelToken);
+                    _OnSuccess?.Invoke(sprite);
+                }
+                catch (TaskCanceledException)
+                {
+                }
+                catch (Exception)
+                {
+                    _OnSuccess?.Invoke(null);
+                }
+            }
+        }
+        
+        public static async void LoadIconByAnimationId(AnimationIds _Ids, string _AvatarID, Action<Sprite> _OnSuccess, CancellationTokenSource cancelToken = null)
+        {
+            if (KinetixCoreBehaviour.ServiceLocator.Get<EmotesService>().GetEmote(_Ids).HasMetadata())
+            {
+                try
+                {
+                    Sprite sprite = await KinetixCoreBehaviour.ServiceLocator.Get<AssetService>().LoadIcon(_Ids, _AvatarID, cancelToken);
                     _OnSuccess?.Invoke(sprite);
                 }
                 catch (TaskCanceledException)

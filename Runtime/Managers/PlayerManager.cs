@@ -39,12 +39,12 @@ namespace Kinetix.Internal.Cache
 		// Play Automatically on Animator
 		private bool playAutomaticallyOnAnimator;
 
-        public PlayerManager(ServiceLocator _ServiceLocator, KinetixCoreConfiguration _Config) : base(_ServiceLocator, _Config) 
+		public PlayerManager(ServiceLocator _ServiceLocator, KinetixCoreConfiguration _Config) : base(_ServiceLocator, _Config) 
 		{
 			UUID = Guid.NewGuid().ToString();
 		}
 
-        protected override void Initialize(KinetixCoreConfiguration _Config)
+		protected override void Initialize(KinetixCoreConfiguration _Config)
 		{
 			playAutomaticallyOnAnimator = _Config.PlayAutomaticallyAnimationOnAnimators;
 			
@@ -84,8 +84,22 @@ namespace Kinetix.Internal.Cache
 			KAvatar            = CreateKinetixAvatar(_Root, _RootTransform, EExportType.KinetixClip);
 			KinetixCharacterComponent = AddKCCAndInit(_PoseInterpreter, KAvatar, _RootMotionConfig);
 			OnRegisterPlayer();
-		}        
-       
+		}
+
+		public void AddPlayerCharacterComponent(Avatar _Avatar, Transform _RootTransform,IPoseInterpreter _PoseInterpreter)
+		{
+			KAvatar            = CreateKinetixAvatar(_Avatar, _RootTransform, EExportType.KinetixClip);
+			KinetixCharacterComponent = AddKCCAndInit(_PoseInterpreter, KAvatar);
+			OnRegisterPlayer();
+		}
+
+		public void AddPlayerCharacterComponent(Avatar _Avatar, Transform _RootTransform, IPoseInterpreter _PoseInterpreter, RootMotionConfig _RootMotionConfig)
+		{
+			KAvatar            = CreateKinetixAvatar(_Avatar, _RootTransform, EExportType.KinetixClip);
+			KinetixCharacterComponent = AddKCCAndInit(_PoseInterpreter, KAvatar, _RootMotionConfig);
+			OnRegisterPlayer();
+		}
+	   
 		public void AddPlayerCharacterComponent(Avatar _Avatar, Transform _RootTransform, EExportType _ExportType)
 		{
 			if (KAvatar != null)
@@ -95,12 +109,12 @@ namespace Kinetix.Internal.Cache
 			OnRegisterPlayer();
 		}
 
-        public void SetAvatarID(string _AvatarID)
-        {
-            if (KAvatar != null)
-                KAvatar.AvatarID = _AvatarID;
-        }
-        
+		public void SetAvatarID(string _AvatarID)
+		{
+			if (KAvatar != null)
+				KAvatar.AvatarID = _AvatarID;
+		}
+		
 		#endregion
 
 		#region LOAD
@@ -122,11 +136,12 @@ namespace Kinetix.Internal.Cache
 		
 		public async void GetRetargetedKinetixClipLegacy(AnimationIds _AnimationIds, Action<KinetixClip> _OnSuccess, Action _OnFailure)
 		{
+			bool awaitAll = KinetixCharacterComponent == null;
 			KinetixEmote emote = serviceLocator.Get<EmotesService>().GetEmote(_AnimationIds);
 
 			try
 			{
-				KinetixClip clip = await serviceLocator.Get<RetargetingService>().GetRetargetedClipByAvatar<KinetixClip, KinetixClipExporter>(emote, KAvatar, SequencerPriority.Low, false);
+				KinetixClip clip = await serviceLocator.Get<RetargetingService>().GetRetargetedClipByAvatar<KinetixClip, KinetixClipExporter>(emote, KAvatar, SequencerPriority.Low, false, _AwaitAll: awaitAll);
 				_OnSuccess?.Invoke(clip);
 			}
 			catch (OperationCanceledException)
@@ -147,7 +162,7 @@ namespace Kinetix.Internal.Cache
 
 			try
 			{
-				AnimationClip clip = await serviceLocator.Get<RetargetingService>().GetRetargetedClipByAvatar<AnimationClip, AnimationClipExport>(emote, KAvatar, SequencerPriority.Low, false);
+				AnimationClip clip = await serviceLocator.Get<RetargetingService>().GetRetargetedClipByAvatar<AnimationClip, AnimationClipExport>(emote, KAvatar, SequencerPriority.Low, false, _AwaitAll: true);
 				
 				clip.wrapMode = WrapMode.Default;
 
@@ -184,19 +199,19 @@ namespace Kinetix.Internal.Cache
 		}
 
 		public void LoadPlayerAnimation(AnimationIds _Ids, string _LockId, Action _OnSuccess = null, Action _OnFailure = null)
-        {
-            KinetixEmote emote = serviceLocator.Get<EmotesService>().GetEmote(_Ids);
-            serviceLocator.Get<LockService>().Lock(new KinetixEmoteAvatarPair() { Emote = emote, Avatar = KAvatar}, _LockId);
-            
-            LoadPlayerAnimationInternal(emote, _OnSuccess, _OnFailure);
-        }
+		{
+			KinetixEmote emote = serviceLocator.Get<EmotesService>().GetEmote(_Ids);
+			serviceLocator.Get<LockService>().Lock(new KinetixEmoteAvatarPair() { Emote = emote, Avatar = KAvatar}, _LockId);
+			
+			LoadPlayerAnimationInternal(emote, _OnSuccess, _OnFailure);
+		}
 
-        public void LoadPlayerAnimations(AnimationIds[] _Ids, string _LockId, Action _OnSuccess = null, Action _OnFailure = null)
-        {
-            for (int i = 0; i < _Ids.Length; i++)
-            {
+		public void LoadPlayerAnimations(AnimationIds[] _Ids, string _LockId, Action _OnSuccess = null, Action _OnFailure = null)
+		{
+			for (int i = 0; i < _Ids.Length; i++)
+			{
 				LoadPlayerAnimation(_Ids[i], _LockId, _OnSuccess, _OnFailure);
-            }
+			}
 		}
 
 		// To be called only in this class in case emote are preloaded with a lock
@@ -224,7 +239,7 @@ namespace Kinetix.Internal.Cache
 			{
 				// TODO find a better way, this is not sexy at all
 				object retargetingResult;
-                
+				
 				if (KAvatar.ExportType == EExportType.KinetixClip)
 				{
 					retargetingResult = await serviceLocator.Get<RetargetingService>().GetRetargetedClipByAvatar<KinetixClip, KinetixClipExporter>(_KinetixEmote, KAvatar, SequencerPriority.Low, 
@@ -294,7 +309,7 @@ namespace Kinetix.Internal.Cache
 			{
 				RemovePlayerEmotesReadyToPlay(ids);
 				KinetixEmote emote = serviceLocator.Get<EmotesService>().GetEmote(ids);
-                serviceLocator.Get<LockService>().ForceUnload(new KinetixEmoteAvatarPair(emote, KAvatar));
+				serviceLocator.Get<LockService>().ForceUnload(new KinetixEmoteAvatarPair(emote, KAvatar));
 
 				serviceLocator.Get<MemoryService>().OnAnimationUnloadedOnPlayer();
 			}
@@ -404,7 +419,7 @@ namespace Kinetix.Internal.Cache
 				}
 				else
 				{
-                    if (!callbackOnRetargetedAnimationIdOnPlayer.ContainsKey(_Ids))
+					if (!callbackOnRetargetedAnimationIdOnPlayer.ContainsKey(_Ids))
 						callbackOnRetargetedAnimationIdOnPlayer.Add(_Ids, new List<Action>());
 				
 					callbackOnRetargetedAnimationIdOnPlayer[_Ids].Add(_OnSucceed);
@@ -483,19 +498,6 @@ namespace Kinetix.Internal.Cache
 			return downloadedEmotesReadyToPlay.ToArray();
 		}
 		
-		public void PlayAnimation(AnimationIds _AnimationsIds, Action<AnimationIds> _OnPlayedAnimation)
-		{
-			if (KinetixCharacterComponent == null)
-			{
-				return;
-			}
-
-			if (playAutomaticallyOnAnimator)
-				KinetixCharacterComponent.PlayAnimation(_AnimationsIds);
-			else
-				_OnPlayedAnimation?.Invoke(_AnimationsIds);
-		}
-
 		public void PlayAnimation(AnimationIds _AnimationsIds, Action<AnimationIds> _OnPlayedAnimation, string _ForcedExtension = "")
 		{
 			if (KinetixCharacterComponent == null)
@@ -564,9 +566,9 @@ namespace Kinetix.Internal.Cache
 			return KinetixCharacterComponent;
 		}
 
-        public bool IsLocalPlayerRegistered()
-        {
-            return KAvatar != null;
-        }
+		public bool IsLocalPlayerRegistered()
+		{
+			return KAvatar != null;
+		}
 	}
 }

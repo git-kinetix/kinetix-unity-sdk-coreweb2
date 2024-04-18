@@ -11,9 +11,10 @@ namespace Kinetix.Internal
         public readonly string Path;
         public readonly RuntimeRetargetFrameIndexer Indexer;
         public readonly SequencerCancel CancellationSequencer;
+        public readonly bool AwaitAll;
         public OperationConfig ResponseType;
 
-        public EmoteRetargetingConfig(KinetixEmote _Emote, KinetixAvatar _Avatar, SequencerPriority _Priority, string _Path, SequencerCancel _CancellationSequencer, bool isAnimationRT3K)
+        public EmoteRetargetingConfig(KinetixEmote _Emote, KinetixAvatar _Avatar, SequencerPriority _Priority, string _Path, SequencerCancel _CancellationSequencer, bool isAnimationRT3K, bool _AwaitAll)
         {
             Avatar = _Avatar;
             Emote = _Emote;
@@ -21,8 +22,10 @@ namespace Kinetix.Internal
             Path = _Path;
             CancellationSequencer = _CancellationSequencer;
             IsAnimationRT3K = isAnimationRT3K;
-        }
-        public EmoteRetargetingConfig(KinetixEmote _Emote, KinetixAvatar _Avatar, SequencerPriority _Priority, RuntimeRetargetFrameIndexer _Indexer, SequencerCancel _CancellationSequencer, bool isAnimationRT3K)
+            AwaitAll = _AwaitAll;
+
+		}
+        public EmoteRetargetingConfig(KinetixEmote _Emote, KinetixAvatar _Avatar, SequencerPriority _Priority, RuntimeRetargetFrameIndexer _Indexer, SequencerCancel _CancellationSequencer, bool isAnimationRT3K, bool _AwaitAll)
         {
             Avatar = _Avatar;
             Emote = _Emote;
@@ -30,6 +33,7 @@ namespace Kinetix.Internal
             Indexer = _Indexer;
             CancellationSequencer = _CancellationSequencer;
             IsAnimationRT3K = isAnimationRT3K;
+            AwaitAll = _AwaitAll;
         }
     }
 }

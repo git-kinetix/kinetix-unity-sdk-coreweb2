@@ -26,7 +26,7 @@ namespace Kinetix.Internal
 
 		public override async Task<RuntimeRetargetFrameIndexer> Load(KinetixEmote emote, string filepath, CancellationTokenSource cancellationToken, string avatarId = null)
 		{
-			EnsureDirectoryExist(filepath);
+			EnsureDirectoryExists(filepath);
 
 			if (kinanimIndexerByFilepath.TryGetValue(filepath, out KinanimServiceData data))
 			{
@@ -60,7 +60,7 @@ namespace Kinetix.Internal
 			ByteRangeDownloaderResponse response = await OperationManagerShortcut.Get().RequestExecution(fileDownloadOperation, cancellationToken);
 			
 			string filepath = GetFilePath(emote.Ids.UUID, avatarId);
-			EnsureDirectoryExist(filepath);
+			EnsureDirectoryExists(filepath);
 
 			KinanimServiceData data = GetStartDataFromEmote(filepath, new MemoryStream(response.bytes), avatarId); //Import header and some frames
 			data.exporter.WriteHeader(data.indexer.dataSource.UncompressedHeader);
@@ -135,6 +135,8 @@ namespace Kinetix.Internal
 		/// <returns></returns>
 		private KinanimServiceData GetStartDataFromEmote(string filepath, Stream readStream, string avatarId)
 		{
+            EnsureDirectoryExists(filepath);
+
 			KinanimServiceData data;
 			//Import Header and extra frames
 			KinanimImporter importer = new KinanimImporter(new InterpoCompression());
@@ -155,7 +157,7 @@ namespace Kinetix.Internal
 
 			kinanimIndexerByFilepath[filepath] = data;
 			return data;
-		}	
+		}
 
 		private async Task GetServerHeader(KinanimDataIndexer indexer, string url, CancellationTokenSource cancellationToken)
 		{

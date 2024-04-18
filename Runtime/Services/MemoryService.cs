@@ -300,7 +300,7 @@ namespace Kinetix.Internal
             string serializedManifest = PlayerPrefs.GetString(c_CacheManifestKey, "");
 
             // If the manifest could not be fetched, create one
-            if (serializedManifest == string.Empty)
+            if (string.IsNullOrEmpty(serializedManifest))
             {
                 CreateManifest(_AnimationNb);
                 return;

@@ -116,5 +116,40 @@ namespace Kinetix.Utils
 
 			return await tcs.Task;
 		}
-	}
+
+        public async Task<AnimationMetadata> GetAnimationMetadataOfAvatar(AnimationIds _AnimationIds, string _AvatarId, AnimationMetadata _Metadata = null)
+        {
+			TaskCompletionSource<AnimationMetadata> tcs = new TaskCompletionSource<AnimationMetadata>();
+
+			string uri = KinetixConstants.c_SDK_API_URL + "/v1/emotes/" + _AnimationIds.UUID + "/avatar/" + _AvatarId;
+
+			GetRawAPIResultConfig apiResultOpConfig = new GetRawAPIResultConfig(uri, GameAPIKey);
+			GetRawAPIResult apiResultOp = new GetRawAPIResult(apiResultOpConfig);
+			GetRawAPIResultResponse response = await OperationManagerShortcut.Get().RequestExecution(apiResultOp);
+			
+			string result = response.json;
+			if (response.raw.ResponseCode == 404)
+			{
+				KinetixDebug.LogError($"\"{nameof(GetAnimationMetadataOfAvatar)}\" returned (404)... Retrying using \"{nameof(GetAnimationMetadataOfEmote)}\"...");
+				return await GetAnimationMetadataOfEmote(_AnimationIds);
+			}
+			
+			try
+			{
+				SdkAvatarApiAsset collection = JsonConvert.DeserializeObject<SdkAvatarApiAsset>(result);
+				collection.EditAnimationMetadata(ref _Metadata, _AvatarId);
+				tcs.SetResult(_Metadata);
+			}
+			catch (ArgumentNullException e)
+			{
+				tcs.SetException(e);
+			}
+			catch (Exception e)
+			{
+				tcs.SetException(e);
+			}
+
+			return await tcs.Task;
+		}
+    }
 }

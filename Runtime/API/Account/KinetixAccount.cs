@@ -36,16 +36,6 @@ namespace Kinetix.Internal
             KinetixAccountBehaviour.DisconnectAccount();
         }
 
-        /// <summary>
-        /// Allows a user to use the wanted emote
-        /// </summary>
-        /// <param name="_EmoteID">UUID (unique id) of the emote</param>
-        [Obsolete("Kinetix SDK no longer supports emote association, this will be removed in the next version")]
-        public void AssociateEmotesToUser(string _EmoteID, Action _OnSuccess = null, Action<string> _OnFailure = null)
-        {
-            KinetixAccountBehaviour.AssociateEmotesToUser(_EmoteID, _OnSuccess, _OnFailure);
-        }
-        
         #region Internal
 
         public KinetixAccount()
