@@ -50,7 +50,7 @@ namespace Kinetix.Internal
 			}
 
 			avatar.AnimationURL = animationURL;
-			if (string.IsNullOrEmpty(animationFbxUrl))
+			if (string.IsNullOrEmpty(animationFbxUrl) && avatar.AnimationURL != animationKinanimUrl)
 			{
 				avatar.AnimationURL = animationGlbUrl;
 			}
@@ -76,6 +76,8 @@ namespace Kinetix.Internal
 		public SignedFile[]                           files;
 		public Dictionary<string, AvatarSignedFile[]> avatars;
 
+		
+
 		public System.DateTime createdAt;
 
 		public AnimationMetadata ToAnimationMetadata()
@@ -83,6 +85,7 @@ namespace Kinetix.Internal
 			string animUrl       = string.Empty;
 			string animUrlLegacy = string.Empty;
 			string thumbnailUrl  = string.Empty;
+
 			Dictionary<string, string> urlByFormat = new Dictionary<string, string>();
 
 			foreach (SignedFile file in files)
@@ -109,6 +112,8 @@ namespace Kinetix.Internal
 						break;
 				}
 			}
+
+			animUrl = urlByFormat.ContainsKey(".kinanim") ? urlByFormat[".kinanim"] : urlByFormat[".glb"];
 
 			List<AvatarAnimationMetadata> avatarsMetadata = new List<AvatarAnimationMetadata>();
 			foreach (KeyValuePair<string, AvatarSignedFile[]> filesTmp in avatars)
