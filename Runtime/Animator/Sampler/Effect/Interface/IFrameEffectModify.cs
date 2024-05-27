@@ -14,9 +14,9 @@ namespace Kinetix.Internal
 		/// <summary>
 		/// Event sent when a frame has been played
 		/// </summary>
-		/// <param name="finalFrame">The cloned frame. You can modify informations in it</param>
-		/// <param name="frames">Original frames. A null frame in the array means that the frame is the same as the previously sent</param>
-		/// <param name="baseFrameIndex">Index on which <paramref name="finalFrame"/> is based</param>
-		public void OnPlayedFrame(ref KinetixFrame finalFrame, in KinetixFrame[] frames, int baseFrameIndex);
+		/// <param name="_FinalFrame">The cloned frame. You can modify informations in it</param>
+		/// <param name="_Frames">Original _Frames. A null frame in the array means that the frame is the same as the previously sent</param>
+		/// <param name="baseFrameIndex">Index on which <paramref name="_FinalFrame"/> is based</param>
+		public void OnPlayedFrame(ref KinetixFrame _FinalFrame, KinetixFrame[] _Frames, in KinetixClipTrack[] _Tracks);
 	}
 }

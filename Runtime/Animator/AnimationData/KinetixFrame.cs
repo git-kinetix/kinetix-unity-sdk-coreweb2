@@ -7,6 +7,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices.WindowsRuntime;
 using UnityEngine;
 
 namespace Kinetix.Internal
@@ -26,6 +27,21 @@ namespace Kinetix.Internal
 		/// </summary>
 		public readonly Dictionary<string, TransformData> resetKeys;
 		public readonly int frame;
+		public float CurrentTime 
+		{ 
+			get 
+			{
+				if (currentTime == 0 && frame == 0)
+					return 0;
+
+				if (currentTime == 0)
+					return currentTime = frame / clip.FrameRate;
+
+				return currentTime;
+			}
+			internal set => currentTime = value;
+		}
+		private float currentTime;
 
 		/// <param name="pose">Pose to duplicate as a frame</param>
 		public KinetixFrame(KinetixPose pose) : base()
@@ -39,6 +55,7 @@ namespace Kinetix.Internal
 			clip       = null;
 			resetKeys  = new Dictionary<string, TransformData>();
 			frame = -1;
+			CurrentTime = -1;
 		}
 
 		/// <param name="frame">Frame to duplicate</param>
@@ -53,6 +70,7 @@ namespace Kinetix.Internal
 			clip            = frame.clip;
 			resetKeys       = frame.resetKeys;
 			this.frame      = frame.frame;
+			CurrentTime     = frame.CurrentTime;
 		}
 
 		/// <param name="transforms">Transforms of the frame (see: <see cref="KinetixPose.humanTransforms")/></param>
@@ -61,6 +79,7 @@ namespace Kinetix.Internal
 		{
 			resetKeys = null;
 			frame = -1;
+			CurrentTime = -1;
 			clip = null;
 		}
 
@@ -71,6 +90,7 @@ namespace Kinetix.Internal
 		{
 			this.clip = clip;
 			this.frame = frame;
+			this.CurrentTime = frame / clip.FrameRate; //s = f / (f/s)
 
 			int count = clip.humanKeys.Count;
 			humanBones = new HumanBodyBones[count];
@@ -106,7 +126,8 @@ namespace Kinetix.Internal
 		{
 			this.clip = clip;
 			this.frame = frame;
-			
+			CurrentTime = frame / clip.FrameRate; //s = f / (f/s)
+
 			int count = humanBones.Length;
 			bones = (HumanBodyBones[])humanBones.Clone();
 			humanTransforms = new TransformData[count];

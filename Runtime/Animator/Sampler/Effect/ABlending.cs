@@ -6,61 +6,71 @@
 
 using Kinetix.Internal.Utils;
 using System;
+using System.Linq;
 using UnityEngine;
 
 namespace Kinetix.Internal
 {
-	/// <summary>
-	/// Abstract blending class for <see cref="IFrameEffect"/>
-	/// </summary>
-	public abstract class ABlending : ISamplerAuthority
+    /// <summary>
+    /// Abstract blending class for <see cref="IFrameEffect"/>
+    /// </summary>
+    public abstract class ABlending : ISamplerAuthority
 	{
 		/// <inheritdoc/>
 		public SamplerAuthorityBridge Authority { get; set; }
 
 		/// <summary>
-		/// Blend a pose (<paramref name="a"/>) and a list of pose (<paramref name="toBlend"/>)
+		/// Overwrite the pose of <paramref name="_Overwrite"/> replacing it by the average of <paramref name="_ToBlend"/> by their respective <paramref name="_Weight"/>
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
 		/// <typeparam name="T2"></typeparam>
-		/// <param name="a">Position blended</param>
-		/// <param name="toBlend">List of animations to blend with <paramref name="a"/></param>
-		/// <param name="time">between 0 and 1</param>
-		/// <param name="blendIndexIgnore">index in the <paramref name="toBlend"/> list to ignore (corrispond to <paramref name="a"/>'s position in the list)</param>
-		public void Blend<T, T2>(ref T a, in T2[] toBlend, float time, int blendIndexIgnore = -1)
+		/// <param name="_Overwrite">Result pose</param>
+		/// <param name="_ToBlend">List of animations to blend with <paramref name="_Overwrite"/></param>
+		/// <param name="_Weight"></param>
+		public void Average<T, T2>(ref T _Overwrite, in T2[] _ToBlend, float[] _Weight)
 			where T : KinetixPose
 			where T2 : KinetixPose
 		{
-			int blendCount = toBlend.Length;
-			int aLenght = a.bones.Length;
+			int blendCount = _ToBlend.Length;
+			int aLenght = _Overwrite.bones.Length;
+
+			if (_Weight.Sum() <= 0)
+				return;
+
+			for (int i = 0; i < (int)ARKitBlendshapes.Count; i++)
+			{
+				ARKitBlendshapes blendshape = (ARKitBlendshapes)i;
+				float blend  = 0,
+					  pCount = 0;
+				for (int j = 0; j < blendCount; j++)
+				{
+					blend += _ToBlend[j].blendshapes[blendshape] * _Weight[j];
+					pCount += _Weight[j];
+				}
+
+				_Overwrite.blendshapes[blendshape] = blend / pCount;
+			}
 
 			//Blend human
 			//A refer to the original pose
 			//B refer to the pose to blend
 			for (int i = 0; i < aLenght; i++)
 			{
-				HumanBodyBones bone = a.bones[i];
-				TransformData trA = a.humanTransforms[i];
+				HumanBodyBones bone = _Overwrite.bones[i];
+				TransformData trA = _Overwrite.humanTransforms[i];
 
-				Vector3 posA = trA.position.GetValueOrDefault(Vector3.zero);
-				Quaternion rotA = trA.rotation.GetValueOrDefault(Quaternion.identity);
-				Vector3 scaleA = trA.scale.GetValueOrDefault(Vector3.one);
+				Vector3 pos    = Vector3.zero;
+				Quaternion rot = new Quaternion(0,0,0,0);
+				Vector3 scale  = Vector3.zero;
 
-				Vector3 pos = Vector3.zero;
-				Quaternion rot = Quaternion.identity;
-				Vector3 scale = Vector3.zero;
-
-				int pCount = 0,
+				float pCount = 0,
 					rCount = 0,
 					sCount = 0;
 
 				//Get the average of each B
 				for (int j = 0; j < blendCount; j++)
 				{
-					if (j == blendIndexIgnore)
-						continue;
-
-					KinetixPose b = toBlend[j];
+					KinetixPose b = _ToBlend[j];
 					if (b == null)
 						continue;
 
@@ -70,37 +80,33 @@ namespace Kinetix.Internal
 
 					TransformData trB = b.humanTransforms[bIndex];
 
-					BlendAdd(ref pos, ref rot, ref scale, ref pCount, ref rCount, ref sCount, trB);
+					BlendAddWithWeight(ref pos, ref rot, ref scale, ref pCount, ref rCount, ref sCount, trB, _Weight[j]);
 				}
 
-				ApplyBlendLerp(ref trA, time, posA, rotA, scaleA, pos, rot, scale, pCount, rCount, sCount);
+				//Do the average
+				if (trA.position != null) trA.position = pCount == 0 ? trA.position : pos / pCount;
+				if (trA.rotation != null) trA.rotation = rCount == 0 ? trA.rotation : QNormalizeSafe(rot);
+				if (trA.scale    != null) trA.scale    = sCount == 0 ? trA.scale    : scale / sCount;
 
-				a.humanTransforms[i] = trA;
+				_Overwrite.humanTransforms[i] = trA;
 			}
 
 			//Blend armature
-			if (a.armature.HasValue)
+			if (_Overwrite.armature.HasValue)
 			{
-				TransformData trA = a.armature.Value;
-
-				Vector3 posA = trA.position.GetValueOrDefault(Vector3.zero);
-				Quaternion rotA = trA.rotation.GetValueOrDefault(Quaternion.identity);
-				Vector3 scaleA = trA.scale.GetValueOrDefault(Vector3.one);
+				TransformData trA = _Overwrite.armature.Value;
 
 				Vector3 pos = Vector3.zero;
 				Quaternion rot = Quaternion.identity;
 				Vector3 scale = Vector3.zero;
 
-				int pCount = 0,
+				float pCount = 0,
 					rCount = 0,
 					sCount = 0;
 
 				for (int j = 0; j < blendCount; j++)
 				{
-					if (j == blendIndexIgnore)
-						continue;
-
-					KinetixPose b = toBlend[j];
+					KinetixPose b = _ToBlend[j];
 					if (b == null)
 						continue;
 
@@ -109,21 +115,17 @@ namespace Kinetix.Internal
 
 					TransformData trB = b.armature.Value;
 
-					BlendAdd(ref pos, ref rot, ref scale, ref pCount, ref rCount, ref sCount, trB);
+					BlendAddWithWeight(ref pos, ref rot, ref scale, ref pCount, ref rCount, ref sCount, trB, _Weight[j]);
 				}
 
-				ApplyBlendLerp(ref trA, time, posA, rotA, scaleA, pos, rot, scale, pCount, rCount, sCount);
+				//Do the average
+				if (trA.position != null) trA.position = pCount == 0 ? trA.position : pos / pCount;
+				if (trA.rotation != null) trA.rotation = rCount == 0 ? trA.rotation : QNormalizeSafe(rot);
+				if (trA.scale != null) trA.scale = sCount == 0 ? trA.scale : scale / sCount;
 
-				a.armature = trA;
-			}
-		}
-
-		private static void ApplyBlendLerp(ref TransformData trA, float time, Vector3 posA, Quaternion rotA, Vector3 scaleA, Vector3 pos, Quaternion rot, Vector3 scale, int pCount, int rCount, int sCount)
-		{
-			if (trA.position != null) trA.position = pCount == 0 ? trA.position : Vector3.Lerp(posA, pos / pCount, time);
-			if (trA.rotation != null) trA.rotation = rCount == 0 ? trA.rotation : Quaternion.Slerp(rotA, rot, time);
-			if (trA.scale != null) trA.scale = sCount == 0 ? trA.scale : Vector3.Lerp(scaleA, scale / sCount, time);
-		}
+				_Overwrite.armature = trA;
+            }
+        }
 
 		/// <summary>
 		/// Add <paramref name="trB"/> to sum calculation
@@ -135,23 +137,70 @@ namespace Kinetix.Internal
 		/// <param name="rCount"></param>
 		/// <param name="sCount"></param>
 		/// <param name="trB"></param>
-		private static void BlendAdd(ref Vector3 pos, ref Quaternion rot, ref Vector3 scale, ref int pCount, ref int rCount, ref int sCount, TransformData trB)
+		private static void BlendAddWithWeight(ref Vector3 pos, ref Quaternion rot, ref Vector3 scale, ref float pCount, ref float rCount, ref float sCount, TransformData trB, float weight)
 		{
-			pos += trB.position.GetValueOrDefault(Vector3.zero);
-			Quaternion rotB = trB.rotation.GetValueOrDefault(Quaternion.identity);
+			//NOTE: Parameters are named after the local variables in 'Average' method
+
+			if (float.IsInfinity(weight) || weight == 0)
+				return;
+
 			if (trB.rotation.HasValue)
 			{
+				Quaternion rotB = trB.rotation.GetValueOrDefault(Quaternion.identity);
 				if (rCount == 0)
-					rot = rotB;
+					rot = QScale(rotB, weight);
 				else
-					rot = Quaternion.Slerp(rot, rotB, 1.0f / (rCount + 1f)); //this code average the quaternions
+					rot = QBlend(rot, rotB, weight);
 			}
 
-			scale += trB.scale.GetValueOrDefault(Vector3.zero);
+			pos   += trB.position.GetValueOrDefault(Vector3.zero) * weight;
+			scale += trB.scale.GetValueOrDefault(Vector3.zero) * weight;
 
-			pCount += trB.position.HasValue ? 1 : 0;
-			rCount += trB.rotation.HasValue ? 1 : 0;
-			sCount += trB.scale.HasValue ? 1 : 0;
+			pCount += trB.position.HasValue ? weight : 0;
+			rCount += trB.rotation.HasValue ? weight : 0;
+			sCount += trB.scale.HasValue    ? weight : 0;
+		}
+
+		const float MIN_DOT_SELF = 1e-10f;
+
+		protected static Quaternion QScale(Quaternion _Q, float _Scale)
+			=> new Quaternion(
+					_Q.x * _Scale, 
+					_Q.y * _Scale, 
+					_Q.z * _Scale, 
+					_Q.w * _Scale
+				);
+
+		protected static Quaternion QNormalizeSafe(Quaternion _Q)
+		{
+			float dot = Quaternion.Dot(_Q, _Q);
+			if (dot > MIN_DOT_SELF)
+			{
+				float invLenght = 1f / Mathf.Sqrt(dot);
+				return new Quaternion(
+					_Q.x * invLenght,
+					_Q.y * invLenght,
+					_Q.z * invLenght,
+					_Q.w * invLenght
+				);
+			}
+
+			return Quaternion.identity;
+		}
+
+		protected static Quaternion QBlend(Quaternion _A, Quaternion _B, float _Weight)
+			=> QAdd(_A, QScale(_B,_Weight));
+		
+		protected static Quaternion QAdd(Quaternion _RefQuat, Quaternion _ToAdd)
+		{
+			float sign = Mathf.Sign(Quaternion.Dot(_RefQuat, _ToAdd));
+			return new Quaternion(
+				_RefQuat.x + sign * _ToAdd.x,
+				_RefQuat.y + sign * _ToAdd.y,
+				_RefQuat.z + sign * _ToAdd.z,
+				_RefQuat.w + sign * _ToAdd.w
+			);
 		}
 	}
+
 }

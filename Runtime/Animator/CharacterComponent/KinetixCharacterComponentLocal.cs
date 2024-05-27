@@ -9,6 +9,7 @@ using UnityEngine;
 using Kinetix.Internal;
 using Kinetix.Internal.Utils;
 using Kinetix.Internal.Retargeting;
+using UnityEngine.Playables;
 
 namespace Kinetix
 {
@@ -24,15 +25,17 @@ namespace Kinetix
 		/// Called when networking data are available
 		/// </summary>
 		public event Action<KinetixNetworkDataRaw> OnNetworkingData;
+		public event Action OnQueueStart;
+		public event Action OnQueueStop;
 
-		private SimulationSampler sampler;
+		public SimulationSampler sampler;
 		private KinetixFrame currentFrame;
 		private KinetixNetworkDataRaw currentNetworkData;
 
 		/// <inheritdoc/>
-		public override void Init(ServiceLocator _ServiceLocator, KinetixAvatar kinetixAvatar, RootMotionConfig _RootMotionConfig)
+		public override void Init(ServiceLocator _ServiceLocator, KinetixAvatar _KinetixAvatar, RootMotionConfig _RootMotionConfig)
 		{
-			base.Init(_ServiceLocator, kinetixAvatar, _RootMotionConfig);
+			base.Init(_ServiceLocator, _KinetixAvatar, _RootMotionConfig);
 
 			networkSampler.OnSerializeData += NetworkSampler_OnSerializeData;
 
@@ -46,12 +49,10 @@ namespace Kinetix
 			sampler.RequestAvatarPos          += Sampler_RequestAvatarPos         ;
 			sampler.RequestAvatar             += Sampler_RequestAvatar            ;
 
+			sampler.Effect.RegisterEffect(new SmoothFrameEffect());
 			sampler.Effect.RegisterEffect(new ClipToClipBlendEffect());
-			sampler.Effect.RegisterEffect(new OuterBlendEffect(OUTER_BLEND_DURATION));
-			sampler.Effect.RegisterEffect(new BlendCancelBetweenClipEffect());
+			sampler.Effect.RegisterEffect(new AnimatorBlendEffect(OUTER_BLEND_DURATION));
 			sampler.Effect.RegisterEffect(new RootMotionEffect(_RootMotionConfig));
-
-			//sampler.bones = characterBones;
 
 			currentFrame = null;
 		}
@@ -76,11 +77,34 @@ namespace Kinetix
 		/// <inheritdoc/>
 		public bool IsDataAvailable() => currentNetworkData != null;
 	
+		public void SetPause(bool _Paused)
+		{
+			if (_Paused)
+				sampler.Pause();
+			else
+				sampler.Resume();
+		}
+
+		public void SetPlayRate(float _PlayRate) => sampler.SetPlayRate(_PlayRate);
+		public float GetPlayRate() => sampler.GetPlayRate();
+		
+		public void SetElapsedTime(float _ElapsedTime) => sampler.ElapsedTime = _ElapsedTime;
+		public float GetElapsedTime() => sampler.ElapsedTime;
+
+		public void SetLoopAnimation(bool _Looping) => sampler.AnimationLoopMode = _Looping ? AnimationLoopMode.Loop : AnimationLoopMode.Default;
+		public bool GetIsLoopingAnimation() => sampler.AnimationLoopMode != AnimationLoopMode.Default;
+
 		/// <summary>
 		/// Play an animation on the current player
 		/// </summary>
 		/// <param name="_AnimationIds">IDs of the animation</param>
-		public async void PlayAnimation(AnimationIds _AnimationIds, string _ForcedExtension = "")
+		public void PlayAnimation(AnimationIds _AnimationIds, string _ForcedExtension = "") => PlayAnimation(_AnimationIds, AnimationTimeRange.Default, _ForcedExtension);
+
+		/// <summary>
+		/// Play an animation on the current player
+		/// </summary>
+		/// <param name="_AnimationIds">IDs of the animation</param>
+		public async void PlayAnimation(AnimationIds _AnimationIds, AnimationTimeRange _TimeRange, string _ForcedExtension = "")
 		{
 			if (_AnimationIds?.UUID == null)
 			{
@@ -97,7 +121,7 @@ namespace Kinetix
 				return;
 			}
 			
-			sampler.Play(new KinetixClipWrapper(clip, _AnimationIds));
+			sampler.Play(true, new KinetixClipWrapper(clip, _AnimationIds)).timeRange = _TimeRange;
 		}
 
 		public void StopAnimation()
@@ -133,7 +157,7 @@ namespace Kinetix
 				
 				if (loaded == animeCount)
 				{
-					sampler.PlayRange(clips);
+					sampler.PlayClips(true, clips);
 				}
 			}
 		}
@@ -145,43 +169,43 @@ namespace Kinetix
 		}
 
 		#region Sampler Event
-		private void Sampler_RequestAdaptToInterpreter(KinetixFrame obj)
+		private void Sampler_RequestAdaptToInterpreter(KinetixFrame _Frame)
 		{
-			obj.AdaptToInterpreter(poseInterpretor[0]);
+			_Frame.AdaptToInterpreter(poseInterpretor[0]);
 		}
 
-		private void Sampler_OnPlayedFrame(KinetixFrame obj)
+		private void Sampler_OnPlayedFrame(KinetixFrame _Frame)
 		{
-			currentFrame = obj;
+			currentFrame = _Frame;
 
 			if (AutoPlay)
 			{
 				int count = poseInterpretor.Count;
 				for (int i = 0; i < count; i++)
 				{
-					obj.Sample(poseInterpretor[i]);
+					_Frame.Sample(poseInterpretor[i]);
 				}
 			}
 
 			Call_OnPlayedFrame();
 		}
 
-		private void Sampler_OnAnimationStart(KinetixClipWrapper obj)
+		private void Sampler_OnAnimationStart(KinetixClipWrapper _Clip)
 		{
 			if (AutoPlay)
 			{
 				int count = poseInterpretor.Count;
 				for (int i = 0; i < count; i++)
 				{
-					if (poseInterpretor[i] is IPoseInterpreterStartEnd startEnd) startEnd.AnimationStart(obj.clip);
+					if (poseInterpretor[i] is IPoseInterpreterStartEnd startEnd) startEnd.AnimationStart(_Clip);
 				}
 			}
 
-			networkSampler.OnPlayStart(obj);
-			Call_OnAnimationStart(obj.animationIds);
+			networkSampler.OnPlayStart(_Clip);
+			Call_OnAnimationStart(_Clip.animationIds);
 		}
 
-		private void Sampler_OnAnimationStop(KinetixClipWrapper obj)
+		private void Sampler_OnAnimationStop(KinetixClipWrapper _Clip)
 		{
 			currentFrame = null;
 		
@@ -190,12 +214,12 @@ namespace Kinetix
 				int count = poseInterpretor.Count;
 				for (int i = 0; i < count; i++)
 				{
-					if (poseInterpretor[i] is IPoseInterpreterStartEnd startEnd) startEnd.AnimationEnd(obj.clip);
+					if (poseInterpretor[i] is IPoseInterpreterStartEnd startEnd) startEnd.AnimationEnd(_Clip);
 				}
 			}
 
 			networkSampler.OnPlayEnd();
-			Call_OnAnimationEnd(obj.animationIds);
+			Call_OnAnimationEnd(_Clip.animationIds);
 		}
 
 		private void Sampler_OnQueueStart()
@@ -208,6 +232,8 @@ namespace Kinetix
 					if (poseInterpretor[i] is IPoseInterpreterStartEnd startEnd) startEnd.QueueStart();
 				}
 			}
+
+			OnQueueStart?.Invoke();
 		}
 
 		private void Sampler_OnQueueStop()
@@ -220,6 +246,8 @@ namespace Kinetix
 					if (poseInterpretor[i] is IPoseInterpreterStartEnd startEnd) startEnd.QueueEnd();
 				}
 			}
+
+			OnQueueStop?.Invoke();
 		}
 
 		private SkeletonPool.PoolItem Sampler_RequestAvatar()
@@ -235,10 +263,10 @@ namespace Kinetix
 			return poseInterpretor[0].GetPose();
 		}
 
-		private void NetworkSampler_OnSerializeData(KinetixNetworkDataRaw obj)
+		private void NetworkSampler_OnSerializeData(KinetixNetworkDataRaw _Data)
 		{
-			currentNetworkData = obj;
-			OnNetworkingData?.Invoke(obj);
+			currentNetworkData = _Data;
+			OnNetworkingData?.Invoke(_Data);
 		}
 		#endregion
 
@@ -249,13 +277,14 @@ namespace Kinetix
 
 			networkSampler.OnSerializeData -= NetworkSampler_OnSerializeData;
 
-			sampler.OnQueueStart     -= Sampler_OnQueueStart     ;
-			sampler.OnQueueStop      -= Sampler_OnQueueStop      ;
-			sampler.OnAnimationStart -= Sampler_OnAnimationStart ;
-			sampler.OnAnimationStop  -= Sampler_OnAnimationStop  ;
-			sampler.OnPlayedFrame    -= Sampler_OnPlayedFrame    ;
-			sampler.RequestAvatarPos -= Sampler_RequestAvatarPos ;
-			sampler.RequestAvatar    -= Sampler_RequestAvatar    ;
+			sampler.OnQueueStart              -= Sampler_OnQueueStart             ;
+			sampler.OnQueueStop               -= Sampler_OnQueueStop              ;
+			sampler.OnAnimationStart          -= Sampler_OnAnimationStart         ;
+			sampler.OnAnimationStop           -= Sampler_OnAnimationStop          ;
+			sampler.OnPlayedFrame             -= Sampler_OnPlayedFrame            ;
+			sampler.RequestAdaptToInterpreter -= Sampler_RequestAdaptToInterpreter;
+			sampler.RequestAvatarPos          -= Sampler_RequestAvatarPos         ;
+			sampler.RequestAvatar             -= Sampler_RequestAvatar            ;
 
 			sampler.Dispose();
 		}

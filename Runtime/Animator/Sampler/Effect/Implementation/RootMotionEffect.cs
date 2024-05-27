@@ -25,6 +25,8 @@ namespace Kinetix.Internal
 			BakeIntoPoseY     = false
 		};
 
+		public int Priority => -100;
+
 		private int countAnime = 0;
 		private bool isEnabled;
 		
@@ -44,16 +46,16 @@ namespace Kinetix.Internal
 
 		public event Action<KinetixFrame> OnAddFrame;
 
-		public RootMotionEffect(RootMotionConfig config)
+		public RootMotionEffect(RootMotionConfig _Config)
 		{
-			if (config != null)
-				this.config = config;
+			if (_Config != null)
+				this.config = _Config;
 		}
 
 		public SamplerAuthorityBridge Authority { get; set; }
 
 		/// <inheritdoc/>
-		public void OnAnimationStart(KinetixClip clip)
+		public void OnAnimationStart(KinetixClip _)
 		{
 			if (++countAnime > 1 && isEnabled) RevertToOffsets();
 			
@@ -89,11 +91,11 @@ namespace Kinetix.Internal
 
 
 		/// <inheritdoc/>
-		public void OnPlayedFrame(ref KinetixFrame finalFrame, in KinetixFrame[] frames, int baseFrameIndex)
-		{
+		public void OnPlayedFrame(ref KinetixFrame _FinalFrame, KinetixFrame[] _Frames, in KinetixClipTrack[] _Tracks)
+        {
 			if (!isEnabled) return;
-			int hipsIndexCurrent = Array.IndexOf(finalFrame.bones, HumanBodyBones.Hips);
-			TransformData transform = finalFrame.humanTransforms[hipsIndexCurrent];
+			int hipsIndexCurrent = Array.IndexOf(_FinalFrame.bones, HumanBodyBones.Hips);
+			TransformData transform = _FinalFrame.humanTransforms[hipsIndexCurrent];
 			
 			//Set hips from curve
 			TrDataToTrAvatar(transform, hips);
@@ -104,23 +106,23 @@ namespace Kinetix.Internal
 			transform = TrAvatarToTrData(transform, hips);
 			
 			//Apply & set curve from root
-			finalFrame.humanTransforms[hipsIndexCurrent] = transform;
-			finalFrame.root = TrAvatarToTrData(new TransformData() { position = Vector3.zero}, root);
+			_FinalFrame.humanTransforms[hipsIndexCurrent] = transform;
+			_FinalFrame.root = TrAvatarToTrData(new TransformData() { position = Vector3.zero}, root);
 		}
 
-		private TransformData TrAvatarToTrData(TransformData original, AvatarBoneTransform transform)
+		private TransformData TrAvatarToTrData(TransformData _Original, AvatarBoneTransform _Transform)
 		{
-			if (original.position.HasValue) original.position = transform.localPosition;
-			if (original.rotation.HasValue) original.rotation = transform.localRotation;
-			if (original.scale.HasValue   ) original.scale    = transform.localScale;
-			return original;
+			if (_Original.position.HasValue) _Original.position = _Transform.localPosition;
+			if (_Original.rotation.HasValue) _Original.rotation = _Transform.localRotation;
+			if (_Original.scale.HasValue   ) _Original.scale    = _Transform.localScale;
+			return _Original;
 		}
 
-		private void TrDataToTrAvatar(TransformData data, AvatarBoneTransform transform)
+		private void TrDataToTrAvatar(TransformData _Data, AvatarBoneTransform _Transform)
 		{
-			if (data.position.HasValue) transform.localPosition = data.position.Value;
-			if (data.rotation.HasValue) transform.localRotation = data.rotation.Value;
-			if (data.scale.HasValue   ) transform.localScale    = data.scale.Value;
+			if (_Data.position.HasValue) _Transform.localPosition = _Data.position.Value;
+			if (_Data.rotation.HasValue) _Transform.localRotation = _Data.rotation.Value;
+			if (_Data.scale.HasValue   ) _Transform.localScale    = _Data.scale.Value;
 		}
 
 		/// <inheritdoc/>
@@ -142,7 +144,7 @@ namespace Kinetix.Internal
 		/// <inheritdoc/>
 		public void Update() {}
 
-		internal void SaveOffsets()
+		private void SaveOffsets()
 		{
 			hipsOriginalPosition = hips.parent.localRotation * hips.localPosition;
 			lastHipsPosition = hipsOriginalPosition;
@@ -150,7 +152,7 @@ namespace Kinetix.Internal
 			rootOriginalPosition = root.position;
 		}
 
-		internal void ProcessRootMotionAfterAnimSampling()
+		private void ProcessRootMotionAfterAnimSampling()
 		{
 			Quaternion armatureRotation = hips.parent.localRotation;
 
@@ -194,7 +196,7 @@ namespace Kinetix.Internal
 			hips.localPosition = Quaternion.Inverse(armatureRotation) * newHipsPos;
 		}
 
-		internal void RevertToOffsets()
+		private void RevertToOffsets()
 		{
 			// Save current hips position before moving the root
 			Vector3 hipsPos = hips.position;
@@ -247,7 +249,7 @@ namespace Kinetix.Internal
 			);
 		}
 
-        public void OnSoftStop(float blendTime)
+        public void OnSoftStop(float _)
         {
         }
     }

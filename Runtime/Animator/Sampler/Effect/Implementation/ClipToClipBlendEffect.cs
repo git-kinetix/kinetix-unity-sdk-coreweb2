@@ -4,6 +4,7 @@
 // // </copyright>
 // // ----------------------------------------------------------------------------
 
+using System.Linq;
 using UnityEngine;
 
 namespace Kinetix.Internal
@@ -28,48 +29,52 @@ namespace Kinetix.Internal
 		/// </summary>
 		public float blendDuration;
 
-		private KinetixClip current;
-		private int frameToReach;
-		private bool isBlendingCurrentClip;
-		private float timestampStartBlend;
+		public int Priority => 100;
 
-		/// <param name="blendDuration">Blend duration in seconds</param>
-		public ClipToClipBlendEffect(float blendDuration = 1f)
+		/// <param name="_BlendDuration">Blend duration in seconds</param>
+		public ClipToClipBlendEffect(float _BlendDuration = 1f)
 		{
-			this.blendDuration = blendDuration;
+			this.blendDuration = _BlendDuration;
 		}
 
 		/// <inheritdoc/>
-		public void OnAnimationEnd()
-		{
-
-		}
-
-		/// <inheritdoc/>
-		public void OnAnimationStart(KinetixClip clip)
-		{
-			current = clip;
-			frameToReach = Mathf.FloorToInt((clip.Duration - blendDuration) * clip.FrameRate);
-			isBlendingCurrentClip = false;
-		}
-
-		/// <inheritdoc/>
-		public void OnPlayedFrame(ref KinetixFrame finalFrame, in KinetixFrame[] frames, int baseFrameIndex)
-		{
+		public void OnPlayedFrame(ref KinetixFrame _FinalFrame, KinetixFrame[] _Frames, in KinetixClipTrack[] _Tracks)
+        {
 			if (!isPlaying) return;
 
-			int length = frames.Length;
-			if (length > 1)
-			{
-				float elapsedTime = (Time.time - timestampStartBlend) / blendDuration;
-				Blend(ref finalFrame, frames, elapsedTime, baseFrameIndex);
-			}
+			float elapsedTime = Authority.GetQueueElapsedTime();
 
-			if (finalFrame.clip == current && !isBlendingCurrentClip && finalFrame.frame >= frameToReach)
+			int length = _Frames.Length;
+			if (length > 1 && _Tracks != null)
 			{
-				isBlendingCurrentClip = true;
-				timestampStartBlend = Time.time;
-				Authority.StartNextClip(true);
+				KinetixClipTrack track;
+
+				float[] weights = new float[length];
+				float blendDuration, localElapsedTime;
+				for (int i = 0; i < length; i++)
+				{
+					blendDuration = this.blendDuration;
+					track = _Tracks[i];
+					localElapsedTime = track.GlobalToLocalTime(elapsedTime);
+
+					if (track.timeRange.Range < blendDuration * 2f)
+					{
+						blendDuration = track.timeRange.Range / 2f;
+					}
+
+					weights[i] = Mathf.Min(
+						1,
+						Mathf.Abs( (localElapsedTime - track.timeRange.minTime) / blendDuration), //start blend weight = 1 ; end blend weight = 0
+						Mathf.Abs( (track.timeRange.maxTime - localElapsedTime) / blendDuration)  //start blend weight = 0 ; end blend weight = 1
+					);
+				}
+
+				var tempTracks = _Tracks;
+				Average(ref _FinalFrame, _Frames, weights);
+			}
+			else
+			{
+				_FinalFrame = new KinetixFrame(_Frames[0]);
 			}
 		}
 
@@ -77,9 +82,6 @@ namespace Kinetix.Internal
 		public void OnQueueEnd()
 		{
 			isPlaying = false;
-			current = null;
-			frameToReach = -1;
-			isBlendingCurrentClip = false;
 		}
 
 		/// <inheritdoc/>
@@ -91,8 +93,8 @@ namespace Kinetix.Internal
 		/// <inheritdoc/>
 		public void Update() {}
 
-        public void OnSoftStop(float blendTime)
-        {
-        }
-    }
+		public void OnSoftStop(float _)
+		{
+		}
+	}
 }
