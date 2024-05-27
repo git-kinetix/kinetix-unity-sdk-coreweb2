@@ -11,7 +11,7 @@ using System.Linq;
 namespace Kinetix.Internal
 {
 	/// <summary>
-	/// Class used by the <see cref="SimulationSampler"/> to sample effects before sending the frame to the network and the
+	/// Class used by the <see cref="SimulationSampler"/> to sample effects before sending the _Frame to the network and the
 	/// </summary>
 	public class EffectSampler
 	{
@@ -24,53 +24,50 @@ namespace Kinetix.Internal
 		private SamplerAuthorityBridge authorityBridge;
 
 
-		/// <param name="authorityBridge">
-		/// Authority on the samplers.<br/>
+		/// <param name="_AuthorityBridge">
+		/// Authority on the _Tracks.<br/>
 		/// You can call some methods like "StartNextClip" or "GetAvatarPos".
 		/// </param>
-		public EffectSampler(SamplerAuthorityBridge authorityBridge)
+		public EffectSampler(SamplerAuthorityBridge _AuthorityBridge)
 		{
-			this.authorityBridge = authorityBridge;
+			this.authorityBridge = _AuthorityBridge;
 		}
 
 		/// <summary>
-		/// Called when <see cref="IFrameEffectAdd"/> added a frame to play
+		/// Called when <see cref="IFrameEffectAdd"/> added a _Frame to play
 		/// </summary>
 		public event Action<KinetixFrame> OnFrameAdded;
 #pragma warning restore IDE0044 // readonly
 
 		/// <summary>
-		/// Add an effect to the list of effect
+		/// Add an _Effect to the list of _Effect
 		/// </summary>
-		/// <param name="effect"></param>
-		public void RegisterEffect(IFrameEffect effect)
+		/// <param name="_Effect"></param>
+		public void RegisterEffect(IFrameEffect _Effect)
 		{
 			bool added = false;
 
-			if (effect is IFrameEffectAdd add)
+			if (_Effect is IFrameEffectAdd add)
 			{
 				added = true;
 				if (!frameAdds.Contains(add))
 				{
-					frameAdds.Add(add);
+					AddToArray(frameAdds, add);
 					add.OnAddFrame -= IFrameEffectAdd_OnAddFrame;
 					add.OnAddFrame += IFrameEffectAdd_OnAddFrame;
 				}
 			}
 			
-			if (effect is IFrameEffectModify modify)
+			if (_Effect is IFrameEffectModify modify)
 			{
 				added = true;
-				
-				if (!frameModify.Contains(modify))
-				{
-					frameModify.Add(modify);
-				}
+
+				AddToArray(frameModify, modify);
 			}
 
-			if (effect is ISamplerAuthority auth)
+			if (_Effect is ISamplerAuthority auth)
 			{
-				added = true;
+				//At the moment there's no priority for authority
 				if (!authority.Contains(auth))
 				{
 					authority.Add(auth);
@@ -82,41 +79,60 @@ namespace Kinetix.Internal
 			{
 				KinetixLogger.LogError(
 					nameof(EffectSampler),
-					nameof(IFrameEffect) + " shall be specialised in at least one of the child interface. See " + nameof(IFrameEffectAdd) + " and " + nameof(IFrameEffectModify),
+					nameof(IFrameEffect) + " should be specialised in at least one of the child interface. See " + nameof(IFrameEffectAdd) + " and " + nameof(IFrameEffectModify),
 					true
 				);
 			}
 			else
 			{
-				if (!frameEffect.Contains(effect))
-					frameEffect.Add(effect);
+				AddToArray(frameEffect, _Effect);
 			}
 		}
 
+		private void AddToArray<TEffect>(List<TEffect> _List, TEffect _Item) where TEffect : IFrameEffect
+		{
+			/* insertIndex optimises access to '_List.Count' when loop start */
+			bool insertFound = false;
+			int insertIndex = _List.Count;
+			for (int i = insertIndex - 1; i >= 0; i--)
+			{
+				TEffect effect = _List[i];
+				if (effect.GetHashCode() == _Item.GetHashCode() && effect.Equals(_Item))
+					return;
+
+				if (!insertFound && _List[i].Priority < _Item.Priority)
+					insertIndex = i;
+				else
+					insertFound = true;
+			}
+
+			_List.Insert(insertIndex, _Item);
+		}
+
 		/// <summary>
-		/// Remove an effect from the list of effect
+		/// Remove an _Effect from the list of _Effect
 		/// </summary>
-		/// <param name="effect"></param>
-		public void UnRegisterEffect(IFrameEffect effect)
+		/// <param name="_Effect"></param>
+		public void UnRegisterEffect(IFrameEffect _Effect)
 		{
 			bool removed = false;
 
-			frameEffect.Remove(effect);
+			frameEffect.Remove(_Effect);
 	
-			if (effect is IFrameEffectAdd add)
+			if (_Effect is IFrameEffectAdd add)
 			{
 				removed = true;
 				frameAdds.Remove(add);
 				add.OnAddFrame -= IFrameEffectAdd_OnAddFrame;
 			}
 
-			if (effect is IFrameEffectModify modify)
+			if (_Effect is IFrameEffectModify modify)
 			{
 				removed = true;
 				frameModify.Remove(modify);
 			}
 
-			if (effect is ISamplerAuthority start)
+			if (_Effect is ISamplerAuthority start)
 			{
 				removed = true;
 				authority.Remove(start);
@@ -132,45 +148,32 @@ namespace Kinetix.Internal
 			}
 		}
 
-		private void IFrameEffectAdd_OnAddFrame(KinetixFrame frame)
+		private void IFrameEffectAdd_OnAddFrame(KinetixFrame _Frame)
 		{
-			ModifyFrame(ref frame);
-			OnFrameAdded?.Invoke(frame);
+			ModifyFrame(ref _Frame);
+			OnFrameAdded?.Invoke(_Frame);
 		}
 		
 		/// <summary>
-		/// Modify a single frame (called by <see cref="IFrameEffectAdd_OnAddFrame"/>
+		/// Modify a single _Frame (called by <see cref="IFrameEffectAdd_OnAddFrame"/>
 		/// </summary>
-		/// <param name="frame"></param>
-		public void ModifyFrame(ref KinetixFrame frame)
-		{
-			KinetixFrame[] frames = new KinetixFrame[] { frame };
-
-			int count = frameModify.Count;
-			for (int i = 0; i < count; i++)
-			{
-				frameModify[i].OnPlayedFrame(ref frame, in frames, 0);
-			}
-		}
+		/// <param name="_Frame"></param>
+		public void ModifyFrame(ref KinetixFrame _Frame)
+			=> ModifyFrame(new KinetixFrame[] { _Frame }, null);
 
 		/// <summary>
-		/// Compute the effects for each <see cref="SimulationSampler.Sampler"/>'s result. The first non null frame is considered the main frame
+		/// Compute the effects for each <see cref="SimulationSampler.Sampler"/>'s result. The first non null _Frame is considered the main _Frame
 		/// </summary>
-		/// <param name="frame">Result of the samplers</param>
+		/// <param name="_Frame">Result of the _Tracks</param>
 		/// <returns></returns>
-		public KinetixFrame ModifyFrame(in KinetixFrame[] frame)
+		public KinetixFrame ModifyFrame(in KinetixFrame[] _Frame, in KinetixClipTrack[] _Tracks)
 		{
-			var kvp =
-				frame.Select( (f,i) => new KeyValuePair<KinetixFrame, int>(f,i) )
-					 .First ( f     => f.Key != null );
-
-			KinetixFrame toReturn = new KinetixFrame(kvp.Key);
-			int clonedIndex = kvp.Value;
+			KinetixFrame toReturn = new KinetixFrame(_Frame[0]);
 
 			int count = frameModify.Count;
 			for (int i = 0; i < count; i++)
 			{
-				frameModify[i].OnPlayedFrame(ref toReturn, in frame, clonedIndex);
+				frameModify[i].OnPlayedFrame(ref toReturn, _Frame, in _Tracks);
 			}
 
 			return toReturn;
@@ -186,45 +189,6 @@ namespace Kinetix.Internal
 			for (int i = 0; i < lenght; i++)
 			{
 				frameEffect[i].Update();
-			}
-		}
-
-		/// <summary>
-		/// Dispatch the "OnAnimationStart" to the effects
-		/// </summary>
-		/// <param name="clip">Clip to give to the effects</param>
-		public void OnAnimationStart(KinetixClip clip)
-		{
-			int lenght = frameEffect.Count;
-			for (int i = 0; i < lenght; i++)
-			{
-				frameEffect[i].OnAnimationStart(clip);
-			}
-		}
-
-		/// <summary>
-		/// Dispatch the "OnAnimationEnd" to the effects
-		/// </summary>
-		/// <param name="_">Unused by the effects</param>
-		public void OnAnimationStop(KinetixClipWrapper _ = default)
-		{
-			int lenght = frameEffect.Count;
-			for (int i = 0; i < lenght; i++)
-			{
-				frameEffect[i].OnAnimationEnd();
-			}
-		}
-
-		/// <summary>
-		/// Dispatch the "OnAnimationEnd" to the effects
-		/// </summary>
-		/// <param name="_">Unused by the effects</param>
-		public void OnSoftStop(float blendTime)
-		{
-			int lenght = frameEffect.Count;
-			for (int i = 0; i < lenght; i++)
-			{
-				frameEffect[i].OnSoftStop(blendTime);
 			}
 		}
 
@@ -251,6 +215,19 @@ namespace Kinetix.Internal
 				frameEffect[i].OnQueueEnd();
 			}
 		}
+
+		/// <summary>
+		/// Dispatch the "OnSoftStop" to the effects
+		/// </summary>
+		public void OnSoftStop(float _SoftDuration)
+		{
+			int lenght = frameEffect.Count;
+			for (int i = 0; i < lenght; i++)
+			{
+				frameEffect[i].OnSoftStop(_SoftDuration);
+			}
+		}
+
 
 	}
 }

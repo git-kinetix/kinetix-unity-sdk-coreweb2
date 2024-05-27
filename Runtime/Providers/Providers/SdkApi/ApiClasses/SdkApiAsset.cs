@@ -80,6 +80,7 @@ namespace Kinetix.Internal
 
 		public AnimationMetadata ToAnimationMetadata()
 		{
+			string currentUrlExtension = string.Empty;
 			string animUrl       = string.Empty;
 			string animUrlLegacy = string.Empty;
 			string thumbnailUrl  = string.Empty;
@@ -101,7 +102,12 @@ namespace Kinetix.Internal
 
 					case Animation_Filename:
 						urlByFormat["." + file.extension.ToLower()] = file.url;
-						animUrl = file.url;
+
+						if (currentUrlExtension != "kinanim") 
+						{
+							animUrl = file.url;
+							currentUrlExtension = file.extension;
+						}
 						break;
 
 					case Animation_Filename_Legacy:
@@ -109,6 +115,8 @@ namespace Kinetix.Internal
 						break;
 				}
 			}
+
+			currentUrlExtension = string.Empty;
 
 			List<AvatarAnimationMetadata> avatarsMetadata = new List<AvatarAnimationMetadata>();
 			foreach (KeyValuePair<string, AvatarSignedFile[]> filesTmp in avatars)
@@ -133,7 +141,12 @@ namespace Kinetix.Internal
 
 						case Animation_Filename:
 							avatarAnimationMetadata.UrlByFormat["." + file.extension.ToLower()] = file.url;
-							avatarAnimationMetadata.AnimationURL = file.url;
+
+							if (currentUrlExtension != "kinanim")
+							{
+								avatarAnimationMetadata.AnimationURL = file.url;
+								currentUrlExtension = file.extension;
+							}
 							break;
 
 						case Animation_Filename_Legacy:

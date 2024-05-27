@@ -440,7 +440,7 @@ namespace Kinetix.Internal.Cache
 
 			kcc.Init(serviceLocator, _KinetixAvatar);
 			kcc.OnAnimationStart += AnimationStartOnPlayerAnimator;
-			kcc.OnAnimationEnd   += AnimationEndOnPlayerAnimator;
+			kcc.OnAnimationEnd  += AnimationEndOnPlayerAnimator;
 			return kcc;
 		}
 
@@ -453,7 +453,7 @@ namespace Kinetix.Internal.Cache
 
 			kcc.Init(serviceLocator, _KinetixAvatar, _RootMotionConfig);
 			kcc.OnAnimationStart += AnimationStartOnPlayerAnimator;
-			kcc.OnAnimationEnd   += AnimationEndOnPlayerAnimator;
+			kcc.OnAnimationEnd  += AnimationEndOnPlayerAnimator;
 			return kcc;
 		}
 
@@ -466,7 +466,7 @@ namespace Kinetix.Internal.Cache
 
 			kcc.Init(serviceLocator, _KinetixAvatar);
 			kcc.OnAnimationStart += AnimationStartOnPlayerAnimator;
-			kcc.OnAnimationEnd   += AnimationEndOnPlayerAnimator;
+			kcc.OnAnimationEnd += AnimationEndOnPlayerAnimator;
 			return kcc;
 		}
 
@@ -479,26 +479,37 @@ namespace Kinetix.Internal.Cache
 
 			kcc.Init(serviceLocator, _KinetixAvatar, _RootMotionConfig);
 			kcc.OnAnimationStart += AnimationStartOnPlayerAnimator;
-			kcc.OnAnimationEnd   += AnimationEndOnPlayerAnimator;
+			kcc.OnAnimationEnd  += AnimationEndOnPlayerAnimator;
 			return kcc;
 		}
 
-		private void AnimationStartOnPlayerAnimator(AnimationIds _AnimationIds)
+		private void AnimationStartOnPlayerAnimator(AnimationIds ids)
 		{
-			OnAnimationStartOnPlayerAnimator?.Invoke(_AnimationIds);
+			OnAnimationStartOnPlayerAnimator?.Invoke(ids);
 		}
 
-		private void AnimationEndOnPlayerAnimator(AnimationIds _AnimationIds)
+		private void AnimationEndOnPlayerAnimator(AnimationIds ids)
 		{
-			OnAnimationEndOnPlayerAnimator?.Invoke(_AnimationIds);
+			OnAnimationEndOnPlayerAnimator?.Invoke(ids);
 		}
 
 		public AnimationIds[] GetDownloadedAnimationsReadyToPlay()
 		{
 			return downloadedEmotesReadyToPlay.ToArray();
 		}
-		
+
+		public void SetLoopAnimation(bool _Looping) => KinetixCharacterComponent.SetLoopAnimation(_Looping);
+		public bool GetIsLoopingAnimation() => KinetixCharacterComponent.GetIsLoopingAnimation();
+
+		public void SetPause(bool _Paused) => KinetixCharacterComponent.SetPause(_Paused);
+		public void SetPlayRate(float _PlayRate) => KinetixCharacterComponent.SetPlayRate(_PlayRate);
+		public void GetPlayRate() => KinetixCharacterComponent.GetPlayRate();
+		public void SetElapsedTime(float _ElapsedTime) => KinetixCharacterComponent.SetElapsedTime(_ElapsedTime);
+		public void GetElapsedTime() => KinetixCharacterComponent.GetElapsedTime();
+
 		public void PlayAnimation(AnimationIds _AnimationsIds, Action<AnimationIds> _OnPlayedAnimation, string _ForcedExtension = "")
+			=> PlayAnimation(_AnimationsIds, AnimationTimeRange.Default, _OnPlayedAnimation, _ForcedExtension);
+		public void PlayAnimation(AnimationIds _AnimationsIds, AnimationTimeRange _AnimationTimeRange, Action<AnimationIds> _OnPlayedAnimation, string _ForcedExtension = "")
 		{
 			if (KinetixCharacterComponent == null)
 			{
@@ -506,7 +517,7 @@ namespace Kinetix.Internal.Cache
 			}
 
 			if (playAutomaticallyOnAnimator)
-				KinetixCharacterComponent.PlayAnimation(_AnimationsIds, _ForcedExtension);
+				KinetixCharacterComponent.PlayAnimation(_AnimationsIds, _AnimationTimeRange, _ForcedExtension);
 			else
 				_OnPlayedAnimation?.Invoke(_AnimationsIds);
 		}

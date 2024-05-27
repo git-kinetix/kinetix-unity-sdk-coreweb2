@@ -6,14 +6,18 @@
 
 using Kinetix.Internal.Utils;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
 namespace Kinetix.Internal
 {
-	public partial class SimulationSampler : IDisposable
+	public class SimulationSampler : IDisposable, IEnumerable<KinetixClipTrack>
 	{
+		public const float DEFAULT_CLIP_BLEND = 1;
+		public const float DEFAULT_QUEUE_END_BLEND = 0.35f;
+
 		// ====================================================================== //
 		//  EVENTS                                                                //
 		// ====================================================================== //
@@ -36,20 +40,29 @@ namespace Kinetix.Internal
 		// ----------------- //
 		private readonly EffectSampler effect;
 		public EffectSampler Effect => effect;
+		/// <summary>
+		/// If you're using a different blend 
+		/// </summary>
+		public float defaultBlendOffset = DEFAULT_CLIP_BLEND;
 
 		/// <summary>
 		/// Instance Singleton shared between every effects
 		/// </summary>
 		private readonly SamplerAuthorityBridge authorityBridge;
 
+		private uint currentPlayingTrackHash = 0;
 
 		//  Queue and play
 		// ----------------- //
-		private Queue<KinetixClipWrapper> queue = new Queue<KinetixClipWrapper>();
+		private float removeOldClipsAfterTime = -1;
+		private float softStopQueueDuration; //Time (after a soft stop) before the sampler call 'Stop()'
+		private bool isSoftStop;
 		private bool playEnabled = false;
-		private float? softStopTime = null;
-		public KinetixClipWrapper MainClip    => (Main?.Clip).GetValueOrDefault();
-		public double             ElapsedTime => (Main?.ElapsedTime).GetValueOrDefault();
+		private bool isPlaying   = false;
+
+		public float ElapsedTime { get => elapsedTime; set => elapsedTime = value; }
+		private float elapsedTime;
+		private float previousFrameTime;
 
 		//  Cache
 		// ----------------- //
@@ -57,49 +70,13 @@ namespace Kinetix.Internal
 
 		//  Samplers
 		// ----------------- //
-		private KinetixClipSampler _main = null;
-		protected bool IsMainNull => Main == null;
-		private KinetixClipSampler Main
-		{
-			get
-			{
-				_main ??= samplers.FirstOrDefault();
+		private float playRate = 1;
+		public AnimationLoopMode AnimationLoopMode { get; set; } = AnimationLoopMode.Default;
 
-				if (_main != null)
-				{
-					_main.isMain = true;
-				}
-
-				return _main;
-			}
-		}
-
-		/// <remarks>
-		///   <u>How many samplers are in my List ?</u><br/>
-		///   <list type="bullet">
-		///     <item>
-		///       0 if nothing is playing
-		///     </item>
-		///     <item>
-		///       1 if one clip is playing
-		///     </item>
-		///     <item>
-		///       2+ if multiple clips are playing simulteanousely
-		///     </item>
-		///   </list>
-		///   <br/>
-		/// 
-		///   <u>A sampler is destroyed when:</u><br/>
-		///   <list type="bullet">
-		///     <item>
-		///       No more clip needs to be played
-		///     </item>
-		///     <item>
-		///       A sampler ends and more than one sampler exists
-		///     </item>
-		///   </list>
-		/// </remarks>
-		private List<KinetixClipSampler> samplers = new List<KinetixClipSampler>();
+		private uint nextAssignTrackHash = 1;
+		private List<KinetixClipTrack> tracks = new List<KinetixClipTrack>();
+		private List<KinetixClipTrack> playAfterStopTracks = new List<KinetixClipTrack>();
+		private bool doPlayAfterStop = false;
 		#endregion
 		// ---------------------------------------------------------------------- //
 
@@ -111,12 +88,12 @@ namespace Kinetix.Internal
 		{
 			authorityBridge = new SamplerAuthorityBridge()
 			{
-				StartNextClip = Authority_StartNextClip,
 				GetAvatarPos = Authority_GetAvatarPos,
-				GetQueue = Authority_GetQueue,
-				GetClip = Authority_GetClip,
-				CreateSampler = Authority_CreateSampler,
 				GetAvatar = Authority_GetAvatar,
+				GetQueueDirection = Authority_AnimationDirection,
+				GetPlayRate = Authority_GetPlayRate,
+				GetQueueDuration = Authority_GetQueueDuration,
+				GetQueueElapsedTime = Authority_GetQueueElapsedTime,
 			};
 
 			effect = new EffectSampler(authorityBridge);
@@ -125,10 +102,9 @@ namespace Kinetix.Internal
 
 		public void Dispose()
 		{
-			_main = null;
-			samplers = null;
-			queue = null;
-
+			//TODO: Dispose tracks
+			tracks = null;
+	
 			effect.OnFrameAdded -= SamplerEffect_OnFrameAdded;
 
 			OnQueueStart = null;
@@ -146,18 +122,12 @@ namespace Kinetix.Internal
 		//  EFFECT AUTHORITY                                                      //
 		// ====================================================================== //
 		#region AUTHORITY
-		private void                      Authority_StartNextClip(bool additive) => Next(additive);
 		private KinetixPose               Authority_GetAvatarPos()               => RequestAvatarPos?.Invoke();
 		private SkeletonPool.PoolItem     Authority_GetAvatar()                  => RequestAvatar?.Invoke();
-		private Queue<KinetixClipWrapper> Authority_GetQueue()                   => queue;
-		private KinetixClipSampler        Authority_CreateSampler()              => new KinetixClipSampler() { SampleFrameHandler = SampleFrameHandler, isMain=false };
-		private KinetixClip Authority_GetClip(int index)
-		{
-			if (index < 0 || index >= samplers.Count)
-				return null;
-
-			return samplers[index].Clip;
-		}
+		private AnimationLoopMode Authority_AnimationDirection() => AnimationLoopMode;
+		private float Authority_GetPlayRate() => GetPlayRate();
+		private float Authority_GetQueueDuration() => GetQueueDuration();
+		private float Authority_GetQueueElapsedTime() => elapsedTime;
 		#endregion
 		// ---------------------------------------------------------------------- //
 
@@ -165,29 +135,40 @@ namespace Kinetix.Internal
 		//  SAMPLER                                                               //
 		// ====================================================================== //
 		#region SAMPLER
-		protected KinetixClipSampler CreateSampler()
+		protected KinetixClipTrack AddTrack(KinetixClipTrack _Track)
 		{
-			KinetixClipSampler sampler = new KinetixClipSampler
+			_Track.SampleFrameHandler = SampleFrameHandler;
+			if (isSoftStop)
+				playAfterStopTracks.Add(_Track);
+			else
+				tracks.Add(_Track);
+
+			unchecked
 			{
-				SampleFrameHandler = SampleFrameHandler
-			};
-
-			samplers.Add(sampler);
-			return sampler;
+				_Track.hash = nextAssignTrackHash++;
+				if (_Track.hash == 0)
+				{
+					nextAssignTrackHash++;
+					_Track.hash++;
+				}
+			}
+			
+			return _Track;
 		}
 
-		protected void DequeueSampler(int index)
+		protected void DequeueSampler(int _Index)
 		{
-			samplers.RemoveAt(index);
-			_main = null; //Uncache
-			_main = Main; //Recache
+			if (isSoftStop)
+				return;
+
+			tracks.RemoveAt(_Index);
 		}
 
-		protected KinetixFrame SampleFrameHandler(KinetixClip kinetixClip, int frame)
+		protected KinetixFrame SampleFrameHandler(KinetixClip _KinetixClip, int _Frame)
 		{
 			KinetixFrame toReturn = bones == null ?
-				new KinetixFrame(out bones, kinetixClip, frame) :
-				new KinetixFrame(bones, kinetixClip, frame);
+				new KinetixFrame(out bones, _KinetixClip, _Frame) :
+				new KinetixFrame(bones, _KinetixClip, _Frame);
 
 			RequestAdaptToInterpreter?.Invoke(toReturn);
 
@@ -200,151 +181,325 @@ namespace Kinetix.Internal
 		//  PLAYMODE CONTROLS                                                     //
 		// ====================================================================== //
 		#region PLAYMODE CONTROLS
+		public float GetPlayRate() => playRate;
+		public void SetPlayRate(float rate)
+		{
+			playRate = rate;
+		}
+
+		public float GetQueueDuration()
+		{
+			if (tracks.Count == 0) 
+				return 0;
+			
+			return tracks.Max(Max);
+			static float Max(KinetixClipTrack __Track)
+			{
+				return __Track.GlobalEndTime;
+			}
+		}
+
+		/// <summary>
+		/// Helper method for <see cref="Play(bool, float, KinetixClipWrapper)"/> and <see cref="Add(bool, float, KinetixClipWrapper)"/>
+		/// </summary>
+		/// <param name="_Immediate">If true, stop current _Track with a blend and play provided clips</param>
+		/// <returns></returns>
+		private float GetAddStartTime(bool _Immediate)
+		{
+			float startTime = 0;
+			if (!isSoftStop)
+			{
+				startTime = _Immediate ?
+					elapsedTime + defaultBlendOffset :
+					GetQueueDuration() - defaultBlendOffset;
+			}
+
+			return startTime;
+		}
+
 		public void Pause()  => playEnabled = false;
 		public void Resume() => playEnabled = true ;
+		public bool GetIsPlaying() => isPlaying;
+		public bool GetIsPaused() => !playEnabled;
 
-		private void PlayImmediate(KinetixClipWrapper clip, bool additive = false)
+		public void Play()
 		{
-			if (IsMainNull) 
+
+			if (isSoftStop)
 			{
-				CreateSampler().Play(clip);
-				InvokeQueueStart();
+				doPlayAfterStop = true;
+				return;
 			}
-			else
+
+			if (isPlaying)
 			{
-				if (additive)
+				playEnabled = true;
+				isPlaying = true;
+				return;
+			}
+
+			if (tracks.Count == 0)
+				return;
+
+			InvokeSoftStop(-1);
+			currentPlayingTrackHash = 0;
+			elapsedTime = playRate < 0 ? GetQueueDuration() : 0;
+			previousFrameTime = elapsedTime;
+			playEnabled = true;
+			isPlaying = true;
+			doPlayAfterStop = false;
+			InvokeQueueStart();
+		}
+
+		/// <summary>
+		/// Add a clip and start playing the sampler
+		/// </summary>
+		/// <param name="_Immediate">If true, stop current _Track with a blend and play provided clips</param>
+		/// <param name="_Clip">Clip to play</param>
+		public KinetixClipTrack Play(bool _Immediate, KinetixClipWrapper _Clip)
+		{
+			float time = GetAddStartTime(_Immediate);
+			return Play(_Immediate, Mathf.Max(0, time), _Clip);
+		}
+
+		/// <summary>
+		/// Add a clip and start playing the sampler
+		/// </summary>
+		/// <param name="_Immediate">If true, stop current _Track with a blend and play provided clips</param>
+		/// <param name="_StartTime">Time at which to start the _Track</param>
+		/// <param name="_Clip">Clip to play</param>
+		public KinetixClipTrack Play(bool _Immediate, float _StartTime, KinetixClipWrapper _Clip)
+		{
+			KinetixClipTrack toReturn = Add(_Immediate, _StartTime, _Clip);
+			Play();
+			return toReturn;
+		}
+
+
+		/// <summary>
+		/// Add a clips and start playing the sampler
+		/// </summary>
+		/// <param name="_Immediate">If true, stop current _Track with a blend and play provided clips</param>
+		/// <param name="_Clips">Clips to play</param>
+		public KinetixClipTrack[] PlayClips(bool _Immediate, params KinetixClipWrapper[] _Clips)
+		{
+			float startTime = GetAddStartTime(_Immediate);
+			return PlayClips(_Immediate, startTime, _Clips);
+		}
+
+		/// <summary>
+		/// Add a clips and start playing the sampler
+		/// </summary>
+		/// <param name="_Immediate">If true, stop current _Track with a blend and play provided clips</param>
+		/// <param name="_StartTime">Time at which to start the tracks</param>
+		/// <param name="_Clips">Clips to play</param>
+		public KinetixClipTrack[] PlayClips(bool _Immediate, float _StartTime, params KinetixClipWrapper[] _Clips)
+		{
+			KinetixClipTrack[] toReturn = AddClips(_Immediate, _StartTime, _Clips);
+			Play();
+			return toReturn;
+		}
+
+		/// <summary>
+		/// Add a _Track to the sampler without triggeting <see cref="Play()"/>
+		/// </summary>
+		/// <param name="_Immediate">If true, stop current _Track with a blend and play provided clips</param>
+		/// <param name="_Clip">Clips to play</param>
+		public KinetixClipTrack Add(bool _Immediate, KinetixClipWrapper _Clip)
+		{
+			float time = GetAddStartTime(_Immediate);
+			return Add(_Immediate, Mathf.Max(0, time), _Clip);
+		}
+
+		/// <summary>
+		/// Add a _Track to the sampler without triggeting <see cref="Play()"/>
+		/// </summary>
+		/// <param name="_Immediate">If true, stop current _Track with a blend and play provided clips</param>
+		/// <param name="_StartTime">Time at which to start the _Track</param>
+		/// <param name="_Clip">Clip to play</param>
+		public KinetixClipTrack Add(bool _Immediate, float _StartTime, KinetixClipWrapper _Clip)
+		{
+			return AddClips(_Immediate, _StartTime, _Clip)[0];
+		}
+
+		/// <summary>
+		/// Add tracks to the sampler without triggeting <see cref="Play()"/>
+		/// </summary>
+		/// <param name="_Immediate">If true, stop current _Track with a blend and play provided clips</param>
+		/// <param name="_Clips">Clips to play</param>
+		public KinetixClipTrack[] AddClips(bool _Immediate, params KinetixClipWrapper[] _Clips)
+		{
+			float startTime = GetAddStartTime(_Immediate);
+			return AddClips(_Immediate, startTime, _Clips);
+		}
+
+		/// <summary>
+		/// Add tracks to the sampler without triggeting <see cref="Play()"/>
+		/// </summary>
+		/// <param name="_Immediate">If true, stop current _Track with a blend and play provided clips</param>
+		/// <param name="_StartTime">Time at which to start the tracks</param>
+		/// <param name="_Clips">Clips to play</param>
+		public KinetixClipTrack[] AddClips(bool _Immediate, float _StartTime, params KinetixClipWrapper[] _Clips)
+		{
+			KinetixClipTrack[] toReturn = new KinetixClipTrack[_Clips.Length];
+			if (!isSoftStop && _Immediate)
+			{
+				if (!isPlaying || !playEnabled || playRate < 0)
 				{
-					CreateSampler().Play(clip);
+					Stop();
 				}
 				else
 				{
-					Main.Play(clip);
+					removeOldClipsAfterTime = _StartTime - elapsedTime;
+					ResetElapsedTimeAndClearOldTracks(removeOldClipsAfterTime, true);
+				}
+				_StartTime = 0;
+			}
+
+			float nextStartTime = _StartTime;
+			int length = _Clips.Length;
+			for (int i = 0; i < length; i++)
+			{
+				KinetixClipTrack item = new KinetixClipTrack(_Clips[i])
+				{
+					timelineStartTime = nextStartTime
+				};
+				nextStartTime = item.GlobalEndTime - defaultBlendOffset;
+				AddTrack(item);
+
+				toReturn[i] = item;
+			}
+
+			return toReturn;
+		}
+
+		public void RemoveAllTracks()
+		{
+			for (int i = tracks.Count - 1; i >= 0; i--)
+			{
+				tracks[i].Dispose();
+				tracks.RemoveAt(i);
+			}
+		}
+
+		/// <summary>
+		/// Remove a _Track from the queue
+		/// </summary>
+		/// <param name="_Track">Track to remove</param>
+		public void RemoveTrack(KinetixClipTrack _Track)
+		{
+			if (tracks == null)
+			{
+				_Track.Dispose();
+				return;
+			}
+
+			if (_Track.hash == currentPlayingTrackHash)
+			{
+				InvokeAnimationStop(currentPlayingTrackHash);
+				currentPlayingTrackHash = 0;
+			}
+
+			tracks.Remove(_Track);
+			_Track.Dispose();
+		}
+
+		/// <summary>
+		/// Method that align all _Track to 0 and reset the elapsed time
+		/// </summary>
+		/// <param name="_TruncateOffset">SetData the end time of tracks to {<see cref="elapsedTime"/>+<paramref name="_TruncateOffset"/>}</param>
+		/// <param name="_KillFuturTracks">If true, remove all tracks that weren't played</param>
+		public void ResetElapsedTimeAndClearOldTracks(float? _TruncateOffset = null, bool _KillFuturTracks = true)
+		{
+			KinetixClipTrack kinetixClipTrack;
+			for (int i = tracks.Count - 1; i >= 0; i--)
+			{
+				kinetixClipTrack = tracks[i];
+
+				if (!_KillFuturTracks && kinetixClipTrack.timelineStartTime > elapsedTime)
+					continue;
+
+				if (!kinetixClipTrack.ContainsGlobalTime(elapsedTime))
+				{
+					kinetixClipTrack.Dispose();
+					tracks.RemoveAt(i);
+				}
+				else
+				{
+					kinetixClipTrack.timelineStartTime -= elapsedTime;
+					if (_TruncateOffset.HasValue)
+						kinetixClipTrack.TruncateEnd(_TruncateOffset.Value);	
 				}
 			}
 
-			playEnabled = true;
-
-			InvokeAnimationStart(clip);
+			elapsedTime = 0;
+			previousFrameTime = 0;
 		}
 
-		public void Play(KinetixClipWrapper clip, bool additive = false)
+		/// <summary>
+		/// Stop with a blend to the Avatar (requires the effect <see cref="AnimatorBlendEffect"/> )
+		/// </summary>
+		public void SoftStop() => SoftStop(DEFAULT_QUEUE_END_BLEND);
+		/// <summary>
+		/// Stop with a blend to the Avatar (requires the effect <see cref="AnimatorBlendEffect"/> )
+		/// </summary>
+		/// <param name="_StopDelay">Delay before complete stop. Note doesn't influence the duration of the blending. See <see cref="AnimatorBlendEffect.blendDuration"/>.</param>
+		public void SoftStop(float _StopDelay)
 		{
-			if (additive)
+			if (tracks.Count == 0)
 			{
-				PlayImmediate(clip, additive);
+				Stop();
+				return;
 			}
-			else
-			{
-				SamplerEnded(0);
-				Add(clip);
-			}
-		}
 
-		public void PlayRange(params KinetixClipWrapper[] clips)
-		{
-			if (!IsMainNull)
+			AnimationLoopMode = AnimationLoopMode.Default;
+			float duration = GetQueueDuration();
+			_StopDelay = Mathf.Min(_StopDelay, duration - elapsedTime);
+			if (_StopDelay < 0)
+			{
+				Stop();
+				return;
+			}
+			
+			if (_StopDelay < Mathf.Epsilon)
 				Stop();
 
-			AddRange(clips);
-		}
-
-		public void SoftStop(float stopDelay)
-		{
-			if (samplers.Count == 0)
-				return;
-
-			softStopTime = stopDelay;
-			InvokeOnSoftStop(stopDelay);
+			isSoftStop = true;
+			ResetElapsedTimeAndClearOldTracks(_StopDelay);
+			softStopQueueDuration = GetQueueDuration();
+			InvokeSoftStop(_StopDelay);
+			Resume();
 		}
 		
+		/// <summary>
+		/// Completely stop and reset the sampler without blending.
+		/// </summary>
 		public void Stop()
 		{
-			softStopTime = null;
+			removeOldClipsAfterTime = -1;
+			isSoftStop = false; //REQUIRED FOR CLEARING SOFT STOP
+			InvokeSoftStop(-1); //REQUIRED FOR CLEARING SOFT STOP
 
-			if (samplers.Count == 0)
-				return;
+			elapsedTime = 0;
+			previousFrameTime = 0;
+			playEnabled = false;
+			isPlaying = false;
+			AnimationLoopMode = AnimationLoopMode.Default;
 
-			KinetixClipSampler sampler = Main;
-			ClearQueue();
-			samplers.Add(sampler); //keep one sampler so that "sampler ended" works
-			SamplerEnded(0);
+			if (currentPlayingTrackHash != 0)
+				InvokeAnimationStop(currentPlayingTrackHash);
+
+			currentPlayingTrackHash = 0;
+			InvokeQueueStop();
+
+			RemoveAllTracks();
+
+			tracks = playAfterStopTracks;
+			playAfterStopTracks = new List<KinetixClipTrack>();
+			if (doPlayAfterStop)
+				Play();
 		}
 
-		public void ClearQueue()
-		{
-			_main = null;
-			samplers.Clear();
-			queue.Clear();
-		}
-
-		public void Add(KinetixClipWrapper clip)
-		{
-			if (IsMainNull)
-			{
-				PlayImmediate(clip);
-			}
-			else
-			{
-				queue.Enqueue(clip);
-			}
-		}
-
-		public void AddRange(params KinetixClipWrapper[] clip)
-		{
-			int i = 0;
-			if (IsMainNull)
-			{
-				PlayImmediate(clip[0]);
-				i = 1;
-			}
-
-			int length = clip.Length;
-			for (; i < length; i++)
-			{
-				queue.Enqueue(clip[i]);
-			}
-		}
-
-		private void Next(bool additive)
-		{
-			if (queue.Count > 0)
-				PlayImmediate(queue.Dequeue(), additive);
-		}
-
-		private void SamplerEnded(int index)
-		{
-			if (samplers.Count == 0) return;
-
-			//If more than one sampler, remove at index.
-			if (samplers.Count > 1)
-			{
-				InvokeAnimationStop(samplers[index].Clip);
-				DequeueSampler(index);
-				return;
-			}
-			//From here only one sampler exists
-
-			//If it's not null, tell that we've ended a clip
-			if (!IsMainNull)
-			{
-				InvokeAnimationStop(Main.Clip);	
-			}
-
-			//If it still have things to play play it
-			if (queue.Count > 0)
-			{
-				PlayImmediate(queue.Dequeue());
-			}
-			else
-			{
-				//This was the last Sampler. Dequeue it and send queue stop event
-				if (!IsMainNull)
-				{
-					DequeueSampler(0);
-				}
-				InvokeQueueStop();
-			}
-		}
 		#endregion
 		// ---------------------------------------------------------------------- //
 
@@ -353,75 +508,132 @@ namespace Kinetix.Internal
 		// ====================================================================== //
 		public void Update()
 		{
-			float deltaTime = Time.deltaTime;
-			int samplersCount = samplers.Count;
-			if (!playEnabled)
-				return;
-
-			effect.Update(); //This is basically for outer effects like "soft stop"
-
-			if (softStopTime.HasValue)
+			int samplersCount = tracks.Count;
+			if (isPlaying && samplersCount == 0)
 			{
-				if (softStopTime <= 0)
-				{
-					Stop();
-					return;
-				}
+				Stop();
+				return;
+			}
 
-				softStopTime -= deltaTime;
+			if (!playEnabled && elapsedTime == previousFrameTime)
+			{
+				return;
 			}
 
 			if (samplersCount == 0)
-				return;
-
-			//--------- Get frames from samplers ---------// 
-			bool isMainNull;
-			KinetixClipSampler sampler;
-			List<KinetixFrame> frames = new List<KinetixFrame>( Enumerable.Repeat<KinetixFrame>(null, samplersCount) );
-
-			//Get main sampler
-			while (true)
 			{
-				sampler = samplers[0];
-
-				if (sampler.Ended) //Security (a sampler should never end before the update)
-					return;
-
-				isMainNull =
-					(frames[0] = sampler.Update(deltaTime))
-					== null;
-				
-				if (sampler.Ended) //Main sampler ended
-				{
-					SamplerEnded(0);
-					frames.RemoveAt(0);
-					if (--samplersCount == 0) //All samplers ended
-						return;
-					continue;
-				}
-
-				break; //Completed successfully
+				Stop();
+				return;
 			}
 
-			//Get frames from each remaining samplers 
-			for (int i = samplersCount - 1; i >= 1; i--)
+			if (isSoftStop && softStopQueueDuration != GetQueueDuration())
 			{
-				sampler = samplers[i];
+				Stop();
+				return;
+			}
 
-				frames[i] = sampler.Update(deltaTime);
-			
-				if (sampler.Ended)
+			float currentElapsedTime = elapsedTime;
+			elapsedTime += Time.deltaTime * playRate;
+			previousFrameTime = elapsedTime;
+
+			if (removeOldClipsAfterTime >= 0 && elapsedTime > removeOldClipsAfterTime)
+			{
+				removeOldClipsAfterTime = -1;
+				KinetixClipTrack kinetixClipTrack;
+				for (int i = tracks.Count - 1; i >= 0; i--)
 				{
-					frames.RemoveAt(i); //frames[i] should equal null so we need to remove it to avoid null exception
-					SamplerEnded(i);
+					kinetixClipTrack = tracks[i];
+
+					if (kinetixClipTrack.timelineStartTime > elapsedTime)
+						continue;
+
+					if (!kinetixClipTrack.ContainsGlobalTime(elapsedTime))
+					{
+						kinetixClipTrack.Dispose();
+						tracks.RemoveAt(i);
+					}
+				}
+
+				samplersCount = tracks.Count;
+			}
+
+			//--------- Get frames from tracks ---------// 
+			KinetixFrame frame;
+			List<KinetixFrame> frames = new List<KinetixFrame>();
+			List<KinetixClipTrack> playedTracks = new List<KinetixClipTrack>();
+
+			if (currentElapsedTime > GetQueueDuration() || currentElapsedTime < 0)
+			{
+				switch (AnimationLoopMode)
+				{
+					case AnimationLoopMode.Default:
+						Stop();
+						break;
+					case AnimationLoopMode.Loop:
+						if (playRate < 0)
+							elapsedTime = GetQueueDuration();
+						else
+							elapsedTime = 0;
+						break;
+				}
+				return;
+			}
+
+			uint maxHash = 0;
+			float maxTime = playRate > 0 ? float.MinValue : float.MaxValue;
+
+			KinetixClipTrack forTrack;
+			float globalEndTime;
+			//Get frames from each tracks 
+			for (int i = samplersCount - 1; i >= 0; i--)
+			{
+				forTrack = tracks[i];
+				frame = forTrack.Update(currentElapsedTime);
+				if (frame != null)
+				{
+					globalEndTime = playRate > 0 ? forTrack.GlobalEndTime : forTrack.timelineStartTime;
+					if ((globalEndTime - maxTime) * playRate > 0) //If globalEndTime is of the sign of playRate
+					{
+						//(globalEndTime > maxTime && playRate > 0)
+						//||
+						//(globalEndTime < maxTime && playRate < 0)
+
+						maxHash = forTrack.hash;
+						maxTime = globalEndTime;
+					}
+
+					frames.Add(frame);
+					playedTracks.Add(forTrack);
+				}
+				else if (forTrack.hash == currentPlayingTrackHash)
+				{
+					InvokeAnimationStop(currentPlayingTrackHash);
+					currentPlayingTrackHash = 0;
 				}
 			}
 
-			if (isMainNull) //Main sampler gave a null frame, this happens to cap animation on a certain frame rate
-				return;
+			frames.Reverse();
+			playedTracks.Reverse();
+			if (frames.Count == 0)
+			{
+				if (currentPlayingTrackHash != 0)
+					InvokeAnimationStop(currentPlayingTrackHash);
 
-			//Compute effect and send frame
-			KinetixFrame frame = effect.ModifyFrame(frames.ToArray());
+				currentPlayingTrackHash = 0;
+				return;
+			}
+
+			if (maxHash != currentPlayingTrackHash)
+			{
+				if (currentPlayingTrackHash != 0)
+					InvokeAnimationStop(currentPlayingTrackHash);
+
+				currentPlayingTrackHash = maxHash;
+				InvokeAnimationStart(currentPlayingTrackHash);
+			}
+
+			//Compute effect and send _Frame
+			frame = effect.ModifyFrame(frames.ToArray(), playedTracks.ToArray());
 			OnPlayedFrame?.Invoke(frame);
 		}
 		// ---------------------------------------------------------------------- //
@@ -440,19 +652,19 @@ namespace Kinetix.Internal
 			effect.OnQueueStop();
 			OnQueueStop?.Invoke();
 		}
-		private void InvokeAnimationStart(KinetixClipWrapper  clip) 
+		private void InvokeAnimationStart(uint _TrackHash)
 		{
-			effect.OnAnimationStart(clip);
+			KinetixClipWrapper clip = tracks.First(t => t.hash == _TrackHash).Clip;
 			OnAnimationStart?.Invoke(clip);
 		}
-		private void InvokeAnimationStop (KinetixClipWrapper  clip) 
+		private void InvokeAnimationStop(uint _TrackHash) 
 		{
-			effect.OnAnimationStop(clip);
-			OnAnimationStop ?.Invoke(clip);
+			KinetixClipWrapper clip = tracks.First(t => t.hash == _TrackHash).Clip;
+			OnAnimationStop?.Invoke(clip);
 		}
-		private void InvokeOnSoftStop (float time) 
+		private void InvokeSoftStop(float _SoftDuration) 
 		{
-			effect.OnSoftStop(time);
+			effect.OnSoftStop(_SoftDuration);
 		}
 		#endregion
 		// ---------------------------------------------------------------------- //
@@ -461,11 +673,22 @@ namespace Kinetix.Internal
 		//  EVENT HANDLER                                                         //
 		// ====================================================================== //
 		#region EVENT HANDLER
-		private void SamplerEffect_OnFrameAdded(KinetixFrame frame)
+		private void SamplerEffect_OnFrameAdded(KinetixFrame _Frame)
 		{
-			OnPlayedFrame?.Invoke(frame);
+			OnPlayedFrame?.Invoke(_Frame);
 		}
 		#endregion
 		// ---------------------------------------------------------------------- //
+		
+		public IEnumerator<KinetixClipTrack> GetEnumerator()
+		{
+			return ((IEnumerable<KinetixClipTrack>)tracks).GetEnumerator();
+		}
+
+		IEnumerator IEnumerable.GetEnumerator()
+		{
+			return ((IEnumerable)tracks).GetEnumerator();
+		}
+
 	}
 }

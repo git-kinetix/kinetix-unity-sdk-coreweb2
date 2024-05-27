@@ -76,8 +76,8 @@ namespace Kinetix
 		/// </summary>
 		/// <param name="_ServiceLocator">The service locator</param>
 		/// <param name="_KinetixAvatar">The avatar to use for the animation</param>
-		/// <param name="rootMotionConfig">Configuration of the root motion</param>
-		public virtual void Init(ServiceLocator _ServiceLocator, KinetixAvatar _KinetixAvatar, RootMotionConfig rootMotionConfig)
+		/// <param name="_RootMotionConfig">Configuration of the root motion</param>
+		public virtual void Init(ServiceLocator _ServiceLocator, KinetixAvatar _KinetixAvatar, RootMotionConfig _RootMotionConfig)
 		{
 			networkSampler = new KinetixNetworkSampler();
 			behaviour = _KinetixAvatar.Root.gameObject.AddComponent<KinetixCharacterComponentBehaviour>();
@@ -152,11 +152,11 @@ namespace Kinetix
 		/// <summary>
 		/// Call <see cref="OnAnimationStart"/>
 		/// </summary>
-		protected void Call_OnAnimationStart(AnimationIds ids) => OnAnimationStart?.Invoke(ids);
+		protected void Call_OnAnimationStart(AnimationIds _Ids) => OnAnimationStart?.Invoke(_Ids);
 		/// <summary>
 		/// Call <see cref="OnAnimationEnd"/>
 		/// </summary>
-		protected void Call_OnAnimationEnd(AnimationIds ids) => OnAnimationEnd?.Invoke(ids);
+		protected void Call_OnAnimationEnd(AnimationIds _Ids) => OnAnimationEnd?.Invoke(_Ids);
 		/// <summary>
 		/// Call <see cref="OnPlayedFrame"/>
 		/// </summary>

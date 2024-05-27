@@ -12,7 +12,7 @@ namespace Kinetix.Internal
     public interface ISamplerAuthority
 	{
 		/// <summary>
-		/// Authority on the samplers.<br/>
+		/// Authority on the tracks.<br/>
 		/// You can call some methods like "StartNextClip" or "GetAvatarPos".
 		/// </summary>                                
 		SamplerAuthorityBridge Authority { get; set; }

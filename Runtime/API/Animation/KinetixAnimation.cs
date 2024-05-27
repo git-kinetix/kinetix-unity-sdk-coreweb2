@@ -511,7 +511,7 @@ namespace Kinetix.Internal
 		}
 
 		/// <summary>
-		/// Play animation on a local Character with a specific format (glb / kinanim)
+		/// Play animation on a local Character with a specific file format (glb / kinanim)
 		/// </summary>
 		/// <param name="_PlayerUUID">UUID of the avatar</param>
 		/// <param name="_EmoteID">ID of the animation</param>
@@ -520,7 +520,156 @@ namespace Kinetix.Internal
 		{
 			KinetixAnimationBehaviour.PlayAnimationOnAvatar(_PlayerUUID, new AnimationIds(_EmoteID), OnPlayedAnimationLocalPlayer, _ForceExtension);
 		}
-		
+
+		/// <summary>
+		/// Play animation on local Player with a specific time range
+		/// </summary>
+		/// <param name="_EmoteID">Id of the animation</param>
+		/// <param name="_AnimationTimeRange">Range of the animation to be played</param>
+		public void PlayAnimationOnLocalPlayer(string _EmoteID, AnimationTimeRange _AnimationTimeRange)
+		{
+			KinetixAnimationBehaviour.PlayAnimationOnLocalPlayer(new AnimationIds(_EmoteID), _AnimationTimeRange, OnPlayedAnimationLocalPlayer);
+		}
+
+		/// <summary>
+		/// Play animation on local Player with a specific time range and a specific file format (glb / kinanim)
+		/// </summary>
+		/// <param name="_EmoteID">Id of the animation</param>
+		/// <param name="_AnimationTimeRange">Range of the animation to be played</param>
+		/// <param name="_ForceExtension">Type of file to use starting with a '.' character.<br/>Example: ".glb"</param>
+		public void PlayAnimationOnLocalPlayer(string _EmoteID, AnimationTimeRange _AnimationTimeRange, string _ForceExtension = "")
+		{
+			KinetixAnimationBehaviour.PlayAnimationOnLocalPlayer(new AnimationIds(_EmoteID), _AnimationTimeRange, OnPlayedAnimationLocalPlayer, _ForceExtension);
+		}
+
+		/// <summary>
+		/// Play animation on a local Avatar with a specific time range
+		/// </summary>
+		/// <param name="_PlayerUUID">UUID of the avatar</param>
+		/// <param name="_EmoteID">Id of the animation</param>
+		/// <param name="_AnimationTimeRange">Range of the animation to be played</param>
+		public void PlayAnimationOnAvatar(string _PlayerUUID, string _EmoteID, AnimationTimeRange _AnimationTimeRange)
+		{
+			KinetixAnimationBehaviour.PlayAnimationOnAvatar(_PlayerUUID, new AnimationIds(_EmoteID), _AnimationTimeRange, OnPlayedAnimationLocalPlayer);
+		}
+
+		/// <summary>
+		/// Play animation on a local Avatar with a specific time range and a specific file format (glb / kinanim)
+		/// </summary>
+		/// <param name="_PlayerUUID">UUID of the avatar</param>
+		/// <param name="_EmoteID">Id of the animation</param>
+		/// <param name="_AnimationTimeRange">Range of the animation to be played</param>
+		/// <param name="_ForceExtension">Type of file to use starting with a '.' character.<br/>Example: ".glb"</param>
+		public void PlayAnimationOnAvatar(string _PlayerUUID, string _EmoteID, AnimationTimeRange _AnimationTimeRange, string _ForceExtension = "")
+		{
+			KinetixAnimationBehaviour.PlayAnimationOnAvatar(_PlayerUUID, new AnimationIds(_EmoteID), _AnimationTimeRange, OnPlayedAnimationLocalPlayer, _ForceExtension);
+		}
+
+		/// <summary>
+		/// Set the play rate of the local Player's kinetix animator
+		/// </summary>
+		/// <param name="_PlayRate">Rate at which the kinetix animator samples the animation</param>
+		public void SetPlayRateOnLocalPlayer(float _PlayRate) 
+		{
+			KinetixAnimationBehaviour.SetPlayRateOnLocalPlayer(_PlayRate);
+		}
+
+		/// <summary>
+		/// Get the play rate of the local Player's kinetix animator
+		/// </summary>
+		public void GetPlayRateOnLocalPlayer() 
+		{
+			KinetixAnimationBehaviour.GetPlayRateOnLocalPlayer();
+		}
+
+		/// <summary>
+		/// Set the elapsed time of the local Player's kinetix animator
+		/// </summary>
+		/// <param name="_ElapsedTime">Current time of the kinetix animator</param>
+		public void SetElapsedTimeOnLocalPlayer(float _ElapsedTime) 
+		{
+			KinetixAnimationBehaviour.SetElapsedTimeOnLocalPlayer(_ElapsedTime);
+		}
+
+		/// <summary>
+		/// Get the current time of the local Player's kinetix animator
+		/// </summary>
+		public void GetElapsedTimeOnLocalPlayer() 
+		{
+			KinetixAnimationBehaviour.GetElapsedTimeOnLocalPlayer();
+		}
+
+		/// <summary>
+		/// Set the play rate of a local Character's kinetix animator
+		/// </summary>
+		/// <param name="_PlayerUUID">UUID of the avatar</param>
+		/// <param name="_PlayRate">Rate at which the kinetix animator samples the animation</param>
+		public void SetPlayRateOnAvatar(string _PlayerUUID, float _PlayRate) 
+		{
+			KinetixAnimationBehaviour.SetPlayRateOnAvatar(_PlayerUUID, _PlayRate);
+		}
+
+		/// <summary>
+		/// Get the play rate of a local Character's kinetix animator
+		/// </summary>
+		/// <param name="_PlayerUUID">UUID of the avatar</param>
+		public void GetPlayRateOnAvatar(string _PlayerUUID) 
+		{
+			KinetixAnimationBehaviour.GetPlayRateOnAvatar(_PlayerUUID);
+		}
+
+		/// <summary>
+		/// Set the elapsed time of a local Character's kinetix animator
+		/// </summary>
+		/// <param name="_PlayerUUID">UUID of the avatar</param>
+		/// <param name="_ElapsedTime">Current time of the kinetix animator</param>
+		public void SetElapsedTimeOnAvatar(string _PlayerUUID, float _ElapsedTime) 
+		{
+			KinetixAnimationBehaviour.SetElapsedTimeOnAvatar(_PlayerUUID, _ElapsedTime);
+		}
+
+		/// <summary>
+		/// Get the current time of a local Character's kinetix animator
+		/// </summary>
+		/// <param name="_PlayerUUID">UUID of the avatar</param>
+		public void GetElapsedTimeOnAvatar(string _PlayerUUID) 
+		{
+			KinetixAnimationBehaviour.GetElapsedTimeOnAvatar(_PlayerUUID);
+		}
+
+		/// <summary>
+		/// Set the looping state of a local Character's kinetix animator
+		/// </summary>
+		/// <param name="_PlayerUUID">UUID of the avatar</param>
+		/// <param name="_Looping">If true, the kinetix animator will loop indefinitely</param>
+		public void SetLoopAnimationOnAvatar(string _PlayerUUID, bool _Looping)
+		{
+			KinetixAnimationBehaviour.SetLoopAnimationOnAvatar(_PlayerUUID, _Looping);
+		}
+		/// <summary>
+		/// Set the looping state of the local Player's kinetix animator
+		/// </summary>
+		/// <param name="_Looping">If true, the kinetix animator will loop indefinitely</param>
+		public void SetLoopAnimationOnLocalPlayer(bool _Looping)
+		{
+			KinetixAnimationBehaviour.SetLoopAnimationOnLocalPlayer(_Looping);
+		}
+		/// <summary>
+		/// Set the looping state of a local Character's kinetix animator
+		/// </summary>
+		/// <param name="_PlayerUUID">UUID of the avatar</param>
+		public bool GetIsLoopingAnimationOnAvatar(string _PlayerUUID)
+		{
+			return KinetixAnimationBehaviour.GetIsLoopingAnimationOnAvatar(_PlayerUUID);
+		}
+		/// <summary>
+		/// Get the looping state of the local Player's kinetix animator
+		/// </summary>
+		public bool GetIsLoopingAnimationOnLocalPlayer()
+		{
+			return KinetixAnimationBehaviour.GetIsLoopingAnimationOnLocalPlayer();
+		}
+
 		/// <summary>
 		/// Play animations on local Player
 		/// </summary>
@@ -620,11 +769,39 @@ namespace Kinetix.Internal
 		}
 
 		/// <summary>
+		/// Pause or Resume the kinetix animator on local Player
+		/// </summary>
+		/// <param name="_Paused">If true, pause the kinetix animator. If false, resume the kinetix animator</param>
+		public void SetPauseOnLocalPlayer(bool _Paused)
+		{
+			KinetixAnimationBehaviour.SetPauseOnLocalPlayer(_Paused);
+		}
+
+		/// <summary>
+		/// Pause or Resume the kinetix animator on a local Character
+		/// </summary>
+		/// <param name="_PlayerUUID">UUID of the avatar</param>
+		/// <param name="_Paused">If true, pause the kinetix animator. If false, resume the kinetix animator</param>
+		public void SetPauseOnAvatar(string _PlayerUUID, bool _Paused)
+		{
+			KinetixAnimationBehaviour.SetPause(_PlayerUUID, _Paused);
+		}
+
+		/// <summary>
 		/// Stop animation on local Player
 		/// </summary>
 		public void StopAnimationOnLocalPlayer()
 		{
 			KinetixAnimationBehaviour.StopAnimationOnLocalPlayer();
+		}
+
+		/// <summary>
+		/// Stop animation on a local Character
+		/// </summary>
+		/// <param name="_PlayerUUID">UUID of the avatar</param>
+		public void StopAnimationOnAvatar(string _PlayerUUID)
+		{
+			KinetixAnimationBehaviour.StopAnimationOnAvatar(_PlayerUUID);
 		}
 
 		/// <summary>

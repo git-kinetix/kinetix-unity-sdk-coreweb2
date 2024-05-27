@@ -253,10 +253,18 @@ namespace Kinetix.Internal
 		{
 			KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().LocalPlayer.PlayAnimation(_Ids, _OnPlayedAnimation, _ForcedExtension);
 		}
+		public static void PlayAnimationOnLocalPlayer(AnimationIds _Ids, AnimationTimeRange _AnimationTimeRange, Action<AnimationIds> _OnPlayedAnimation, string _ForcedExtension = "")
+		{
+			KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().LocalPlayer.PlayAnimation(_Ids, _AnimationTimeRange, _OnPlayedAnimation, _ForcedExtension);
+		}
 
 		public static void PlayAnimationOnAvatar(string _PlayerUUID, AnimationIds _Ids, Action<AnimationIds> _OnPlayedAnimation, string _ForcedExtension = "")
 		{
 			KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().PlayAnimation(_PlayerUUID, _Ids, _OnPlayedAnimation, _ForcedExtension);
+		}
+		public static void PlayAnimationOnAvatar(string _PlayerUUID, AnimationIds _Ids, AnimationTimeRange _AnimationTimeRange, Action<AnimationIds> _OnPlayedAnimation, string _ForcedExtension = "")
+		{
+			KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().PlayAnimation(_PlayerUUID, _Ids, _AnimationTimeRange, _OnPlayedAnimation, _ForcedExtension);
 		}
 		
 		public static void PlayAnimationQueueOnLocalPlayer(AnimationIds[] _Ids, bool _Loop = false, Action<AnimationIds[]> _OnPlayedAnimation = null)
@@ -264,9 +272,75 @@ namespace Kinetix.Internal
 			KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().LocalPlayer.PlayAnimationQueue(_Ids, _Loop, _OnPlayedAnimation);
 		}
 
+		public static void SetPauseOnLocalPlayer(bool _Paused)
+		{
+			KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().LocalPlayer.SetPause(_Paused);
+		}
+
+		public static void SetPause(string _PlayerUUID, bool _Paused)
+		{
+			KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().SetPause(_PlayerUUID, _Paused);
+		}
+
 		public static void StopAnimationOnLocalPlayer()
 		{
 			KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().LocalPlayer.StopAnimation();
+		}
+
+		public static void StopAnimationOnAvatar(string _PlayerUUID)
+		{
+			KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().StopAnimation(_PlayerUUID);
+		}
+
+		public static void SetLoopAnimationOnAvatar(string _PlayerUUID, bool _Looping)
+		{
+			KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().SetLoopAnimation(_PlayerUUID, _Looping);
+		}
+		public static void SetLoopAnimationOnLocalPlayer(bool _Looping)
+		{
+			KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().LocalPlayer.SetLoopAnimation(_Looping);
+		}
+		public static bool GetIsLoopingAnimationOnAvatar(string _PlayerUUID)
+		{
+			return KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().GetIsLoopingAnimation(_PlayerUUID);
+		}
+		public static bool GetIsLoopingAnimationOnLocalPlayer()
+		{
+			return KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().LocalPlayer.GetIsLoopingAnimation();
+		}
+
+
+		public static void SetPlayRateOnLocalPlayer(float _PlayRate)
+		{
+			KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().LocalPlayer.SetPlayRate(_PlayRate);
+		}
+		public static void GetPlayRateOnLocalPlayer() 
+		{
+			KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().LocalPlayer.GetPlayRate();
+		}
+		public static void SetElapsedTimeOnLocalPlayer(float _ElapsedTime) 
+		{
+			KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().LocalPlayer.SetElapsedTime(_ElapsedTime);
+		}
+		public static void GetElapsedTimeOnLocalPlayer() 
+		{
+			KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().LocalPlayer.GetElapsedTime();
+		}
+		public static void SetPlayRateOnAvatar(string _PlayerUUID, float _PlayRate)
+		{
+			KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().SetPlayRate(_PlayerUUID, _PlayRate);
+		}
+		public static void GetPlayRateOnAvatar(string _PlayerUUID) 
+		{
+			KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().GetPlayRate(_PlayerUUID);
+		}
+		public static void SetElapsedTimeOnAvatar(string _PlayerUUID, float _ElapsedTime) 
+		{
+			KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().SetElapsedTime(_PlayerUUID, _ElapsedTime);
+		}
+		public static void GetElapsedTimeOnAvatar(string _PlayerUUID) 
+		{
+			KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().GetElapsedTime(_PlayerUUID);
 		}
 
 		#endregion
@@ -371,5 +445,6 @@ namespace Kinetix.Internal
 		{
 			return KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().LocalPlayer.IsLocalPlayerRegistered();
 		}
-	}
+
+    }
 }

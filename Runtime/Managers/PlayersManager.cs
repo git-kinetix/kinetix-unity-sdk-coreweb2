@@ -150,6 +150,8 @@ namespace Kinetix.Internal
 		}
 
 		public void PlayAnimation(int _PlayerIndex, AnimationIds _Ids, Action<AnimationIds> _OnPlayedAnimation)
+			=> PlayAnimation(_PlayerIndex, _Ids, AnimationTimeRange.Default, _OnPlayedAnimation);
+		public void PlayAnimation(int _PlayerIndex, AnimationIds _Ids, AnimationTimeRange _AnimationTimeRange, Action<AnimationIds> _OnPlayedAnimation)
 		{
 			if (_PlayerIndex > players.Count)
 			{
@@ -157,22 +159,110 @@ namespace Kinetix.Internal
 				return;
 			}
 
-			players[_PlayerIndex].PlayAnimation(_Ids, _OnPlayedAnimation);
+			players[_PlayerIndex].PlayAnimation(_Ids, _AnimationTimeRange, _OnPlayedAnimation);
 		}
 
 		public void PlayAnimation(string _PlayerUUID, AnimationIds _Ids, Action<AnimationIds> _OnPlayedAnimation)
+			=> PlayAnimation(_PlayerUUID, _Ids, AnimationTimeRange.Default, _OnPlayedAnimation);
+		public void PlayAnimation(string _PlayerUUID, AnimationIds _Ids, AnimationTimeRange _AnimationTimeRange, Action<AnimationIds> _OnPlayedAnimation)
 		{
 			PlayerManager player = players.Find((player) => player.UUID == _PlayerUUID);
 
-			player.PlayAnimation(_Ids, _OnPlayedAnimation);
+			player.PlayAnimation(_Ids, _AnimationTimeRange, _OnPlayedAnimation);
 		}
 
 		public void PlayAnimation(string _PlayerUUID, AnimationIds _Ids, Action<AnimationIds> _OnPlayedAnimation, string _ForcedExtension)
+			=> PlayAnimation(_PlayerUUID, _Ids, AnimationTimeRange.Default, _OnPlayedAnimation, _ForcedExtension);
+		public void PlayAnimation(string _PlayerUUID, AnimationIds _Ids, AnimationTimeRange _AnimationTimeRange, Action<AnimationIds> _OnPlayedAnimation, string _ForcedExtension)
 		{
 			PlayerManager player = players.Find((player) => player.UUID == _PlayerUUID);
 
-			player.PlayAnimation(_Ids, _OnPlayedAnimation, _ForcedExtension);
+			player.PlayAnimation(_Ids, _AnimationTimeRange, _OnPlayedAnimation, _ForcedExtension);
 		}
+
+		public void StopAnimation(string _PlayerUUID)
+		{
+			PlayerManager player = players.Find((player) => player.UUID == _PlayerUUID);
+			player.StopAnimation();
+		}
+
+		public void SetPause(string _PlayerUUID, bool _Paused)
+		{
+			PlayerManager player = players.Find((player) => player.UUID == _PlayerUUID);
+			player.SetPause(_Paused);
+		}
+
+		public void SetPauseOnLocalPlayer(bool _Paused)
+		{
+			localPlayer.SetPause(_Paused);
+		}
+		
+		public void SetPlayRateOnLocalPlayer(float _PlayRate)
+		{
+			localPlayer.SetPlayRate(_PlayRate);
+		}
+		
+		public void SetPlayRate(string _PlayerUUID, float _PlayRate) 
+		{
+			PlayerManager player = players.Find((player) => player.UUID == _PlayerUUID);
+			player.SetPlayRate(_PlayRate);
+		}
+		
+		public void GetPlayRateOnLocalPlayer()
+		{
+			localPlayer.GetPlayRate();
+		}
+		
+		public void GetPlayRate(string _PlayerUUID) 
+		{
+			PlayerManager player = players.Find((player) => player.UUID == _PlayerUUID);
+			player.GetPlayRate();
+		}
+		
+		public void SetElapsedTimeOnLocalPlayer(float _ElapsedTime)
+		{
+			localPlayer.SetElapsedTime(_ElapsedTime);
+		}
+		
+		public void SetElapsedTime(string _PlayerUUID, float _ElapsedTime) 
+		{
+			PlayerManager player = players.Find((player) => player.UUID == _PlayerUUID);
+			player.SetElapsedTime(_ElapsedTime);
+		}
+		
+		public void GetElapsedTimeOnLocalPlayer()
+		{
+			localPlayer.GetElapsedTime();
+		}
+		
+		public void GetElapsedTime(string _PlayerUUID)
+		{
+			PlayerManager player = players.Find((player) => player.UUID == _PlayerUUID);
+			player.GetElapsedTime();
+		}
+		
+		public void SetLoopAnimation(string _PlayerUUID, bool _Looping) 
+		{
+			PlayerManager player = players.Find((player) => player.UUID == _PlayerUUID);
+			player.SetLoopAnimation(_Looping);
+		}
+
+        public void SetLoopAnimationOnLocalPlayer(bool _Looping)
+        {
+            localPlayer.SetLoopAnimation(_Looping);
+        }
+
+        public bool GetIsLoopingAnimation(string _PlayerUUID)
+		{
+			PlayerManager player = players.Find((player) => player.UUID == _PlayerUUID);
+			return player.GetIsLoopingAnimation();
+		}
+		
+		public bool GetIsLoopingAnimationOnLocalPlayer()
+		{
+			return localPlayer.GetIsLoopingAnimation();
+		}
+
 
 		public KinetixCharacterComponentLocal GetLocalKCC()
 		{

@@ -33,7 +33,7 @@ PluginImporter:
         Exclude Win64: 0
         Exclude WindowsStoreApps: 1
         Exclude XboxOne: 1
-        Exclude iOS: 1
+        Exclude iOS: 0
         Exclude tvOS: 1
   - first:
       Any: 
