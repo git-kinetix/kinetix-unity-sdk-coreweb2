@@ -27,12 +27,12 @@ namespace Kinetix.Internal
 
             InitializeManagers(_Configuration);
 
-            KinetixCore.Account   = new KinetixAccount();
-            KinetixCore.Metadata  = new KinetixMetadata();
+            KinetixCore.Account = new KinetixAccount();
+            KinetixCore.Metadata = new KinetixMetadata();
             KinetixCore.Animation = new KinetixAnimation();
-            KinetixCore.Network   = new KinetixNetwork();
-            KinetixCore.UGC       = new KinetixUGC();
-            KinetixCore.Context   = new KinetixContext();
+            KinetixCore.Network = new KinetixNetwork();
+            KinetixCore.UGC = new KinetixUGC();
+            KinetixCore.Process = new KinetixProcess();
             
             KinetixAnalytics.Initialize(_Configuration.EnableAnalytics);
 

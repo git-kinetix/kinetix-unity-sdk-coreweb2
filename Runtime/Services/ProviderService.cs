@@ -81,6 +81,44 @@ namespace Kinetix.Internal
             }
         }
 
+        public async Task<SdkApiProcess[]> GetUserProcesses(string _AccountId)
+        {
+            try
+            {
+                return await ProviderWrappers[EKinetixNodeProvider.SDK_API].GetAnimationProcessesOfOwner(_AccountId);
+            }
+            catch (Exception e)
+            {
+                throw e;
+            }
+        }
+
+
+        public async Task<SdkApiProcess> ValidateEmote(string _EmoteId)
+        {
+            try
+            {
+                return await ProviderWrappers[EKinetixNodeProvider.SDK_API].ValidateEmote(_EmoteId);
+            }
+            catch (Exception e)
+            {
+                throw e;
+            }
+        }
+
+        /// <summary>
+        public async Task<SdkApiProcess> RetakeEmote(string _EmoteId)
+        {
+            try
+            {
+                return await ProviderWrappers[EKinetixNodeProvider.SDK_API].RetakeEmote(_EmoteId);
+            }
+            catch (Exception e)
+            {
+                throw e;
+            }
+        }
+
 		/// <summary>
 		/// Make a Web Request to get metadata of a specific emote
 		/// </summary>

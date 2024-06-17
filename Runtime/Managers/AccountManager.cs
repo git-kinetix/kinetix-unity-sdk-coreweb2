@@ -128,7 +128,7 @@ namespace Kinetix.Internal
             }
 
             // Try to create account
-            string url     = KinetixConstants.c_SDK_API_URL + "/v1/virtual-world/users";
+            string url = KinetixConstants.c_SDK_API_URL + "/v1/virtual-world/users";
             string payload = "{\"id\":\"" + _UserId + "\"}";
             
             Dictionary<string, string> headers = new Dictionary<string, string>
@@ -174,6 +174,7 @@ namespace Kinetix.Internal
             return accountExist;
         }
 
+
         public bool IsAccountAlreadyConnected(string _AccountId)
         {
             foreach (Account acc in Accounts)
@@ -187,6 +188,50 @@ namespace Kinetix.Internal
             return false;
         }
 
+        public async void GetAllUserProcesses(Action<SdkApiProcess[]> _OnSuccess, Action _OnFailure = null)
+        {
+            try
+            {
+                SdkApiProcess[] processes = await KinetixCoreBehaviour.ServiceLocator.Get<ProviderService>().GetUserProcesses(loggedAccount.AccountId);
+                
+                _OnSuccess?.Invoke(processes);
+            }
+            catch (Exception e)
+            {
+                _OnFailure?.Invoke();
+                KinetixDebug.LogWarning(e.Message);
+            }
+        }
+
+        public async void ValidateEmoteProcess(string _ProcessId, Action<SdkApiProcess> _OnSuccess, Action _OnFailure = null)
+        {
+            try
+            {
+                SdkApiProcess process = await KinetixCoreBehaviour.ServiceLocator.Get<ProviderService>().ValidateEmote(_ProcessId);
+
+                _OnSuccess?.Invoke(process);
+            }
+            catch (Exception e)
+            {
+                _OnFailure?.Invoke();
+                KinetixDebug.LogWarning(e.Message);
+            }
+        }
+
+        public async void RetakeEmoteProcess(string _ProcessId, Action<string> _OnSuccess, Action _OnFailure = null)
+        {
+            try
+            {
+                SdkApiProcess process = await KinetixCoreBehaviour.ServiceLocator.Get<ProviderService>().RetakeEmote(_ProcessId);
+
+                _OnSuccess?.Invoke(process.Uuid.ToString());
+            }
+            catch (Exception e)
+            {
+                _OnFailure?.Invoke();
+                KinetixDebug.LogWarning(e.Message);
+            }
+        }
 
         public async void GetAllUserEmotes(Action<AnimationMetadata[]> _OnSuccess, Action _OnFailure = null)
         {

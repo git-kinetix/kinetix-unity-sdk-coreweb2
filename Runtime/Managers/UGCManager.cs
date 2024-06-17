@@ -102,6 +102,16 @@ namespace Kinetix.Internal
             return UgcUrl;
         }
 
+        public async Task<string> GetRetakeUgcUrl(string _Token)
+        {
+            string rawUrl = await GetUgcUrl();
+
+            string modifiedUrl = rawUrl.Substring(0, rawUrl.IndexOf("?token=") + 7);
+            modifiedUrl += _Token;
+
+            return modifiedUrl;
+        }
+
         public async void StartPollingForNewUGCToken()
         {
             if (string.IsNullOrEmpty(TokenUUID))

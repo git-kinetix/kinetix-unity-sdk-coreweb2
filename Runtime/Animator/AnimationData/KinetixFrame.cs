@@ -186,7 +186,7 @@ namespace Kinetix.Internal
 
 			SampleHumanAnimation(interpreter);
 			SampleOthers(interpreter);
-			SampleBlendshapePos(interpreter);
+			//SampleBlendshapePos(interpreter);         //PATCH 1.6.1
 		}
 
 		/// <summary>

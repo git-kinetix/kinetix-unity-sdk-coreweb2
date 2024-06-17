@@ -151,5 +151,106 @@ namespace Kinetix.Utils
 
 			return await tcs.Task;
 		}
+
+		public async Task<SdkApiProcess[]> GetAnimationProcessesOfOwner(string _AccountId)
+		{
+			TaskCompletionSource<SdkApiProcess[]> tcs = new TaskCompletionSource<SdkApiProcess[]>();
+
+			string uri = KinetixConstants.c_SDK_API_URL + "/v2/users/" + _AccountId + "/processes";
+
+			GetRawAPIResultConfig apiResultOpConfig = new GetRawAPIResultConfig(uri, GameAPIKey);
+			GetRawAPIResult apiResultOp = new GetRawAPIResult(apiResultOpConfig);
+			GetRawAPIResultResponse response = await OperationManagerShortcut.Get().RequestExecution(apiResultOp);
+			
+			string result = response.json;
+
+			if (response.raw.ResponseCode == 404)
+			{
+				KinetixDebug.LogError($"\"{nameof(GetAnimationProcessesOfOwner)}\" returned (404)... Retrying using \"{nameof(GetAnimationProcessesOfOwner)}\"...");
+				return await GetAnimationProcessesOfOwner(_AccountId);
+			}
+			
+			try
+			{
+				SdkApiProcess[] collection = JsonConvert.DeserializeObject<SdkApiProcess[]>(result);
+				tcs.SetResult(collection);
+			}
+			catch (ArgumentNullException e)
+			{
+				tcs.SetException(e);
+			}
+			catch (Exception e)
+			{
+				tcs.SetException(e);
+			}
+
+			return await tcs.Task;
+		}
+
+		public async Task<SdkApiProcess> ValidateEmote(string _ProcessId)
+		{
+			TaskCompletionSource<SdkApiProcess> tcs = new TaskCompletionSource<SdkApiProcess>();
+
+			string url = KinetixConstants.c_SDK_API_URL + "/v1/process/" + _ProcessId + "/validate";
+            
+            Dictionary<string, string> headers = new Dictionary<string, string>
+            {
+                { "Content-type", "application/json" },
+                { "Accept", "application/json" },
+                { "x-api-key", GameAPIKey },
+				{ "User-Agent", KinetixConstants.SDK_USER_AGENT}
+            };
+            
+            try
+            {
+                WebRequestDispatcher webRequest = new WebRequestDispatcher();
+
+                RawResponse response = await webRequest.SendRequest<RawResponse>(url, WebRequestDispatcher.HttpMethod.POST, headers);
+
+                if (!response.IsSuccess)
+                    throw new Exception(response.Error);
+
+				tcs.SetResult(JsonConvert.DeserializeObject<SdkApiProcess>(response.Content));
+            }
+            catch (Exception e)
+            {
+                throw e;
+            }
+
+			return await tcs.Task;
+		}
+
+		public async Task<SdkApiProcess> RetakeEmote(string _ProcessId)
+		{
+			TaskCompletionSource<SdkApiProcess> tcs = new TaskCompletionSource<SdkApiProcess>();
+
+			string url = KinetixConstants.c_SDK_API_URL + "/v1/process/" + _ProcessId + "/retake";
+            
+            Dictionary<string, string> headers = new Dictionary<string, string>
+            {
+                { "Content-type", "application/json" },
+                { "Accept", "application/json" },
+                { "x-api-key", GameAPIKey },
+				{ "User-Agent", KinetixConstants.SDK_USER_AGENT}
+            };
+            
+            try
+            {
+                WebRequestDispatcher webRequest = new WebRequestDispatcher();
+
+                RawResponse response = await webRequest.SendRequest<RawResponse>(url, WebRequestDispatcher.HttpMethod.POST, headers);
+
+                if (!response.IsSuccess)
+                    throw new Exception(response.Error);
+
+				tcs.SetResult(JsonConvert.DeserializeObject<SdkApiProcess>(response.Content));
+            }
+            catch (Exception e)
+            {
+                throw e;
+            }
+
+			return await tcs.Task;
+		}
     }
 }
