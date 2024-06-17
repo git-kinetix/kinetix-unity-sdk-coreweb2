@@ -9,8 +9,32 @@ PluginImporter:
   isPreloaded: 0
   isOverridable: 0
   isExplicitlyReferenced: 0
-  validateReferences: 1
+  validateReferences: 0
   platformData:
+  - first:
+      : Any
+    second:
+      enabled: 0
+      settings:
+        'Exclude ': 1
+        Exclude Android: 0
+        Exclude CloudRendering: 1
+        Exclude Editor: 0
+        Exclude GameCoreXboxOne: 1
+        Exclude Linux64: 0
+        Exclude Lumin: 1
+        Exclude OSXUniversal: 0
+        Exclude PS4: 1
+        Exclude PS5: 1
+        Exclude Stadia: 1
+        Exclude Switch: 1
+        Exclude WebGL: 0
+        Exclude Win: 0
+        Exclude Win64: 0
+        Exclude WindowsStoreApps: 1
+        Exclude XboxOne: 1
+        Exclude iOS: 0
+        Exclude tvOS: 1
   - first:
       Any: 
     second:
