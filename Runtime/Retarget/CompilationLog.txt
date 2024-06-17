@@ -1,0 +1,4 @@
+# Starting compiling Kinetix.Retarget.dll
+D:\UnityInstall\2020.3.33f1\Editor\Data\Tools\RoslynScripts\unity_csc.bat /noconfig @Temp/UnityTempFile-51e20ad7c24e9624685d697d416ee95a
+# Starting IL post processing on Kinetix.Retarget.dll
+D:/UnityInstall/2020.3.33f1/Editor/Data/MonoBleedingEdge/bin/mono.exe D:/UnityInstall/2020.3.33f1/Editor/Data/Tools/ILPostProcessorRunner/ILPostProcessorRunner.exe @D:/Kinetix/kinetix-emote-wheel/Temp/UnityTempFile-6f213dcc7ac9b044ab27b34ba64b405b

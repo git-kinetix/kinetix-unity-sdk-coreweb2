@@ -10,11 +10,18 @@ namespace Kinetix.Internal
         }
 
 
-        public static async void GetUgcUrl(Action<string> urlFetchedCallback)
+        public static async void GetUgcUrl(Action<string> _UrlFetchedCallback)
         {
             string url = await KinetixCoreBehaviour.ManagerLocator.Get<UGCManager>().GetUgcUrl();
             
-            urlFetchedCallback(url);
+            _UrlFetchedCallback?.Invoke(url);
+        }
+
+        public static async void GetRetakeUgcUrl(string _RetakeToken, Action<string> _UrlFetchedCallback)
+        {
+            string url = await KinetixCoreBehaviour.ManagerLocator.Get<UGCManager>().GetRetakeUgcUrl(_RetakeToken);
+            
+            _UrlFetchedCallback?.Invoke(url);
         }
 
         public static bool IsUGCAvailable()

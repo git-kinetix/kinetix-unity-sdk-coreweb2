@@ -8,7 +8,7 @@ namespace Kinetix.Internal
 {
     public static class KinetixConstants
     {
-        public const  string version                = "1.6.1";
+        public const  string version                = "1.7.0";
         public static bool   C_ShouldUGCBeAvailable = true;
         
 #if STAGING_KINETIX
@@ -25,6 +25,9 @@ namespace Kinetix.Internal
         #region StreamingAssets
         
         public static string C_FreeAnimationsManifestPath => "Kinetix/FreeEmoteManifest.json";
+
+        public static readonly string SDK_USER_AGENT = "SDK-Unity/" + version;
+
         public const string C_FreeAnimationsAssetSAPath = "Assets/StreamingAssets/Kinetix/FreeAnimations";
         public const string C_FreeAnimationsPath = "Kinetix/FreeAnimations";
         public const string C_FreeCustomAnimationsPath = "Kinetix/CustomFreeAnimations";

@@ -25,9 +25,14 @@ namespace Kinetix.Internal
 
         }
 
-        public void GetUgcUrl(Action<string> urlFetchedCallback)
+        public void GetUgcUrl(Action<string> _UrlFetchedCallback)
         {
-            KinetixUGCBehaviour.GetUgcUrl(urlFetchedCallback);
+            KinetixUGCBehaviour.GetUgcUrl(_UrlFetchedCallback);
+        }
+
+        public void GetRetakeUgcUrl(string _RetakeToken, Action<string> _UrlFetchedCallback)
+        {
+            KinetixUGCBehaviour.GetRetakeUgcUrl(_RetakeToken, _UrlFetchedCallback);
         }
 
         private void UGCTokenExpired()

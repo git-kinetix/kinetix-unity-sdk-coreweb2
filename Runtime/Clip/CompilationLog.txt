@@ -1,0 +1,2 @@
+# Starting compiling Kinetix.Clip.dll
+D:\UnityInstall\2020.3.33f1\Editor\Data\Tools\RoslynScripts\unity_csc.bat /noconfig @Temp/UnityTempFile-3f1a1c0415f486f45874c619d10a4795
