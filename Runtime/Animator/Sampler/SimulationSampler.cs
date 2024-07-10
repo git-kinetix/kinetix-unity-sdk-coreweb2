@@ -486,11 +486,13 @@ namespace Kinetix.Internal
 			isPlaying = false;
 			AnimationLoopMode = AnimationLoopMode.Default;
 
-			if (currentPlayingTrackHash != 0)
+			if (tracks.Count > 0 && currentPlayingTrackHash != 0)
 				InvokeAnimationStop(currentPlayingTrackHash);
 
 			currentPlayingTrackHash = 0;
-			InvokeQueueStop();
+
+			if (tracks.Count > 0)
+				InvokeQueueStop();
 
 			RemoveAllTracks();
 
