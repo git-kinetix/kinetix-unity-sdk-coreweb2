@@ -49,9 +49,9 @@ namespace Kinetix
 			sampler.RequestAvatarPos          += Sampler_RequestAvatarPos         ;
 			sampler.RequestAvatar             += Sampler_RequestAvatar            ;
 
-			//sampler.Effect.RegisterEffect(new SmoothFrameEffect());
-			//sampler.Effect.RegisterEffect(new ClipToClipBlendEffect());
-			//sampler.Effect.RegisterEffect(new AnimatorBlendEffect(OUTER_BLEND_DURATION));
+			sampler.Effect.RegisterEffect(new SmoothFrameEffect());
+			sampler.Effect.RegisterEffect(new ClipToClipBlendEffect());
+			sampler.Effect.RegisterEffect(new AnimatorBlendEffect(OUTER_BLEND_DURATION));
 			sampler.Effect.RegisterEffect(new RootMotionEffect(_RootMotionConfig));
 
 			currentFrame = null;
