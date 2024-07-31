@@ -28,5 +28,10 @@ namespace Kinetix.Internal
         {
             return KinetixCoreBehaviour.ManagerLocator.Get<UGCManager>().IsUGCAvailable();
         }
+
+        public static void ClearCachedUrl()
+        {
+            KinetixCoreBehaviour.ManagerLocator.Get<UGCManager>().ClearPolling();
+        } 
     }
 }

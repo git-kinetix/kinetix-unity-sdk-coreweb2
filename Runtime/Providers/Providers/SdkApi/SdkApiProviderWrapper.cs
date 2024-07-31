@@ -198,7 +198,7 @@ namespace Kinetix.Utils
                 { "Content-type", "application/json" },
                 { "Accept", "application/json" },
                 { "x-api-key", GameAPIKey },
-				{ "User-Agent", KinetixConstants.SDK_USER_AGENT}
+				//{ "sdk-version", KinetixConstants.SDK_USER_AGENT}
             };
             
             try
@@ -231,7 +231,7 @@ namespace Kinetix.Utils
                 { "Content-type", "application/json" },
                 { "Accept", "application/json" },
                 { "x-api-key", GameAPIKey },
-				{ "User-Agent", KinetixConstants.SDK_USER_AGENT}
+				//{ "sdk-version", KinetixConstants.SDK_USER_AGENT}
             };
             
             try

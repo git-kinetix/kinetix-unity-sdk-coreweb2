@@ -156,11 +156,14 @@ namespace Kinetix.Internal
             OnUGCTokenExpired?.Invoke();
         }
 
-        public void ClearPolling()
+        public void ClearPolling(bool _ForceCancelUrlFetching = false)
         {
             TokenUUID     = string.Empty;
             UgcUrl        = string.Empty;
             lastFetchDate = System.DateTime.MinValue;
+
+            if (_ForceCancelUrlFetching == false)
+                return;
             
             if (tokenCancellationGetUgcUrl != null && !tokenCancellationGetUgcUrl.IsCancellationRequested)
                 tokenCancellationGetUgcUrl?.Cancel();
