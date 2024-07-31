@@ -14,13 +14,18 @@ namespace Kinetix
         public bool BakeIntoPoseXZ = false;
         public bool BakeIntoPoseY = false;
 
-        public RootMotionConfig(bool ApplyHipsYPos = false, bool ApplyHipsXAndZPos = false, bool BackToInitialPose = false, bool BakeIntoPoseXZ = false, bool BakeIntoPoseY = false)
+        // Use this is you scaled up of down your armature or a parent of the hips compared to your root. 
+        //Ex: 100f if your armature is x100 your root.
+        public float ArmatureRootScaleRatio = 1.0f; 
+
+        public RootMotionConfig(bool ApplyHipsYPos = false, bool ApplyHipsXAndZPos = false, bool BackToInitialPose = false, bool BakeIntoPoseXZ = false, bool BakeIntoPoseY = false, float ArmatureRootScaleRatio = 1.0f)
         {
             this.ApplyHipsYPos = ApplyHipsYPos;
             this.ApplyHipsXAndZPos = ApplyHipsXAndZPos;
             this.BackToInitialPose = BackToInitialPose;
             this.BakeIntoPoseXZ = BakeIntoPoseXZ;
-            this.BakeIntoPoseY = BakeIntoPoseXZ;
+            this.BakeIntoPoseY = BakeIntoPoseY;
+            this.ArmatureRootScaleRatio = ArmatureRootScaleRatio;
         }
     }
 }

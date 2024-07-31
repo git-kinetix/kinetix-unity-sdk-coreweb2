@@ -67,7 +67,7 @@ namespace Kinetix.Internal
             managerLocator.Register<ContextManager>(new ContextManager(serviceLocator, _Configuration));
             managerLocator.Register<NetworkManager>(new NetworkManager(serviceLocator, _Configuration));
             
-            managerLocator.Get<AccountManager>().OnDisconnectedAccount += managerLocator.Get<UGCManager>().ClearPolling;
+            managerLocator.Get<AccountManager>().OnDisconnectedAccount += () => managerLocator.Get<UGCManager>().ClearPolling(true);
         }
 
         public static bool IsInitialized()

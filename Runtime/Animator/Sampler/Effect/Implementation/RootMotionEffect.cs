@@ -28,7 +28,7 @@ namespace Kinetix.Internal
 		public int Priority => -100;
 
 		private int countAnime = 0;
-		private bool isEnabled;
+		private bool isEnabled = false;
 		
 		private int hipsIndexStartPos;
 		
@@ -55,7 +55,7 @@ namespace Kinetix.Internal
 		public SamplerAuthorityBridge Authority { get; set; }
 
 		/// <inheritdoc/>
-		public void OnAnimationStart(KinetixClip _)
+		public void OnAnimationStart()
 		{
 			if (++countAnime > 1 && isEnabled) RevertToOffsets();
 			
@@ -68,15 +68,15 @@ namespace Kinetix.Internal
 
 			hipsIndexStartPos = Array.IndexOf(startPos.bones, HumanBodyBones.Hips);
 			hips = skeleton[UnityHumanUtils.AVATAR_HIPS];
-			root = (AvatarBoneTransform)hips.IterateParent().Last();
+			root = (AvatarBoneTransform) hips.IterateParent().Last();
 			isEnabled = true;
 
 			//Set hips to pos
 			TransformData transform = startPos.humanTransforms[hipsIndexStartPos];
-			TrDataToTrAvatar(transform, hips);
+			transform = TrDataToTrAvatar(transform, hips);
 
 			//Set root to pos
-			if (startPos.root.HasValue) TrDataToTrAvatar(startPos.root.Value, root);
+			if (startPos.root.HasValue) startPos.root = TrDataToTrAvatar(startPos.root.Value, root);
 
 			//Init root motion
 			SaveOffsets();
@@ -94,11 +94,12 @@ namespace Kinetix.Internal
 		public void OnPlayedFrame(ref KinetixFrame _FinalFrame, KinetixFrame[] _Frames, in KinetixClipTrack[] _Tracks)
         {
 			if (!isEnabled) return;
+
 			int hipsIndexCurrent = Array.IndexOf(_FinalFrame.bones, HumanBodyBones.Hips);
 			TransformData transform = _FinalFrame.humanTransforms[hipsIndexCurrent];
 			
 			//Set hips from curve
-			TrDataToTrAvatar(transform, hips);
+			transform = TrDataToTrAvatar(transform, hips);
 			
 			ProcessRootMotionAfterAnimSampling();
 			
@@ -115,14 +116,19 @@ namespace Kinetix.Internal
 			if (_Original.position.HasValue) _Original.position = _Transform.localPosition;
 			if (_Original.rotation.HasValue) _Original.rotation = _Transform.localRotation;
 			if (_Original.scale.HasValue   ) _Original.scale    = _Transform.localScale;
+
 			return _Original;
 		}
 
-		private void TrDataToTrAvatar(TransformData _Data, AvatarBoneTransform _Transform)
+		private TransformData TrDataToTrAvatar(TransformData _Data, AvatarBoneTransform _Transform)
 		{
+			if (_Transform == null) return _Data;
+
 			if (_Data.position.HasValue) _Transform.localPosition = _Data.position.Value;
 			if (_Data.rotation.HasValue) _Transform.localRotation = _Data.rotation.Value;
 			if (_Data.scale.HasValue   ) _Transform.localScale    = _Data.scale.Value;
+
+			return _Data;
 		}
 
 		/// <inheritdoc/>
@@ -130,6 +136,8 @@ namespace Kinetix.Internal
 		{
 			skeleton?.Dispose();
 			skeleton = Authority.GetAvatar();
+
+			OnAnimationStart();
 		}
 
 
@@ -139,6 +147,8 @@ namespace Kinetix.Internal
 			isEnabled = false;
 			skeleton?.Dispose();
 			skeleton = null;
+
+			OnAnimationEnd();
 		}
 
 		/// <inheritdoc/>
@@ -158,7 +168,7 @@ namespace Kinetix.Internal
 
 			// Handling root post-processing
 			Vector3 newRootPosition = Vector3.zero;
-			calculatedRootPosition = root.localRotation * ((armatureRotation * hips.localPosition) - lastHipsPosition);
+			calculatedRootPosition = root.localRotation * ((armatureRotation * hips.localPosition) - lastHipsPosition) * config.ArmatureRootScaleRatio;
 
 			if (!config.BakeIntoPoseXZ && config.ApplyHipsXAndZPos)
 			{

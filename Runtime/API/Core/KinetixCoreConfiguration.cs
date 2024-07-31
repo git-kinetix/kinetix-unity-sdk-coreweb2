@@ -31,6 +31,6 @@ namespace Kinetix
 
         // How many emotes have to be cached?
         public int CachedEmotesNb = 10;
-        
+
     }
 }

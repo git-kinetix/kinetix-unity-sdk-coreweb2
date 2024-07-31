@@ -35,6 +35,11 @@ namespace Kinetix.Internal
             KinetixUGCBehaviour.GetRetakeUgcUrl(_RetakeToken, _UrlFetchedCallback);
         }
 
+        public void ClearCachedUrl()
+        {
+            KinetixUGCBehaviour.ClearCachedUrl();
+        } 
+
         private void UGCTokenExpired()
         {
             OnUGCTokenExpired?.Invoke();
