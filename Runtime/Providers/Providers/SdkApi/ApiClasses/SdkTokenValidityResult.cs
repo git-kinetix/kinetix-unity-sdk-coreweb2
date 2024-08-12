@@ -1,8 +1,9 @@
 namespace Kinetix.Internal
 {
-    internal class SdkTokenValidityResult
+    public class SdkTokenValidityResult
     {
         public int expireIn;
         public System.DateTime expire;
+        public string url;
     }
 }
