@@ -17,6 +17,6 @@ public interface IProviderWrapper
     public Task<AnimationMetadata> GetAnimationMetadataOfAvatar(AnimationIds _AnimationIds, string _AvatarId, AnimationMetadata _Metadata = null);
     public Task<SdkApiProcess[]> GetAnimationProcessesOfOwner(string _AccountId);
     public Task<SdkApiProcess> ValidateEmote(string _EmoteId);
-    public Task<SdkApiProcess> RetakeEmote(string _EmoteId);
+    public Task<SdkTokenValidityResult> RetakeEmote(string _EmoteId);
 }
 
