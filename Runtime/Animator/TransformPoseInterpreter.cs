@@ -254,6 +254,7 @@ namespace Kinetix.Internal
 			if (skinnedMeshRenderer != null && skinnedMeshRenderer.Length != 0)
 			{
 				blendshapes = new float[(int)ARKitBlendshapes.Count];
+				length = (int)ARKitBlendshapes.Count;
 				for (int i = 0; i < length; i++)
 				{
 					blendshapes[i] = 

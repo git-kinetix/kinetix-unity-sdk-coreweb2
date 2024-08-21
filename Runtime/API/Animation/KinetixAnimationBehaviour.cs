@@ -8,7 +8,6 @@ using System;
 using System.Collections.Generic;
 using Kinetix.Internal.Cache;
 using UnityEngine;
-using static UnityEditor.Experimental.GraphView.GraphView;
 
 namespace Kinetix.Internal
 {
