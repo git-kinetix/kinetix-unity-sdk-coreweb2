@@ -1,5 +1,5 @@
 // // ----------------------------------------------------------------------------
-// // <copyright file="KinetixClipTrack.cs" company="Kinetix SAS">
+// // <copyright file="AnimationLoopMode.cs" company="Kinetix SAS">
 // // Kinetix Unity SDK - Copyright (C) 2022 Kinetix SAS
 // // </copyright>
 // // ----------------------------------------------------------------------------

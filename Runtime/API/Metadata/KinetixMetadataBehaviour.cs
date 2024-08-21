@@ -48,8 +48,15 @@ namespace Kinetix.Internal
                     _OnFailure?.Invoke();
                 }
             }
-           
-            _OnSuccess?.Invoke(emotesService.GetEmote(_Ids).Metadata);
+
+            AnimationMetadata metadata = emotesService.GetEmote(_Ids).Metadata;
+            if (metadata == null)
+            {
+                _OnFailure?.Invoke();
+                return;
+            }
+
+            _OnSuccess?.Invoke(metadata);
         }
 
         public static void IsAnimationOwnedByUser(AnimationIds _Ids, Action<bool> _OnSuccess, Action _OnFailure)

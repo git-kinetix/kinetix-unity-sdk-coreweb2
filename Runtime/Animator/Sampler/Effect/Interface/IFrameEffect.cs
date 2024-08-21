@@ -10,6 +10,8 @@ namespace Kinetix.Internal
 {
     public interface IFrameEffect
 	{
+		public bool IsEnabled { get; set; }
+
 		/// <summary>
 		/// Priority of the effect. Highest priority will be updated first (constant)
 		/// </summary>

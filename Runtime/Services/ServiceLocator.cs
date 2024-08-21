@@ -30,5 +30,13 @@ namespace Kinetix.Internal
             
             return (TService) returnValue;
         }
+        public IKinetixService Get(Type type)
+        {
+            IKinetixService returnValue;
+
+            services.TryGetValue(type, out returnValue);
+            
+            return returnValue;
+        }
     }
 }

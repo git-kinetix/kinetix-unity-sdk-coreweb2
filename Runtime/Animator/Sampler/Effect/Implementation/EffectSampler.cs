@@ -16,10 +16,10 @@ namespace Kinetix.Internal
 	public class EffectSampler
 	{
 #pragma warning disable IDE0044 // readonly
-		private List<IFrameEffect>         frameEffect   = new List<IFrameEffect>();
-		private List<IFrameEffectAdd>      frameAdds     = new List<IFrameEffectAdd>();
-		private List<IFrameEffectModify>   frameModify   = new List<IFrameEffectModify>();
-		private List<ISamplerAuthority>     authority     = new List<ISamplerAuthority>();
+		internal List<IFrameEffect>         frameEffect   = new List<IFrameEffect>();
+		private  List<IFrameEffectAdd>      frameAdds     = new List<IFrameEffectAdd>();
+		private  List<IFrameEffectModify>   frameModify   = new List<IFrameEffectModify>();
+		private  List<ISamplerAuthority>     authority     = new List<ISamplerAuthority>();
 		
 		private SamplerAuthorityBridge authorityBridge;
 

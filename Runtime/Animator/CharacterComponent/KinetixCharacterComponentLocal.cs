@@ -9,7 +9,7 @@ using UnityEngine;
 using Kinetix.Internal;
 using Kinetix.Internal.Utils;
 using Kinetix.Internal.Retargeting;
-using UnityEngine.Playables;
+using System.Collections.Generic;
 
 namespace Kinetix
 {
@@ -19,6 +19,28 @@ namespace Kinetix
 	/// </summary>
 	public class KinetixCharacterComponentLocal : KinetixCharacterComponent
 	{
+		private readonly struct RootMotionContext : IDisposable
+		{
+			private readonly Transform root;
+			private readonly Vector3 originalPos;
+
+			public RootMotionContext(RootMotionEffect effect, Transform root, SimulationSampler simulationSampler)
+			{
+				this.root = root;
+				originalPos = root.position;
+
+				if (simulationSampler.GetIsPlaying())
+					//Set root without rootMotion context
+					effect.SetRootAtStartPosition(root);
+			}
+
+			public void Dispose()
+			{
+				//Set root back to previous pos
+				root.position   = originalPos;
+			}
+		}
+
 		const float OUTER_BLEND_DURATION = 0.35f;
 
 		/// <summary>
@@ -32,43 +54,67 @@ namespace Kinetix
 		private KinetixFrame currentFrame;
 		private KinetixNetworkDataRaw currentNetworkData;
 
+		internal IKEffect ik;
+		internal KinetixMaskEffect mask;
+		internal RootMotionEffect rootMotion;
+
 		/// <inheritdoc/>
 		public override void Init(ServiceLocator _ServiceLocator, KinetixAvatar _KinetixAvatar, RootMotionConfig _RootMotionConfig)
 		{
 			base.Init(_ServiceLocator, _KinetixAvatar, _RootMotionConfig);
-
+			
 			networkSampler.OnSerializeData += NetworkSampler_OnSerializeData;
 
 			sampler = new SimulationSampler();
-			sampler.OnQueueStart              += Sampler_OnQueueStart             ;
-			sampler.OnQueueStop               += Sampler_OnQueueStop              ;
-			sampler.OnAnimationStart          += Sampler_OnAnimationStart         ;
-			sampler.OnAnimationStop           += Sampler_OnAnimationStop          ;
-			sampler.OnPlayedFrame             += Sampler_OnPlayedFrame            ;
+			sampler.OnQueueStart += Sampler_OnQueueStart;
+			sampler.OnQueueStop += Sampler_OnQueueStop;
+			sampler.OnAnimationStart += Sampler_OnAnimationStart;
+			sampler.OnAnimationStop += Sampler_OnAnimationStop;
+			sampler.OnPlayedFrame += Sampler_OnPlayedFrame;
 			sampler.RequestAdaptToInterpreter += Sampler_RequestAdaptToInterpreter;
-			sampler.RequestAvatarPos          += Sampler_RequestAvatarPos         ;
-			sampler.RequestAvatar             += Sampler_RequestAvatar            ;
+			sampler.RequestAvatarPos += Sampler_RequestAvatarPos;
+			sampler.RequestAvatar += Sampler_RequestAvatar;
+
 
 			sampler.Effect.RegisterEffect(new SmoothFrameEffect());
 			sampler.Effect.RegisterEffect(new ClipToClipBlendEffect());
 			sampler.Effect.RegisterEffect(new AnimatorBlendEffect(OUTER_BLEND_DURATION));
-			sampler.Effect.RegisterEffect(new RootMotionEffect(_RootMotionConfig));
+			sampler.Effect.RegisterEffect(mask = new KinetixMaskEffect());
+			sampler.Effect.RegisterEffect(ik   = new IKEffect());
+			sampler.Effect.RegisterEffect(rootMotion = new RootMotionEffect(_RootMotionConfig));
 
 			currentFrame = null;
 		}
 
+		//=====================================//
+		// Mask                                //
+		//=====================================//
+		public void SetMask(KinetixMask _Mask)
+		{
+			mask.mask = _Mask;
+		}
+		
+		public KinetixMask GetMask()
+		{
+			return mask.mask;
+		}
+
+		//=====================================//
+		// Pose / Data                         //
+		//=====================================//
+		#region Pose / Data
 		/// <summary>
 		/// Get the current frame animation if it exists.<br/>
 		/// </summary>
-		/// <returns>Returns the pose in a sampleable format</returns>
+		/// <returns>Returns the pose in _OnBeforeIkEffect sampleable format</returns>
 		public KinetixFrame GetRawPose() => currentFrame;
-		
+
 		/// <summary>
-		/// Get the data in a format suitable for the network
+		/// Get the data in _OnBeforeIkEffect format suitable for the network
 		/// </summary>
 		public KinetixNetworkDataRaw GetNetworkedData()
 		{
-			if (!IsDataAvailable()) 
+			if (!IsDataAvailable())
 				return null;
 
 			return currentNetworkData;
@@ -76,7 +122,21 @@ namespace Kinetix
 
 		/// <inheritdoc/>
 		public bool IsDataAvailable() => currentNetworkData != null;
-	
+		#endregion
+
+		//=====================================//
+		// Frame controller                    //
+		//=====================================//
+		#region Frame controller
+		public void SetBlendshapeActive(bool _Active)
+		{
+			sampler.blendshapeEnabled = _Active;
+		}
+		public bool GetBlendshapeActive()
+		{
+			return sampler.blendshapeEnabled;
+		}
+
 		public void SetPause(bool _Paused)
 		{
 			if (_Paused)
@@ -87,7 +147,7 @@ namespace Kinetix
 
 		public void SetPlayRate(float _PlayRate) => sampler.SetPlayRate(_PlayRate);
 		public float GetPlayRate() => sampler.GetPlayRate();
-		
+
 		public void SetElapsedTime(float _ElapsedTime) => sampler.ElapsedTime = _ElapsedTime;
 		public float GetElapsedTime() => sampler.ElapsedTime;
 
@@ -112,15 +172,15 @@ namespace Kinetix
 				return;
 			}
 
-			KinetixEmote emote = KinetixCoreBehaviour.ServiceLocator.Get<EmotesService>().GetEmote(_AnimationIds);
-			KinetixClip clip = await KinetixCoreBehaviour.ServiceLocator.Get<RetargetingService>().GetRetargetedClipByAvatar<KinetixClip, KinetixClipExporter>(emote, kinetixAvatar, SequencerPriority.VeryHigh, true, _ForcedExtension);
+			KinetixEmote emote = serviceLocator.Get<EmotesService>().GetEmote(_AnimationIds);
+			KinetixClip clip = await serviceLocator.Get<RetargetingService>().GetRetargetedClipByAvatar<KinetixClip, KinetixClipExporter>(emote, kinetixAvatar, SequencerPriority.VeryHigh, true, _ForcedExtension);
 
 			if (clip == null)
 			{
 				KinetixDebug.LogWarning("Can't get the animation " + _AnimationIds.UUID);
 				return;
 			}
-			
+
 			sampler.Play(true, new KinetixClipWrapper(clip, _AnimationIds)).timeRange = _TimeRange;
 		}
 
@@ -130,7 +190,7 @@ namespace Kinetix
 		}
 
 		/// <summary>
-		/// Play a sequence of animation on the current player
+		/// Play _OnBeforeIkEffect sequence of animation on the current player
 		/// </summary>
 		/// <param name="_AnimationIdsArray">IDs of each animation in the play order</param>
 		public async void PlayAnimationQueue(AnimationIds[] _AnimationIdsArray)
@@ -154,13 +214,61 @@ namespace Kinetix
 
 				clips[i] = new KinetixClipWrapper(clip, _AnimationIds);
 				loaded++;
-				
+
 				if (loaded == animeCount)
 				{
 					sampler.PlayClips(true, clips);
 				}
 			}
 		}
+		#endregion
+
+		//=====================================//
+		// IK controller                       //
+		//=====================================//
+		#region IK controller
+		/* Event */
+		public void RegisterIkEvent(IKEffect.DelegateBeforeIkEffect _OnBeforeIkEffect) => ik.OnBeforeIkEffect += _OnBeforeIkEffect;
+		public void UnregisterIkEvent(IKEffect.DelegateBeforeIkEffect _OnBeforeIkEffect) => ik.OnBeforeIkEffect -= _OnBeforeIkEffect;
+		public void UnregisterAllIkEvents() => ik.UnregisterAllEvents();
+
+		/* GET */
+		public Vector3    GetIKHintPosition(AvatarIKHint _Hint)   {using var _ = new RootMotionContext(rootMotion, kinetixAvatar.Root, sampler); return GetMemberByHint(_Hint).GetPoleVector(kinetixAvatar.Root.gameObject); }
+		public Vector3    GetIKPosition(AvatarIKGoal _Goal)       {using var _ = new RootMotionContext(rootMotion, kinetixAvatar.Root, sampler); return GetMemberByGoal(_Goal).GetIKPosition(kinetixAvatar.Root.gameObject); }
+		public float      GetIKPositionWeight(AvatarIKGoal _Goal) => GetMemberByGoal(_Goal).targetPositionWeight;
+		public Quaternion GetIKRotation(AvatarIKGoal _Goal)       {using var _ = new RootMotionContext(rootMotion, kinetixAvatar.Root, sampler); return GetMemberByGoal(_Goal).GetEndBoneRotation(kinetixAvatar.Root.gameObject); }
+		public float      GetIKRotationWeight(AvatarIKGoal _Goal) => GetMemberByGoal(_Goal).targetRotationWeight;
+		public bool       GetIKAdjustHips(AvatarIKGoal _Goal) => GetMemberByGoal(_Goal).clampHips;
+		/* SET */
+		public void SetIKHintPosition(AvatarIKHint _Hint, Vector3 _Value) {using var _ = new RootMotionContext(rootMotion, kinetixAvatar.Root, sampler); GetMemberByHint(_Hint).SetPoleVector(kinetixAvatar.Root.gameObject, _Value); }
+		public void SetIKPosition(AvatarIKGoal _Goal, Vector3 _Value)     {using var _ = new RootMotionContext(rootMotion, kinetixAvatar.Root, sampler); GetMemberByGoal(_Goal).SetIKPosition(kinetixAvatar.Root.gameObject, _Value); }
+		public void SetIKPositionWeight(AvatarIKGoal _Goal, float _Value) => GetMemberByGoal(_Goal).targetPositionWeight = _Value;
+		public void SetIKRotation(AvatarIKGoal _Goal, Quaternion _Value) { using var _ = new RootMotionContext(rootMotion, kinetixAvatar.Root, sampler); GetMemberByGoal(_Goal).SetEndBoneRotation(kinetixAvatar.Root.gameObject, _Value);  }
+		public void SetIKRotationWeight(AvatarIKGoal _Goal, float _Value) => GetMemberByGoal(_Goal).targetRotationWeight = _Value;
+		public void SetIKAdjustHips(AvatarIKGoal _Goal, bool _Value) => GetMemberByGoal(_Goal).clampHips = _Value;
+
+		private IKEffectMember GetMemberByHint(AvatarIKHint _Hint) => _Hint switch
+		{
+			AvatarIKHint.LeftKnee => ik.leftFoot,
+			AvatarIKHint.RightKnee => ik.rightFoot,
+			AvatarIKHint.LeftElbow => ik.leftHand,
+			AvatarIKHint.RightElbow => ik.rightHand,
+			_ => null
+		};
+
+		private IKEffectMember GetMemberByGoal(AvatarIKGoal _Goal) => _Goal switch
+		{
+			AvatarIKGoal.LeftFoot => ik.leftFoot,
+			AvatarIKGoal.RightFoot => ik.rightFoot,
+			AvatarIKGoal.LeftHand => ik.leftHand,
+			AvatarIKGoal.RightHand => ik.rightHand,
+			_ => null
+		};
+		#endregion
+
+		//=====================================//
+		// Other                               //
+		//=====================================//
 
 		/// <inheritdoc/>
 		protected override void Update()
@@ -257,7 +365,7 @@ namespace Kinetix
 		{
 			if (poseInterpretor.Count == 0)
 			{
-				return new KinetixPose(new TransformData[0], new HumanBodyBones[0], null, default, default);
+				return new KinetixPose(new List<TransformData>(), new List<HumanBodyBones>(), null, default, default);
 			}
 
 			return poseInterpretor[0].GetPose();
@@ -285,6 +393,8 @@ namespace Kinetix
 			sampler.RequestAdaptToInterpreter -= Sampler_RequestAdaptToInterpreter;
 			sampler.RequestAvatarPos          -= Sampler_RequestAvatarPos         ;
 			sampler.RequestAvatar             -= Sampler_RequestAvatar            ;
+
+			UnregisterAllIkEvents();
 
 			sampler.Dispose();
 		}

@@ -107,7 +107,7 @@ namespace Kinetix.Internal
         }
 
         /// <summary>
-        public async Task<SdkTokenValidityResult> RetakeEmote(string _EmoteId)
+        public async Task<SdkApiProcess> RetakeEmote(string _EmoteId)
         {
             try
             {

@@ -44,6 +44,10 @@ namespace Kinetix.Internal
 		/// If you're using a different blend 
 		/// </summary>
 		public float defaultBlendOffset = DEFAULT_CLIP_BLEND;
+		/// <summary>
+		/// If true, do blendshape animations
+		/// </summary>
+		public bool blendshapeEnabled = true;
 
 		/// <summary>
 		/// Instance Singleton shared between every effects
@@ -70,13 +74,14 @@ namespace Kinetix.Internal
 
 		//  Samplers
 		// ----------------- //
-		private float playRate = 1;
+		private float playRate = 1f;
 		public AnimationLoopMode AnimationLoopMode { get; set; } = AnimationLoopMode.Default;
 
 		private uint nextAssignTrackHash = 1;
 		private List<KinetixClipTrack> tracks = new List<KinetixClipTrack>();
 		private List<KinetixClipTrack> playAfterStopTracks = new List<KinetixClipTrack>();
 		private bool doPlayAfterStop = false;
+		private KinetixPose interpreterAvatarPos;
 		#endregion
 		// ---------------------------------------------------------------------- //
 
@@ -122,7 +127,11 @@ namespace Kinetix.Internal
 		//  EFFECT AUTHORITY                                                      //
 		// ====================================================================== //
 		#region AUTHORITY
-		private KinetixPose               Authority_GetAvatarPos()               => RequestAvatarPos?.Invoke();
+		private KinetixPose Authority_GetAvatarPos()
+		{
+			return interpreterAvatarPos ??= RequestAvatarPos?.Invoke();
+		}
+
 		private SkeletonPool.PoolItem     Authority_GetAvatar()                  => RequestAvatar?.Invoke();
 		private AnimationLoopMode Authority_AnimationDirection() => AnimationLoopMode;
 		private float Authority_GetPlayRate() => GetPlayRate();
@@ -170,6 +179,8 @@ namespace Kinetix.Internal
 				new KinetixFrame(out bones, _KinetixClip, _Frame) :
 				new KinetixFrame(bones, _KinetixClip, _Frame);
 
+			if (!blendshapeEnabled)
+				toReturn.hasBlendshapes = false;
 			RequestAdaptToInterpreter?.Invoke(toReturn);
 
 			return toReturn;
@@ -476,6 +487,7 @@ namespace Kinetix.Internal
 		/// </summary>
 		public void Stop()
 		{
+			interpreterAvatarPos = null;
 			removeOldClipsAfterTime = -1;
 			isSoftStop = false; //REQUIRED FOR CLEARING SOFT STOP
 			InvokeSoftStop(-1); //REQUIRED FOR CLEARING SOFT STOP
@@ -635,8 +647,13 @@ namespace Kinetix.Internal
 			}
 
 			//Compute effect and send _Frame
+			bool hasBlendshapes = frames.Any(f => f.hasBlendshapes);
 			frame = effect.ModifyFrame(frames.ToArray(), playedTracks.ToArray());
+			frame.hasBlendshapes = hasBlendshapes;
+			
 			OnPlayedFrame?.Invoke(frame);
+
+			interpreterAvatarPos = null; //Clear avatar pos cache
 		}
 		// ---------------------------------------------------------------------- //
 

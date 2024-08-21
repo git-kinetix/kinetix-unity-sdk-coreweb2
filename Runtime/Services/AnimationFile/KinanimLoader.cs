@@ -17,9 +17,11 @@ namespace Kinetix.Internal
 		const long HEADER_DOWNLOAD_SIZE = 1000 * 5;
 
 		private readonly Dictionary<string, KinanimServiceData> kinanimIndexerByFilepath = new Dictionary<string, KinanimServiceData>();
+		protected readonly EmoteDownloadSpeedService downloadSpeedService;
 
 		public KinanimLoader(ServiceLocator _ServiceLocator) : base(_ServiceLocator)
 		{
+			downloadSpeedService = _ServiceLocator.Get<EmoteDownloadSpeedService>();
 		}
 
 		public override string Extension => KinanimData.FILE_EXTENSION;
@@ -30,7 +32,7 @@ namespace Kinetix.Internal
 
 			if (kinanimIndexerByFilepath.TryGetValue(filepath, out KinanimServiceData data))
 			{
-				if (data.exporter != null) data.exporter.Dispose();
+				data.exporter?.Dispose();
 				data.exporter = new KinanimExporter(new FileStream(filepath, FileMode.OpenOrCreate, FileAccess.Write));
 			}
 			else
@@ -54,33 +56,38 @@ namespace Kinetix.Internal
 
 		public override async Task<RuntimeRetargetFrameIndexer> Download(KinetixEmote emote, string url, CancellationTokenSource cancellationToken, string avatarId = null)
 		{
+			DownloadSpeedRecorder downloadTime = downloadSpeedService.RecordDownload();
+			downloadTime.Start(HEADER_DOWNLOAD_SIZE);
+
 			ByteRangeDownloaderConfig fileDownloadOperationConfig = new ByteRangeDownloaderConfig(url, 0, HEADER_DOWNLOAD_SIZE);
 			ByteRangeDownloader fileDownloadOperation = new ByteRangeDownloader(fileDownloadOperationConfig);
 
 			ByteRangeDownloaderResponse response = await OperationManagerShortcut.Get().RequestExecution(fileDownloadOperation, cancellationToken);
-			
+
+			downloadTime.Stop();
+
 			string filepath = GetFilePath(emote.Ids.UUID, avatarId);
 			EnsureDirectoryExists(filepath);
 
-			KinanimServiceData data = GetStartDataFromEmote(filepath, new MemoryStream(response.bytes), avatarId); //Import header and some frames
-			data.exporter.WriteHeader(data.indexer.dataSource.UncompressedHeader);
+			KinanimServiceData kinanim = GetStartDataFromEmote(filepath, new MemoryStream(response.bytes), avatarId); //Import header and some frames
+			kinanim.exporter.WriteHeader(kinanim.indexer.dataSource.UncompressedHeader);
 
 			//Write frames we created
-			int maxFrame = data.indexer.dataSource.compression?.MaxUncompressedFrame ?? data.indexer.dataSource.HighestImportedFrame;
-			int frameCount = data.indexer.dataSource.Result.content.frames.Length;
+			int maxFrame = kinanim.indexer.dataSource.compression?.MaxUncompressedFrame ?? kinanim.indexer.dataSource.HighestImportedFrame;
+			int frameCount = kinanim.indexer.dataSource.Result.content.frames.Length;
 			if (maxFrame >= frameCount)
 			{
 				maxFrame = frameCount - 1;
 			}
 
-			data.exporter.content.WriteFrames(new ArraySegment<KinanimData.FrameData>(data.indexer.dataSource.Result.content.frames, 0, maxFrame + 1).ToArray(), data.indexer.dataSource.Result.header.hasBlendshapes, 0);
+			kinanim.exporter.content.WriteFrames(new ArraySegment<KinanimData.FrameData>(kinanim.indexer.dataSource.Result.content.frames, 0, maxFrame + 1).ToArray(), kinanim.indexer.dataSource.Result.header.hasBlendshapes, 0);
 
 			//Download remaining frames
-			_ = AsyncDownloadRemainingFrames(data, url, null, false)
+			_ = AsyncDownloadRemainingFrames(kinanim, url, null, false)
 				.Catch(KinetixDebug.LogException)
-				.Then(data.exporter.Dispose);
+				.Then(kinanim.exporter.Dispose);
 
-			return data.indexer;
+			return kinanim.indexer;
 		}
 
 		private async Task AsyncDownloadRemainingFrames(KinanimServiceData kinanim, string url, CancellationTokenSource cancellationTokenDownload, bool downloadHeader)
@@ -104,15 +111,15 @@ namespace Kinetix.Internal
 			//    ReadFrames / 
 			//	  KinanimDataIndexer.IndexFrames();
 
-			int remainingFrames = kinanim.indexer.dataSource.Result.header.FrameCount - (kinanim.indexer.dataSource.HighestImportedFrame + 1);
-			int chunkCount = Mathf.CeilToInt(remainingFrames / (float)InterpoCompression.DEFAULT_BATCH_SIZE);
-			for (int chunk = 0; chunk < chunkCount; chunk++)
+			int frameCount = kinanim.indexer.dataSource.Result.header.FrameCount;
+			int minFrame, maxFrame = kinanim.indexer.dataSource.HighestImportedFrame;
+			while (maxFrame < frameCount - 1)
 			{
-				int minFrame = (kinanim.indexer.dataSource.compression?.MaxUncompressedFrame ?? kinanim.indexer.dataSource.HighestImportedFrame) + 1;
-				await LoadBatchFrameKinanim(kinanim.indexer, url, InterpoCompression.DEFAULT_BATCH_SIZE, cancellationTokenDownload); //Partial file download operation (20 frames)
+				minFrame = (kinanim.indexer.dataSource.compression?.MaxUncompressedFrame ?? kinanim.indexer.dataSource.HighestImportedFrame) + 1;
 
-				int maxFrame = kinanim.indexer.dataSource.compression?.MaxUncompressedFrame ?? kinanim.indexer.dataSource.HighestImportedFrame;
-				int frameCount = kinanim.indexer.dataSource.Result.content.frames.Length;
+				await LoadBatchFrameKinanim(kinanim.indexer, url, cancellationTokenDownload); //Partial file download operation (20 frames)
+
+				maxFrame = kinanim.indexer.dataSource.compression?.MaxUncompressedFrame ?? kinanim.indexer.dataSource.HighestImportedFrame;
 				if (maxFrame >= frameCount)
 				{
 					maxFrame = frameCount - 1;
@@ -135,7 +142,7 @@ namespace Kinetix.Internal
 		/// <returns></returns>
 		private KinanimServiceData GetStartDataFromEmote(string filepath, Stream readStream, string avatarId)
 		{
-            EnsureDirectoryExists(filepath);
+			EnsureDirectoryExists(filepath);
 
 			KinanimServiceData data;
 			//Import Header and extra frames
@@ -161,10 +168,15 @@ namespace Kinetix.Internal
 
 		private async Task GetServerHeader(KinanimDataIndexer indexer, string url, CancellationTokenSource cancellationToken)
 		{
+			DownloadSpeedRecorder downloadTime = downloadSpeedService.RecordDownload();
+			downloadTime.Start(indexer.dataSource.Result.header.BinarySize);
+
 			ByteRangeDownloaderConfig fileDownloadOperationConfig = new ByteRangeDownloaderConfig(url, 0, indexer.dataSource.Result.header.BinarySize);
 			ByteRangeDownloader fileDownloadOperation = new ByteRangeDownloader(fileDownloadOperationConfig);
 
 			ByteRangeDownloaderResponse response = await OperationManagerShortcut.Get().RequestExecution(fileDownloadOperation, cancellationToken);
+
+			downloadTime.Stop();
 
 			//Import frames
 			MemoryStream stream = new MemoryStream(response.bytes);
@@ -173,43 +185,18 @@ namespace Kinetix.Internal
 			indexer.UpdateIndexCount();
 		}
 
-		private async Task LoadBatchFrameKinanim(KinanimDataIndexer indexer, string url, int frameCount, CancellationTokenSource cancellationToken)
+		private async Task<(int frameMin, int frameMax)> LoadBatchFrameKinanim(KinanimDataIndexer indexer, string url, CancellationTokenSource cancellationToken)
 		{
-			int minFrame = indexer.dataSource.HighestImportedFrame + 1;
-			int maxFrame = minFrame + frameCount - 1;
-			// -1 explaination :
-			//   let's say frameCount = 3 and minFrame = 5
-			//   you download these frames:
-			//   5, 6, 7
-			//   maxFrame = 7 = 5 + 3 - 1
+			(long byteMin, long byteMax, int minFrame, int maxFrame) = downloadSpeedService.CalculateFramesDownloadByteRange(indexer.dataSource);
 
-			KinanimData.KinanimHeader header = indexer.dataSource.Result.header;
-			ushort totalFrameCount = header.FrameCount;
-			if (maxFrame >= totalFrameCount)
-				maxFrame = totalFrameCount - 1;
-
-			//Calculate size
-			long byteMin = indexer.dataSource.Result.header.BinarySize - 1,
-				 byteMax = byteMin;
-			for (int i = 0; i <= maxFrame; i++) //NOTE: can optimise with variables by keeping track of the byte count
-			{
-				if (i < minFrame)
-				{
-					byteMin += header.FrameSizes[i];
-					byteMax = byteMin;
-				}
-				else
-				{
-					byteMax += header.FrameSizes[i];
-				}
-			}
-
-			byteMax -= 1; //We work using lenght but downloads works based on position
-
+			DownloadSpeedRecorder downloadTime = downloadSpeedService.RecordDownload();
+			downloadTime.Start(byteMax - byteMin + 1);
+			
 			ByteRangeDownloaderConfig fileDownloadOperationConfig = new ByteRangeDownloaderConfig(url, byteMin, byteMax);
 			ByteRangeDownloader fileDownloadOperation = new ByteRangeDownloader(fileDownloadOperationConfig);
 
 			ByteRangeDownloaderResponse response = await OperationManagerShortcut.Get().RequestExecution(fileDownloadOperation, cancellationToken);
+			downloadTime.Stop();
 
 			//Import frames
 			MemoryStream stream = new MemoryStream(response.bytes);
@@ -219,6 +206,7 @@ namespace Kinetix.Internal
 #if DEV_KINETIX
 			KinetixLogger.LogDebug("Kinanim,Download", $"downloaded frames {minFrame}-{maxFrame} (byte={byteMin}-{byteMax})", true);
 #endif
+			return (minFrame, maxFrame);
 		}
 	}
 }

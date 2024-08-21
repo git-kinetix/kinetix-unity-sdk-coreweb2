@@ -84,7 +84,6 @@ namespace Kinetix.Internal
 				return Metadata.UrlByFormat[_Extension];
 
 			return GetAvatarMetadata(_AvatarId)?.UrlByFormat[_Extension];
-			bool First(AvatarAnimationMetadata avatar) => avatar.AvatarUUID == _AvatarId;
 		}
 	}
 }

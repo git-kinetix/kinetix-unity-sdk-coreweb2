@@ -79,6 +79,7 @@ namespace Kinetix
 		/// <param name="_RootMotionConfig">Configuration of the root motion</param>
 		public virtual void Init(ServiceLocator _ServiceLocator, KinetixAvatar _KinetixAvatar, RootMotionConfig _RootMotionConfig)
 		{
+			serviceLocator = _ServiceLocator;
 			networkSampler = new KinetixNetworkSampler();
 			behaviour = _KinetixAvatar.Root.gameObject.AddComponent<KinetixCharacterComponentBehaviour>();
 			behaviour._kcc = this;

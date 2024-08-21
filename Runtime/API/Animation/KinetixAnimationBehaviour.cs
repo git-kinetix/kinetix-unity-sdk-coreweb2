@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using Kinetix.Internal.Cache;
 using UnityEngine;
+using static UnityEditor.Experimental.GraphView.GraphView;
 
 namespace Kinetix.Internal
 {
@@ -247,8 +248,10 @@ namespace Kinetix.Internal
 
 		#endregion
 
-		#region Animation playing
-
+		//===========================//
+		// Frame controller          //
+		//===========================//
+		#region Frame controller
 		public static void PlayAnimationOnLocalPlayer(AnimationIds _Ids, Action<AnimationIds> _OnPlayedAnimation, string _ForcedExtension = "")
 		{
 			KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().LocalPlayer.PlayAnimation(_Ids, _OnPlayedAnimation, _ForcedExtension);
@@ -272,7 +275,24 @@ namespace Kinetix.Internal
 			KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().LocalPlayer.PlayAnimationQueue(_Ids, _Loop, _OnPlayedAnimation);
 		}
 
-		public static void SetPauseOnLocalPlayer(bool _Paused)
+		public static void SetBlendshapeActiveOnAvatar(string _PlayerUUID, bool _Active)
+		{
+			KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().SetBlendshapeActive(_PlayerUUID, _Active);
+		}
+		public static bool GetBlendshapeActiveOnAvatar(string _PlayerUUID)
+		{
+			return KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().GetBlendshapeActive(_PlayerUUID);
+		}
+		public static void SetBlendshapeActiveOnLocalPlayer(bool _Active)
+		{
+			KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().LocalPlayer.SetBlendshapeActive(_Active);
+		}
+        public static bool GetBlendshapeActiveOnLocalPlayer()
+        {
+            return KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().LocalPlayer.GetBlendshapeActive();
+        }
+
+        public static void SetPauseOnLocalPlayer(bool _Paused)
 		{
 			KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().LocalPlayer.SetPause(_Paused);
 		}
@@ -342,9 +362,207 @@ namespace Kinetix.Internal
 		{
 			KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().GetElapsedTime(_PlayerUUID);
 		}
+		#endregion
+
+		//===========================//
+		// IK Controller             //
+		//===========================//
+		#region IK Controller
+
+		/* == == ==  == == == */
+		/* == Local Player == */
+		/* == == ==  == == == */
+
+		/* Event */
+		public static void RegisterIkEventOnLocalPlayer(IKEffect.DelegateBeforeIkEffect _OnBeforeIkEffect)
+		{
+			KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().LocalPlayer.RegisterIkEvent(_OnBeforeIkEffect);
+		}
+
+		public static void UnregisterIkEventOnLocalPlayer(IKEffect.DelegateBeforeIkEffect _OnBeforeIkEffect)
+		{
+			KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().LocalPlayer.UnregisterIkEvent(_OnBeforeIkEffect);
+		}
+
+		public static void UnregisterAllIkEventsOnLocalPlayer()
+		{
+			KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().LocalPlayer.UnregisterAllIkEvents();
+		}
+
+		/* GET */
+		public static Vector3 GetIKHintPositionOnLocalPlayer(AvatarIKHint _Hint)
+		{
+			return KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().LocalPlayer.GetIKHintPosition(_Hint);
+		}
+
+		public static Vector3 GetIKPositionOnLocalPlayer(AvatarIKGoal _Goal)
+		{
+			return KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().LocalPlayer.GetIKPosition(_Goal);
+		}
+
+		public static float GetIKPositionWeightOnLocalPlayer(AvatarIKGoal _Goal)
+		{
+			return KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().LocalPlayer.GetIKPositionWeight(_Goal);
+		}
+
+		public static Quaternion GetIKRotationOnLocalPlayer(AvatarIKGoal _Goal)
+		{
+			return KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().LocalPlayer.GetIKRotation(_Goal);
+		}
+
+		public static float GetIKRotationWeightOnLocalPlayer(AvatarIKGoal _Goal)
+		{
+			return KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().LocalPlayer.GetIKRotationWeight(_Goal);
+		}
+
+		public static bool GetIKAdjustHipsOnLocalPlayer(AvatarIKGoal _Goal)
+		{
+			return KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().LocalPlayer.GetIKAdjustHips(_Goal);
+		}
+
+		/* SET */
+		public static void SetIKHintPositionOnLocalPlayer(AvatarIKHint _Hint, Vector3 _Value)
+		{
+			KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().LocalPlayer.SetIKHintPosition(_Hint, _Value);
+		}
+
+		public static void SetIKPositionOnLocalPlayer(AvatarIKGoal _Goal, Vector3 _Value)
+		{
+			KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().LocalPlayer.SetIKPosition(_Goal, _Value);
+		}
+
+		public static void SetIKPositionWeightOnLocalPlayer(AvatarIKGoal _Goal, float _Value)
+		{
+			KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().LocalPlayer.SetIKPositionWeight(_Goal, _Value);
+		}
+
+		public static void SetIKRotationOnLocalPlayer(AvatarIKGoal _Goal, Quaternion _Value)
+		{
+			KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().LocalPlayer.SetIKRotation(_Goal, _Value);
+		}
+
+		public static void SetIKRotationWeightOnLocalPlayer(AvatarIKGoal _Goal, float _Value)
+		{
+			KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().LocalPlayer.SetIKRotationWeight(_Goal, _Value);
+		}
+
+		public static void SetIKAdjustHipsOnLocalPlayer(AvatarIKGoal _Goal, bool _Value)
+		{
+			KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().LocalPlayer.SetIKAdjustHips(_Goal, _Value);
+		}
+
+
+		/* == ==  == == */
+		/* == Avatar == */
+		/* == ==  == == */
+
+		/* Event */
+		public static void RegisterIkEventOnAvatar(string _PlayerUUID, IKEffect.DelegateBeforeIkEffect _OnBeforeIkEffect)
+        {
+			KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().RegisterIkEvent(_PlayerUUID, _OnBeforeIkEffect);
+		}
+
+		public static void UnregisterIkEventOnAvatar(string _PlayerUUID, IKEffect.DelegateBeforeIkEffect _OnBeforeIkEffect)
+        {
+			KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().UnregisterIkEvent(_PlayerUUID, _OnBeforeIkEffect);
+        }
+        public static void UnregisterAllIkEventsOnAvatar(string _PlayerUUID)
+        {
+			KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().UnregisterAllIkEvents(_PlayerUUID);
+		}
+
+        /* GET */
+		public static Vector3 GetIKHintPositionOnAvatar(string _PlayerUUID, AvatarIKHint _Hint)
+		{
+			return KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().GetIKHintPosition(_PlayerUUID, _Hint);
+        }
+
+		public static Vector3 GetIKPositionOnAvatar(string _PlayerUUID, AvatarIKGoal _Goal)
+		{
+			return KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().GetIKPosition(_PlayerUUID, _Goal);
+        }
+
+		public static float GetIKPositionWeightOnAvatar(string _PlayerUUID, AvatarIKGoal _Goal)
+		{
+			return KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().GetIKPositionWeight(_PlayerUUID, _Goal);
+        }
+
+		public static Quaternion GetIKRotationOnAvatar(string _PlayerUUID, AvatarIKGoal _Goal)
+		{
+			return KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().GetIKRotation(_PlayerUUID, _Goal);
+        }
+
+		public static float GetIKRotationWeightOnAvatar(string _PlayerUUID, AvatarIKGoal _Goal)
+		{
+			return KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().GetIKRotationWeight(_PlayerUUID, _Goal);
+        }
+
+		public static bool GetIKAdjustHipsOnAvatar(string _PlayerUUID, AvatarIKGoal _Goal)
+		{
+			return KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().GetIKAdjustHips(_PlayerUUID, _Goal);
+		}
+
+		/* SET */
+		public static void SetIKHintPositionOnAvatar(string _PlayerUUID, AvatarIKHint _Hint, Vector3 _Value)
+		{
+			KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().SetIKHintPosition(_PlayerUUID, _Hint, _Value);
+        }
+
+		public static void SetIKPositionOnAvatar(string _PlayerUUID, AvatarIKGoal _Goal, Vector3 _Value)
+		{
+			KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().SetIKPosition(_PlayerUUID, _Goal, _Value);
+        }
+
+		public static void SetIKPositionWeightOnAvatar(string _PlayerUUID, AvatarIKGoal _Goal, float _Value)
+		{
+			KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().SetIKPositionWeight(_PlayerUUID, _Goal, _Value);
+        }
+
+		public static void SetIKRotationOnAvatar(string _PlayerUUID, AvatarIKGoal _Goal, Quaternion _Value)
+		{
+			KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().SetIKRotation(_PlayerUUID, _Goal, _Value);
+        }
+
+		public static void SetIKRotationWeightOnAvatar(string _PlayerUUID, AvatarIKGoal _Goal, float _Value)
+		{
+			KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().SetIKRotationWeight(_PlayerUUID, _Goal, _Value);
+		}
+
+		public static void SetIKAdjustHipsOnAvatar(string _PlayerUUID, AvatarIKGoal _Goal, bool _Value)
+		{
+			KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().SetIKAdjustHips(_PlayerUUID, _Goal, _Value);
+		}
 
 		#endregion
 
+		//=====================================//
+		// Mask                                //
+		//=====================================//
+		#region Mask
+		public static void SetMaskOnLocalPlayer(KinetixMask _Mask)
+        {
+            KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().LocalPlayer.SetMask(_Mask);
+        }
+
+        public static KinetixMask GetMaskOnLocalPlayer()
+        {
+            return KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().LocalPlayer.GetMask();
+        }
+
+        public static void SetMaskOnAvatar(string _PlayerUUID, KinetixMask _Mask)
+		{
+			KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().SetMask(_PlayerUUID, _Mask);
+		}
+
+		public static KinetixMask GetMaskOnAvatar(string _PlayerUUID)
+		{
+			return KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().GetMask(_PlayerUUID);
+		}
+		#endregion
+
+		//=====================================//
+		// Anim load / Unload / Retarget       //
+		//=====================================//
 		#region Animation loading / unloading / retargeting
 
 		public static void GetRetargetedKinetixClipOnLocalPlayer(AnimationIds _AnimationIds, Action<KinetixClip> _OnSuccess, Action _OnFailure)
@@ -413,6 +631,10 @@ namespace Kinetix.Internal
 
 		#endregion
 
+
+		//=====================================//
+		// Other                               //
+		//=====================================//
 		public static bool IsAnimationAvailableOnLocalPlayer(AnimationIds _Ids)
 		{
 			if (KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().LocalPlayer == null)

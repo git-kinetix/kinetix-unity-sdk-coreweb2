@@ -42,7 +42,8 @@ namespace Kinetix.Internal
 		private readonly SkinnedMeshRenderer[] skinnedMeshRenderer;
 		private readonly Dictionary<ARKitBlendshapes, List<BlendshapeMapData>> blendshapeMap = new Dictionary<ARKitBlendshapes, List<BlendshapeMapData>>();
 		protected KinetixClip clip;
-
+		protected KinetixPose poseBeforeQueue;
+		private bool wereBlendshapesModified;
 
 		public TransformPoseInterpreter(GameObject root, Avatar avatar, SkinnedMeshRenderer[] skinnedMeshRenderer = null)
 		{
@@ -55,9 +56,9 @@ namespace Kinetix.Internal
 				int length = skinnedMeshRenderer.Length;
 				for (int i = length-1; i >= 0; i--)
 				{
+					Mesh sharedMesh = skinnedMeshRenderer[i].sharedMesh;
 					for (ARKitBlendshapes blend = 0; blend < ARKitBlendshapes.Count; blend++)
 					{
-						Mesh sharedMesh = skinnedMeshRenderer[i].sharedMesh;
 						if (sharedMesh.HasLossyBlendshape(blend.ToString(), out KeyValuePair<string, int> resultIdName))
 						{
 							if (!blendshapeMap.ContainsKey(blend))
@@ -67,14 +68,17 @@ namespace Kinetix.Internal
 								  max = 0f;
 
 							int frameCount = sharedMesh.GetBlendShapeFrameCount(resultIdName.Value);
-							for (int j = 0; j < frameCount; j++)
+							if (frameCount > 0)
 							{
-								float frameWeight = sharedMesh.GetBlendShapeFrameWeight(resultIdName.Value, j);
-								min = Mathf.Min(frameWeight, min);
-								max = Mathf.Max(frameWeight, max);
+								for (int j = 0; j < frameCount; j++)
+								{
+									float frameWeight = sharedMesh.GetBlendShapeFrameWeight(resultIdName.Value, j);
+									min = Mathf.Min(frameWeight, min);
+									max = Mathf.Max(frameWeight, max);
+								}
 							}
 
-							blendshapeMap[blend].Add(new BlendshapeMapData(i, resultIdName.Value, min, max));
+							blendshapeMap[blend].Insert(0, new BlendshapeMapData(i, resultIdName.Value, min, max));
 						}
 						
 					}
@@ -111,12 +115,29 @@ namespace Kinetix.Internal
 
 		public virtual void QueueStart()
 		{
-
+			wereBlendshapesModified = false;
+			poseBeforeQueue = CreatePose(false);
 		}
 
 		public virtual void QueueEnd()
 		{
 			clip = null;
+
+			ResetBlendshapesToPose();
+
+			poseBeforeQueue = null;
+		}
+
+		protected void ResetBlendshapesToPose()
+		{
+			if (wereBlendshapesModified && poseBeforeQueue != null)
+			{
+				//Apply back blendshapes
+				for (ARKitBlendshapes i = 0; i < ARKitBlendshapes.Count; i++)
+				{
+					ApplyBlendshape(i, poseBeforeQueue.blendshapes[i]);
+				}
+			}
 		}
 
 
@@ -165,6 +186,7 @@ namespace Kinetix.Internal
 				if (list == null)
 					return;
 
+
 				SkinnedMeshRenderer skm;
 				BlendshapeMapData data;
 				for (int i = list.Count - 1; i >= 0; i--)
@@ -174,6 +196,7 @@ namespace Kinetix.Internal
 					if (skm == null)
 						continue;
 
+					wereBlendshapesModified = true;
 					skm.SetBlendShapeWeight(data.blendshapeId, Mathf.Lerp(data.min, data.max, pose));
 				}
 			}
@@ -198,10 +221,15 @@ namespace Kinetix.Internal
 		///<inheritdoc/>
 		public virtual KinetixPose GetPose()
 		{
-			HumanBodyBones[] bones = boneMap.Keys.ToArray();
-			int length = bones.Length;
+			return CreatePose(true);
+		}
 
-			TransformData[] trs = new TransformData[length];
+		public virtual KinetixPose CreatePose(bool usePoseBeforeQueue)
+		{
+			List<HumanBodyBones> bones = boneMap.Keys.ToList();
+			int length = bones.Count;
+
+			MaxSizedList<TransformData> trs = new List<TransformData>(length);
 
 			for (int i = 0; i < length; i++)
 			{
@@ -214,14 +242,31 @@ namespace Kinetix.Internal
 			}
 
 			TransformData rootTrData = TransformToData(root.transform);
+			TransformData rootTrDataGlobal = TransformToDataGlobal(root.transform);
 
 			TransformData? armatureTrData = armature == null ? default(TransformData?) : TransformToData(armature.transform);
 
-			SkinnedMeshRenderer skinnedMeshRenderer = this.skinnedMeshRenderer?.FirstOrDefault();
-			return new KinetixPose(trs, bones, skinnedMeshRenderer == null ? null : new float[(int)ARKitBlendshapes.Count].Select(SelectBlendshapes), rootTrData, armatureTrData);
+			if (usePoseBeforeQueue && poseBeforeQueue != null)
+				return new KinetixPose(trs, bones, poseBeforeQueue.blendshapes.ToArray(), rootTrData, armatureTrData);
 
-			float SelectBlendshapes(float arg1, int arg2)
-				=> skinnedMeshRenderer.GetBlendShapeWeight(arg2);
+			float[] blendshapes = null;
+
+			if (skinnedMeshRenderer != null && skinnedMeshRenderer.Length != 0)
+			{
+				blendshapes = new float[(int)ARKitBlendshapes.Count];
+				for (int i = 0; i < length; i++)
+				{
+					blendshapes[i] = 
+						blendshapeMap.ValueOrDefault((ARKitBlendshapes)i) /* Get blend or null */
+						?.Max(map => skinnedMeshRenderer[map.rendererId].GetBlendShapeWeight(map.blendshapeId) / map.max) /* Get highest value between each mesh */
+						?? 0; /* If the blendshape doesn't exist, return 0 */
+				}
+			}
+
+			return new KinetixPose(trs, bones, blendshapes, rootTrData, armatureTrData)
+			{
+				rootGlobal = rootTrDataGlobal,
+			};
 		}
 
 		private static void ApplyDataToTransform(TransformData pose, Transform tr)
@@ -236,6 +281,13 @@ namespace Kinetix.Internal
 			position = transform.localPosition,
 			rotation = transform.localRotation,
 			scale = transform.localScale
+		};
+
+		private static TransformData TransformToDataGlobal(Transform transform) => new TransformData()
+		{
+			position = transform.position,
+			rotation = transform.rotation,
+			scale = transform.lossyScale
 		};
 
 	}

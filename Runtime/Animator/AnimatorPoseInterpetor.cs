@@ -18,7 +18,7 @@ namespace Kinetix.Internal
 		private bool wasOn;
 		private bool keepAnimatorState;
 
-        public AnimatorPoseInterpetor(Animator animator, Avatar avatar, SkinnedMeshRenderer[] skinnedMeshRenderer = null) : base(animator.gameObject, avatar, skinnedMeshRenderer)
+		public AnimatorPoseInterpetor(Animator animator, Avatar avatar, SkinnedMeshRenderer[] skinnedMeshRenderer = null) : base(animator.gameObject, avatar, skinnedMeshRenderer)
 		{
 			this.animator = animator;
 		}
@@ -56,17 +56,21 @@ namespace Kinetix.Internal
 
 		}
 
-        public override KinetixPose GetPose()
-        {
+		public override KinetixPose GetPose()
+		{
+			ResetBlendshapesToPose();
+
 			bool wasOn = animator.enabled;
 			animator.enabled = false;
 			animator.Update(Time.deltaTime);
-            KinetixPose toReturn = base.GetPose();
+			KinetixPose toReturn = CreatePose(false);
 			animator.enabled = wasOn;
 
 			clip?.ApplyResetPos(this);
 
+			poseBeforeQueue = toReturn;
+
 			return toReturn;
-        }
-    }
+		}
+	}
 }

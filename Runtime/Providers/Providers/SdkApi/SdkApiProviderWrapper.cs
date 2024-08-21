@@ -99,6 +99,19 @@ namespace Kinetix.Utils
 			GetRawAPIResultResponse response = await OperationManagerShortcut.Get().RequestExecution(apiResultOp);
 
 			string result = response.json;
+			if (response.raw.ResponseCode == 404)
+			{
+				KinetixDebug.LogError($"\"{nameof(GetAnimationMetadataOfEmote)}\" returned (404) : Emote not found");
+				tcs.SetResult(null);
+				return await tcs.Task;
+			}
+
+			if (response.raw.ResponseCode == 401)
+			{
+				KinetixDebug.LogError($"\"{nameof(GetAnimationMetadataOfEmote)}\" returned (401) : API KEY NOT FOUND");
+				tcs.SetResult(null);
+				return await tcs.Task;
+			}
 
 			try
 			{
@@ -131,9 +144,17 @@ namespace Kinetix.Utils
 			if (response.raw.ResponseCode == 404)
 			{
 				KinetixDebug.LogError($"\"{nameof(GetAnimationMetadataOfAvatar)}\" returned (404)... Retrying using \"{nameof(GetAnimationMetadataOfEmote)}\"...");
+				tcs.SetResult(null);
 				return await GetAnimationMetadataOfEmote(_AnimationIds);
 			}
-			
+
+			if (response.raw.ResponseCode == 401)
+			{
+				KinetixDebug.LogError($"\"{nameof(GetAnimationMetadataOfAvatar)}\" returned (401) : API KEY NOT FOUND");
+				tcs.SetResult(null);
+				return await tcs.Task;
+			}
+
 			try
 			{
 				SdkAvatarApiAsset collection = JsonConvert.DeserializeObject<SdkAvatarApiAsset>(result);
@@ -220,9 +241,9 @@ namespace Kinetix.Utils
 			return await tcs.Task;
 		}
 
-		public async Task<SdkTokenValidityResult> RetakeEmote(string _ProcessId)
+		public async Task<SdkApiProcess> RetakeEmote(string _ProcessId)
 		{
-			TaskCompletionSource<SdkTokenValidityResult> tcs = new TaskCompletionSource<SdkTokenValidityResult>();
+			TaskCompletionSource<SdkApiProcess> tcs = new TaskCompletionSource<SdkApiProcess>();
 
 			string url = KinetixConstants.c_SDK_API_URL + "/v1/process/" + _ProcessId + "/retake";
             
@@ -243,7 +264,7 @@ namespace Kinetix.Utils
                 if (!response.IsSuccess)
                     throw new Exception(response.Error);
 
-				tcs.SetResult(JsonConvert.DeserializeObject<SdkTokenValidityResult>(response.Content));
+				tcs.SetResult(JsonConvert.DeserializeObject<SdkApiProcess>(response.Content));
             }
             catch (Exception e)
             {

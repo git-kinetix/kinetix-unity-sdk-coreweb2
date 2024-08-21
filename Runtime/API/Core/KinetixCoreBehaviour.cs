@@ -44,13 +44,14 @@ namespace Kinetix.Internal
         {
             serviceLocator = new ServiceLocator();
             
-            serviceLocator.Register<EmotesService>(new EmotesService(serviceLocator, _Configuration));
+            serviceLocator.Register<EmoteDownloadSpeedService>(new EmoteDownloadSpeedService());
+            serviceLocator.Register<AssetService>(new AssetService());
             serviceLocator.Register<LockService>(new LockService());
             serviceLocator.Register<MemoryService>(new MemoryService(_Configuration));
-            serviceLocator.Register<LoadAnimService>(new LoadAnimService(serviceLocator));
-            serviceLocator.Register<AssetService>(new AssetService());
-            serviceLocator.Register<RetargetingService>(new RetargetingService(serviceLocator));
             serviceLocator.Register<ProviderService>(new ProviderService(_Configuration));
+            serviceLocator.Register<EmotesService>(new EmotesService(serviceLocator, _Configuration));
+            serviceLocator.Register<LoadAnimService>(new LoadAnimService(serviceLocator));
+            serviceLocator.Register<RetargetingService>(new RetargetingService(serviceLocator));
 
             serviceLocator.Get<LockService>().OnRequestEmoteUnload += serviceLocator.Get<RetargetingService>().ClearAvatar;
         }

@@ -1,5 +1,5 @@
 // // ----------------------------------------------------------------------------
-// // <copyright file="ABlending.cs" company="Kinetix SAS">
+// // <copyright file="AInterpolationEffect.cs" company="Kinetix SAS">
 // // Kinetix Unity SDK - Copyright (C) 2022 Kinetix SAS
 // // </copyright>
 // // ----------------------------------------------------------------------------
@@ -11,14 +11,17 @@ using UnityEngine;
 
 namespace Kinetix.Internal
 {
-    /// <summary>
-    /// Abstract blending class for <see cref="IFrameEffect"/>
-    /// </summary>
-    public abstract class ABlending : ISamplerAuthority
+	/// <summary>
+	/// Abstract blending class for <see cref="IFrameEffect"/>
+	/// </summary>
+	public abstract class AInterpolationEffect : ISamplerAuthority
 	{
 		/// <inheritdoc/>
 		public SamplerAuthorityBridge Authority { get; set; }
 
+		//------------------------------------------------------------------//
+		// Average                                                          //
+		//------------------------------------------------------------------//
 		/// <summary>
 		/// Overwrite the pose of <paramref name="_Overwrite"/> replacing it by the average of <paramref name="_ToBlend"/> by their respective <paramref name="_Weight"/>
 		/// </summary>
@@ -32,7 +35,7 @@ namespace Kinetix.Internal
 			where T2 : KinetixPose
 		{
 			int blendCount = _ToBlend.Length;
-			int aLenght = _Overwrite.bones.Length;
+			int aLenght = _Overwrite.bones.Count;
 
 			if (_Weight.Sum() <= 0)
 				return;
@@ -51,7 +54,7 @@ namespace Kinetix.Internal
 				_Overwrite.blendshapes[blendshape] = blend / pCount;
 			}
 
-			//Blend human
+			//Lerp human
 			//A refer to the original pose
 			//B refer to the pose to blend
 			for (int i = 0; i < aLenght; i++)
@@ -74,7 +77,7 @@ namespace Kinetix.Internal
 					if (b == null)
 						continue;
 
-					int bIndex = Array.IndexOf(b.bones, bone);
+					int bIndex = b.bones.IndexOf(bone);
 					if (bIndex == -1)
 						continue;
 
@@ -91,7 +94,7 @@ namespace Kinetix.Internal
 				_Overwrite.humanTransforms[i] = trA;
 			}
 
-			//Blend armature
+			//Lerp armature
 			if (_Overwrite.armature.HasValue)
 			{
 				TransformData trA = _Overwrite.armature.Value;
@@ -124,8 +127,8 @@ namespace Kinetix.Internal
 				if (trA.scale != null) trA.scale = sCount == 0 ? trA.scale : scale / sCount;
 
 				_Overwrite.armature = trA;
-            }
-        }
+			}
+		}
 
 		/// <summary>
 		/// Add <paramref name="trB"/> to sum calculation
@@ -163,6 +166,9 @@ namespace Kinetix.Internal
 
 		const float MIN_DOT_SELF = 1e-10f;
 
+		//------------------------------------------------------------------//
+		// Quaternion utils                                                 //
+		//------------------------------------------------------------------//
 		protected static Quaternion QScale(Quaternion _Q, float _Scale)
 			=> new Quaternion(
 					_Q.x * _Scale, 
@@ -201,6 +207,68 @@ namespace Kinetix.Internal
 				_RefQuat.w + sign * _ToAdd.w
 			);
 		}
+
+		//------------------------------------------------------------------//
+		// Lerp                                                             //
+		//------------------------------------------------------------------//
+		protected void Lerp(ref KinetixFrame _CurrentFrame, KinetixFrame _PreviousFrame, float _Time)
+		{
+			//Blendshapes
+			int count = _CurrentFrame.blendshapes.Count;
+			for (int i = 0; i < count; i++)
+			{
+				_CurrentFrame.blendshapes[(ARKitBlendshapes)i] = Lerp(
+					_CurrentFrame.blendshapes[(ARKitBlendshapes)i],
+					_PreviousFrame.blendshapes[(ARKitBlendshapes)i],
+					_Time
+				);
+			}
+
+			//Bones
+			count = _CurrentFrame.humanTransforms.Count;
+			TransformData bone;
+			for (int i = 0; i < count; i++)
+			{
+				bone = _CurrentFrame.humanTransforms[i];
+				Lerp(ref bone, _PreviousFrame.humanTransforms[i], _Time);
+				_CurrentFrame.humanTransforms[i] = bone;
+			}
+
+			//Armature
+			Lerp(ref _CurrentFrame.armature, _PreviousFrame.armature, _Time);
+		}
+
+		protected void Lerp(ref TransformData? _Current, TransformData? _PreviousFrame, float _Time)
+		{
+			if (!_PreviousFrame.HasValue)
+				return;
+
+			if (!_Current.HasValue)
+			{
+				if (_PreviousFrame.HasValue)
+					_Current = _PreviousFrame;
+				return;
+			}
+
+			TransformData data = _Current.Value;
+			Lerp(ref data, _PreviousFrame.Value, _Time);
+			_Current = data;
+		}
+
+		protected void Lerp(ref TransformData _CurrentFrameTr, TransformData _PreviousFrameTr, float _Time)
+		{
+			if (_CurrentFrameTr.position.HasValue && _PreviousFrameTr.position.HasValue)
+				_CurrentFrameTr.position = Vector3.Lerp(_CurrentFrameTr.position.Value, _PreviousFrameTr.position.Value, _Time);
+
+			if (_CurrentFrameTr.rotation.HasValue && _PreviousFrameTr.rotation.HasValue)
+				_CurrentFrameTr.rotation = Quaternion.Slerp(_CurrentFrameTr.rotation.Value, _PreviousFrameTr.rotation.Value, _Time);
+
+			if (_CurrentFrameTr.scale.HasValue && _PreviousFrameTr.scale.HasValue)
+				_CurrentFrameTr.scale = Vector3.Lerp(_CurrentFrameTr.scale.Value, _PreviousFrameTr.scale.Value, _Time);
+		}
+
+		protected float Lerp(float _CurrentFrameBlend, float _PreviousFrameBlend, float _Time) => Mathf.Lerp(_CurrentFrameBlend, _PreviousFrameBlend, _Time);
+
 	}
 
 }

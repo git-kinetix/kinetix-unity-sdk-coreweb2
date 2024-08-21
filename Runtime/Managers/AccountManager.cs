@@ -222,9 +222,9 @@ namespace Kinetix.Internal
         {
             try
             {
-                SdkTokenValidityResult process = await KinetixCoreBehaviour.ServiceLocator.Get<ProviderService>().RetakeEmote(_ProcessId);
+                SdkApiProcess process = await KinetixCoreBehaviour.ServiceLocator.Get<ProviderService>().RetakeEmote(_ProcessId);
 
-                _OnSuccess?.Invoke(process.url);
+                _OnSuccess?.Invoke(process.Uuid.ToString());
             }
             catch (Exception e)
             {
