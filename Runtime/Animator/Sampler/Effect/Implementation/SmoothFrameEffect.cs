@@ -13,9 +13,9 @@ using UnityEngine.Playables;
 namespace Kinetix.Internal
 {
 	/// <summary>
-	///	Interpolate between 2 _Frames (_Current and next) of each track
+	///	Interpolate between 2 _Frames (_Current and _Next) of each track
 	/// </summary>
-	public class SmoothFrameEffect : IFrameEffectModify, ISamplerAuthority
+	public class SmoothFrameEffect : AInterpolationEffect, IFrameEffectModify, ISamplerAuthority
 	{
 		private const double TIME_EPSILON = 1e-5;
 		private const double MAX_TIME_EPSILON = 1 - TIME_EPSILON;
@@ -24,15 +24,16 @@ namespace Kinetix.Internal
 
 		private sbyte oldPlayRateSign = 1;
 
-		/// <inheritdoc/>
-		public SamplerAuthorityBridge Authority { get; set; }
-
 		public int Priority => 200;
+		public bool IsEnabled { get; set; } = true;
 
 		public SmoothFrameEffect() {}
 
 		public void OnPlayedFrame(ref KinetixFrame _FinalFrame, KinetixFrame[] _Frames, in KinetixClipTrack[] _Tracks)
 		{
+			if (!IsEnabled || _Tracks == null || _Tracks.Length == 0 || _Frames.Length == 0)
+				return;
+
 			KinetixClipTrack track;
 			KinetixFrame current, nextFrame;
 			bool containsFrame;
@@ -73,8 +74,8 @@ namespace Kinetix.Internal
 					
 					time = 1 - time;
 
-					//Blend 'current' with the next frame to be played
-					Blend(ref current, nextFrame, time);
+					//Lerp 'current' with the next frame to be played
+					Lerp(ref current, nextFrame, time);
 					current.CurrentTime = localElapsedTime;
 					_Frames[i] = current;
 				}
@@ -106,61 +107,6 @@ namespace Kinetix.Internal
 				nextFramesSet.Remove(keys[i]); //Remove old frames
 			}
 		}
-
-		private void Blend(ref KinetixFrame _Current, KinetixFrame _PreviousFrame, float _Time)
-		{
-			//Blendshapes
-			int count = _Current.blendshapes.Count;
-			for (int i = 0; i < count; i++)
-			{
-				_Current.blendshapes[(ARKitBlendshapes)i] = Blend(
-					_Current.blendshapes[(ARKitBlendshapes)i], 
-					_PreviousFrame.blendshapes[(ARKitBlendshapes)i], 
-					_Time
-				);
-			}
-			
-			//Bones
-			count = _Current.humanTransforms.Length;
-			for (int i = 0; i < count; i++)
-			{
-				Blend(ref _Current.humanTransforms[i], _PreviousFrame.humanTransforms[i], _Time);
-			}
-
-			//Armature
-			Blend(ref _Current.armature, _PreviousFrame.armature, _Time);
-		}
-
-		private void Blend(ref TransformData? _Current, TransformData? _PreviousFrame, float _Time)
-		{
-			if (!_PreviousFrame.HasValue)
-				return;
-
-			if (!_Current.HasValue)
-			{
-				if (_PreviousFrame.HasValue)
-					_Current = _PreviousFrame;
-				return;
-			}
-
-			TransformData data = _Current.Value;
-			Blend(ref data, _PreviousFrame.Value, _Time);
-			_Current = data;
-		}
-
-		private void Blend(ref TransformData _Current, TransformData _PreviousFrame, float _Time)
-		{
-			if (_Current.position.HasValue && _PreviousFrame.position.HasValue)
-				_Current.position = Vector3.Lerp(_Current.position.Value, _PreviousFrame.position.Value, _Time);
-	
-			if (_Current.rotation.HasValue && _PreviousFrame.rotation.HasValue)
-				_Current.rotation = Quaternion.Slerp(_Current.rotation.Value, _PreviousFrame.rotation.Value, _Time);
-			
-			if (_Current.scale.HasValue && _PreviousFrame.scale.HasValue)
-				_Current.scale = Vector3.Lerp(_Current.scale.Value, _PreviousFrame.scale.Value, _Time);
-		}
-
-		private float Blend(float _CurrentBlend, float _PreviousFrameBlend, float _Time) => Mathf.Lerp(_CurrentBlend, _PreviousFrameBlend, _Time);
 
 		public void OnQueueEnd()
 		{

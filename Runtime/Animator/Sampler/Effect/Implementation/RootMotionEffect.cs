@@ -6,6 +6,7 @@
 
 using Kinetix.Internal.Utils;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
@@ -25,10 +26,12 @@ namespace Kinetix.Internal
 			BakeIntoPoseY     = false
 		};
 
-		public int Priority => -100;
+		public int Priority => -500;
 
 		private int countAnime = 0;
-		private bool isEnabled = false;
+
+		public bool IsEnabled { get; set; } = true;
+		private bool internalEnabled = false;
 		
 		private int hipsIndexStartPos;
 		
@@ -54,22 +57,30 @@ namespace Kinetix.Internal
 
 		public SamplerAuthorityBridge Authority { get; set; }
 
+		public void SetRootAtStartPosition(Transform root)
+		{
+			if (!config.ApplyHipsYPos && !config.ApplyHipsXAndZPos)
+				return;
+
+			root.position = startPos?.rootGlobal?.position ?? rootOriginalPosition;
+		}
+
 		/// <inheritdoc/>
 		public void OnAnimationStart()
 		{
-			if (++countAnime > 1 && isEnabled) RevertToOffsets();
+			if (++countAnime > 1 && internalEnabled) RevertToOffsets();
 			
 			startPos = Authority.GetAvatarPos();
 			if (startPos == null)
 			{
-				isEnabled = false;
+				internalEnabled = false;
 				return;
 			}
 
-			hipsIndexStartPos = Array.IndexOf(startPos.bones, HumanBodyBones.Hips);
+			hipsIndexStartPos = startPos.bones.IndexOf(HumanBodyBones.Hips);
 			hips = skeleton[UnityHumanUtils.AVATAR_HIPS];
 			root = (AvatarBoneTransform) hips.IterateParent().Last();
-			isEnabled = true;
+			internalEnabled = true;
 
 			//Set hips to pos
 			TransformData transform = startPos.humanTransforms[hipsIndexStartPos];
@@ -85,27 +96,26 @@ namespace Kinetix.Internal
 		/// <inheritdoc/>
 		public void OnAnimationEnd()
 		{
-			if (--countAnime == 0 && isEnabled)
+			if (--countAnime == 0 && internalEnabled)
 				RevertToOffsets();
 		}
 
 
 		/// <inheritdoc/>
 		public void OnPlayedFrame(ref KinetixFrame _FinalFrame, KinetixFrame[] _Frames, in KinetixClipTrack[] _Tracks)
-        {
-			if (!isEnabled) return;
-
-			int hipsIndexCurrent = Array.IndexOf(_FinalFrame.bones, HumanBodyBones.Hips);
+		{
+			if (!internalEnabled || !IsEnabled) return;
+		
+			int hipsIndexCurrent = _FinalFrame.bones.IndexOf(HumanBodyBones.Hips);
 			TransformData transform = _FinalFrame.humanTransforms[hipsIndexCurrent];
 			
 			//Set hips from curve
 			transform = TrDataToTrAvatar(transform, hips);
-			
 			ProcessRootMotionAfterAnimSampling();
 			
 			//Set curve from hips
 			transform = TrAvatarToTrData(transform, hips);
-			
+
 			//Apply & set curve from root
 			_FinalFrame.humanTransforms[hipsIndexCurrent] = transform;
 			_FinalFrame.root = TrAvatarToTrData(new TransformData() { position = Vector3.zero}, root);
@@ -142,13 +152,13 @@ namespace Kinetix.Internal
 
 
 		/// <inheritdoc/>
-		public void OnQueueEnd() 
+		public void OnQueueEnd()
 		{
-			isEnabled = false;
-			skeleton?.Dispose();
-			skeleton = null;
-
 			OnAnimationEnd();
+
+			internalEnabled = false;
+			skeleton?.Dispose();
+			skeleton = null;			
 		}
 
 		/// <inheritdoc/>
@@ -246,11 +256,14 @@ namespace Kinetix.Internal
 			hips.position = hipsPos;
 			lastHipsPosition = hips.localPosition;
 
+			if (!IsEnabled)
+				return;
+
 			//Bridge back to avatar
 			OnAddFrame?.Invoke(
 				new KinetixFrame(
-					new TransformData[1] { TrAvatarToTrData(startPos.humanTransforms[hipsIndexStartPos], hips) }, 
-					new HumanBodyBones[1] { HumanBodyBones.Hips },
+					new List<TransformData>() { TrAvatarToTrData(startPos.humanTransforms[hipsIndexStartPos], hips) }, 
+					new List<HumanBodyBones>() { HumanBodyBones.Hips },
 					null
 				)
 				{
@@ -259,8 +272,8 @@ namespace Kinetix.Internal
 			);
 		}
 
-        public void OnSoftStop(float _)
-        {
-        }
-    }
+		public void OnSoftStop(float _)
+		{
+		}
+	}
 }

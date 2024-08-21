@@ -1,6 +1,5 @@
 using Kinetix.Internal.Retargeting.AnimationData;
 using System;
-using UnityEngine;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -52,30 +51,6 @@ namespace Kinetix.Internal
 
 				return loaderExtension == _Extension;
 			}
-
-			// The code above is basically the code bellow but
-			// - More modular
-			// - Doesn't recreate loaders
-			// - Take into account all loaders
-			//
-			/*switch(_Extension)
-			{
-				case "glb":
-					loaders = new AAnimLoader[]
-					{
-						new GLBLoader(serviceLocator),
-						new KinanimLoader(serviceLocator),
-					};
-					break;
-				default:
-				case "kinanim":
-					loaders = new AAnimLoader[]
-					{
-						new KinanimLoader(serviceLocator),
-						new GLBLoader(serviceLocator),
-					};
-					break;
-			}*/
 
 			return loaders;
 			

@@ -11,12 +11,13 @@ namespace Kinetix.Internal
 	/// <summary>
 	/// Effect that can blend between an animator and kinetix clip system
 	/// </summary>
-	public class AnimatorBlendEffect : ABlending, IFrameEffectModify, ISamplerAuthority
+	public class AnimatorBlendEffect : AInterpolationEffect, IFrameEffectModify, ISamplerAuthority
 	{
 		public int Priority => 90;
+		public bool IsEnabled { get; set; } = true;
 
 		/// <summary>
-		/// Blend duration in seconds
+		/// Lerp duration in seconds
 		/// </summary>
 		public float blendDuration;
 		private bool isFirstLoop = true;
@@ -25,7 +26,7 @@ namespace Kinetix.Internal
 		private float softStop = -1;
 
 		/// <param name="_BlendDuration">
-		/// Blend duration in seconds
+		/// Lerp duration in seconds
 		/// </param>
 		public AnimatorBlendEffect(float _BlendDuration = 0.35f)
 		{
@@ -35,6 +36,9 @@ namespace Kinetix.Internal
 		/// <inheritdoc/>
 		public void OnPlayedFrame(ref KinetixFrame _FinalFrame, KinetixFrame[] _Frames, in KinetixClipTrack[] _Tracks)
 		{
+			if(!IsEnabled)
+				return;
+
 			sbyte sampleRateSign = 0;
 			float sampleRate = Authority.GetPlayRate();
 

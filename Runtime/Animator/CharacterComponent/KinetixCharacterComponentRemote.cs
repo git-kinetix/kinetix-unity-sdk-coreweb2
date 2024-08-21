@@ -8,6 +8,7 @@ using UnityEngine;
 using Kinetix.Internal;
 using Kinetix.Internal.Utils;
 using Kinetix.Internal.Retargeting;
+using System.Collections.Generic;
 
 namespace Kinetix
 {
@@ -259,7 +260,7 @@ namespace Kinetix
 		{
 			if (poseInterpretor.Count == 0)
 			{
-				return new KinetixPose(new TransformData[0], new HumanBodyBones[0], null, default, default);
+				return new KinetixPose(new List<TransformData>(), new List<HumanBodyBones>(), null, default, default);
 			}
 
 			return poseInterpretor[0].GetPose();

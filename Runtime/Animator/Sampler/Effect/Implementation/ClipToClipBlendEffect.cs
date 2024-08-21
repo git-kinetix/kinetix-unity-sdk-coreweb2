@@ -12,7 +12,7 @@ namespace Kinetix.Internal
 	/// <summary>
 	/// An effect that blends <see cref="KinetixClip"/> between them
 	/// </summary>
-	public class ClipToClipBlendEffect : ABlending, IFrameEffectModify, ISamplerAuthority
+	public class ClipToClipBlendEffect : AInterpolationEffect, IFrameEffectModify, ISamplerAuthority
 	{
 		// How does it work :
 		//
@@ -23,15 +23,16 @@ namespace Kinetix.Internal
 		// clip 3 :                   |-----------|
 
 		private bool isPlaying = false;
+		public bool IsEnabled { get; set; } = true;
 
 		/// <summary>
-		/// Blend duration in seconds
+		/// Lerp duration in seconds
 		/// </summary>
 		public float blendDuration;
 
 		public int Priority => 100;
 
-		/// <param name="_BlendDuration">Blend duration in seconds</param>
+		/// <param name="_BlendDuration">Lerp duration in seconds</param>
 		public ClipToClipBlendEffect(float _BlendDuration = 1f)
 		{
 			this.blendDuration = _BlendDuration;
@@ -40,6 +41,7 @@ namespace Kinetix.Internal
 		/// <inheritdoc/>
 		public void OnPlayedFrame(ref KinetixFrame _FinalFrame, KinetixFrame[] _Frames, in KinetixClipTrack[] _Tracks)
         {
+			if (!IsEnabled) return;
 			if (!isPlaying) return;
 
 			float elapsedTime = Authority.GetQueueElapsedTime();

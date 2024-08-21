@@ -769,6 +769,45 @@ namespace Kinetix.Internal
 		}
 
 		/// <summary>
+		/// Enable or Disable blendshapes animation on a local Character
+		/// </summary>
+		/// <param name="_PlayerUUID">UUID of the avatar</param>
+		/// <param name="_Active">True to enable the blenshapes animation</param>
+		public void SetBlendshapeActiveOnAvatar(string _PlayerUUID, bool _Active)
+		{
+			KinetixAnimationBehaviour.SetBlendshapeActiveOnAvatar(_PlayerUUID, _Active);
+		}
+
+		/// <summary>
+		/// Get if blendshapes animation is enabled on a local Character
+		/// </summary>
+		/// <param name="_PlayerUUID">UUID of the avatar</param>
+		/// <returns>True if the blenshapes animation is enabled</returns>
+		public bool GetBlendshapeActiveOnAvatar(string _PlayerUUID)
+		{
+			return KinetixAnimationBehaviour.GetBlendshapeActiveOnAvatar(_PlayerUUID);
+		}
+
+
+		/// <summary>
+		/// Enable or Disable blendshapes animation on a local Character
+		/// </summary>
+		/// <param name="_Active">True to enable the blenshapes animation</param>
+		public void SetBlendshapeActiveOnLocalPlayer(bool _Active)
+		{
+			KinetixAnimationBehaviour.SetBlendshapeActiveOnLocalPlayer(_Active);
+		}
+
+		/// <summary>
+		/// Get if blendshapes animation is enabled on the local Player
+		/// </summary>
+		/// <returns>True if the blenshapes animation is enabled</returns>
+		public bool GetBlendshapeActiveOnLocalPlayer()
+		{
+			return KinetixAnimationBehaviour.GetBlendshapeActiveOnLocalPlayer();
+		}
+
+		/// <summary>
 		/// Pause or Resume the kinetix animator on local Player
 		/// </summary>
 		/// <param name="_Paused">If true, pause the kinetix animator. If false, resume the kinetix animator</param>
@@ -1026,7 +1065,7 @@ namespace Kinetix.Internal
 		{
 			return KinetixAnimationBehaviour.GetAvatarKCC(_PlayerUUID);
 		}
-
+		
 		/// <summary>
 		/// Get the UUID of every Characters and the local Player
 		/// </summary>
@@ -1045,8 +1084,383 @@ namespace Kinetix.Internal
 			return KinetixAnimationBehaviour.IsLocalPlayerRegistered();
 		}
 
-		#region Internal
+		/// <summary>
+		/// Register the event "OnBeforeIkEffect" on the local Player
+		/// </summary>
+		/// <param name="_OnBeforeIkEffect">This event is called before computing the IK. You can use it to modify the IK position</param>
+		public void RegisterIkEventOnLocalPlayer(IKEffect.DelegateBeforeIkEffect _OnBeforeIkEffect)
+		{
+			KinetixAnimationBehaviour.RegisterIkEventOnLocalPlayer(_OnBeforeIkEffect);
+		}
 
+		/// <summary>
+		/// Unregister the event "OnBeforeIkEffect" on the local Player
+		/// </summary>
+		/// <param name="_OnBeforeIkEffect">Event to unregister</param>
+		public void UnregisterIkEventOnLocalPlayer(IKEffect.DelegateBeforeIkEffect _OnBeforeIkEffect)
+		{
+			KinetixAnimationBehaviour.UnregisterIkEventOnLocalPlayer(_OnBeforeIkEffect);
+		}
+
+		/// <summary>
+		/// Get the position of the hint (Knee or Elbow) on the local Player
+		/// </summary>
+		/// <param name="_Hint">Select which Knee or Elbow to get</param>
+		/// <returns>The position of the <paramref name="_Hint"/> in global context</returns>
+		public Vector3 GetIKHintPositionOnLocalPlayer(AvatarIKHint _Hint)
+		{
+			return KinetixAnimationBehaviour.GetIKHintPositionOnLocalPlayer(_Hint);
+		}
+
+		/// <summary>
+		/// Get the target IK position of a member (Hand or Foot) on the local Player
+		/// </summary>
+		/// <param name="_Goal">Select which Hand or Foot to get</param>
+		/// <returns>The position of the <paramref name="_Goal"/> in global context</returns>
+		public Vector3 GetIKPositionOnLocalPlayer(AvatarIKGoal _Goal)
+		{
+			return KinetixAnimationBehaviour.GetIKPositionOnLocalPlayer(_Goal);
+		}
+
+		/// <summary>
+		/// Get the IK position weight of a member (Hand or Foot) on the local Player
+		/// </summary>
+		/// <param name="_Goal">Select which Hand or Foot to get</param>
+		/// <returns>The weight of the IK position.<br/>
+		/// 0 = no IK<br/>
+		/// 1 = full IK<br/>
+		/// </returns>
+		public float GetIKPositionWeightOnLocalPlayer(AvatarIKGoal _Goal)
+		{
+			return KinetixAnimationBehaviour.GetIKPositionWeightOnLocalPlayer(_Goal);
+		}
+
+		/// <summary>
+		/// Get the target IK rotation of a member (Hand or Foot) on the local Player
+		/// </summary>
+		/// <param name="_Goal">Select which Hand or Foot to get</param>
+		/// <returns>The rotation of the <paramref name="_Goal"/> in global context.</returns>
+		public Quaternion GetIKRotationOnLocalPlayer(AvatarIKGoal _Goal)
+		{
+			return KinetixAnimationBehaviour.GetIKRotationOnLocalPlayer(_Goal);
+		}
+
+		/// <summary>
+		/// Get the IK rotation weight of a member (Hand or Foot) on the local Player
+		/// </summary>
+		/// <param name="_Goal">Select which Hand or Foot to get</param>
+		/// <returns>The weight of the IK rotation.<br/>
+		/// 0 = no IK<br/>
+		/// 1 = full IK<br/>
+		/// </returns>
+		public float GetIKRotationWeightOnLocalPlayer(AvatarIKGoal _Goal)
+		{
+			return KinetixAnimationBehaviour.GetIKRotationWeightOnLocalPlayer(_Goal);
+		}
+
+		/// <summary>
+		/// Set the position of the hint (Knee or Elbow) on the local Player
+		/// </summary>
+		/// <param name="_Hint">Select which Knee or Elbow to set</param>
+		/// <param name="_Value">The position of the <paramref name="_Hint"/> in global context</param>
+		public void SetIKHintPositionOnLocalPlayer(AvatarIKHint _Hint, Vector3 _Value)
+		{
+			KinetixAnimationBehaviour.SetIKHintPositionOnLocalPlayer(_Hint, _Value);
+		}
+
+		/// <summary>
+		/// Get if the member (Hand or Foot) on the local Player will move the hips in order to stay in place
+		/// </summary>
+		/// <param name="_Goal">Select which Hand or Foot to get</param>
+		/// <returns>True if the member (Hand or Foot) will stay in place and move the hips</returns>
+		public bool GetIKAdjustHipsOnLocalPlayer(AvatarIKGoal _Goal)
+		{
+			return KinetixAnimationBehaviour.GetIKAdjustHipsOnLocalPlayer(_Goal);
+		}
+
+		/// <summary>
+		/// Set if the member (Hand or Foot) on the local Player will move the hips in order to stay in place
+		/// </summary>
+		/// <param name="_Goal">Select which Hand or Foot to set</param>
+		/// <returns>True if the member (Hand or Foot) will stay in place and move the hips</returns>
+		public void SetIKAdjustHipsOnLocalPlayer(AvatarIKGoal _Goal, bool _Value)
+		{
+			KinetixAnimationBehaviour.SetIKAdjustHipsOnLocalPlayer(_Goal, _Value);
+		}
+
+		/// <summary>
+		/// Get if the member (Hand or Foot) on the local Player will move the hips in order to stay in place
+		/// </summary>
+		/// <param name="_PlayerUUID">UUID of the avatar</param>
+		/// <param name="_Goal">Select which Hand or Foot to get</param>
+		/// <returns>True if the member (Hand or Foot) will stay in place and move the hips</returns>
+		public bool GetIKAdjustHipsOnAvatar(string _PlayerUUID, AvatarIKGoal _Goal)
+		{
+			return KinetixAnimationBehaviour.GetIKAdjustHipsOnAvatar(_PlayerUUID, _Goal);
+		}
+
+		/// <summary>
+		/// Set if the member (Hand or Foot) on the local Player will move the hips in order to stay in place
+		/// </summary>
+		/// <param name="_PlayerUUID">UUID of the avatar</param>
+		/// <param name="_Goal">Select which Hand or Foot to set</param>
+		/// <returns>True if the member (Hand or Foot) will stay in place and move the hips</returns>
+		public void SetIKAdjustHipsOnAvatar(string _PlayerUUID, AvatarIKGoal _Goal, bool _Value)
+		{
+			KinetixAnimationBehaviour.SetIKAdjustHipsOnAvatar(_PlayerUUID, _Goal, _Value);
+		}
+
+		/// <summary>
+		/// Set the target IK position of a member (Hand or Foot) on the local Player
+		/// </summary>
+		/// <param name="_Goal">Select which Hand or Foot to set</param>
+		/// <param name="_Value">The position of the <paramref name="_Goal"/> in global context</param>
+		public void SetIKPositionOnLocalPlayer(AvatarIKGoal _Goal, Vector3 _Value)
+		{
+			KinetixAnimationBehaviour.SetIKPositionOnLocalPlayer(_Goal, _Value);
+		}
+
+		/// <summary>
+		/// Set the target IK position and position weight of a member (Hand or Foot) on the local Player.
+		/// </summary>
+		/// <param name="_Goal">Select which Hand or Foot to set</param>
+		/// <param name="_Position">The position of the <paramref name="_Goal"/> in global context</param>
+		/// <param name="_Weight">The weight of the IK position.<br/>
+		/// 0 = no IK<br/>
+		/// 1 = full IK<br/>
+		/// </param>
+		public void SetIKPositionAndWeightOnLocalPlayer(AvatarIKGoal _Goal, Vector3 _Position, float _Weight)
+		{
+			KinetixAnimationBehaviour.SetIKPositionOnLocalPlayer(_Goal, _Position);
+			KinetixAnimationBehaviour.SetIKPositionWeightOnLocalPlayer(_Goal, _Weight);
+		}
+
+		/// <summary>
+		/// Set the IK position weight of a member (Hand or Foot) on the local Player
+		/// </summary>
+		/// <param name="_Goal">Select which Hand or Foot to set</param>
+		/// <param name="_Value">The weight of the IK position.<br/>
+		/// 0 = no IK<br/>
+		/// 1 = full IK<br/>
+		/// </param>
+		public void SetIKPositionWeightOnLocalPlayer(AvatarIKGoal _Goal, float _Value)
+		{
+			KinetixAnimationBehaviour.SetIKPositionWeightOnLocalPlayer(_Goal, _Value);
+		}
+
+		/// <summary>
+		/// Set the target IK rotation of a member (Hand or Foot) on the local Player
+		/// </summary>
+		/// <param name="_Goal">Select which Hand or Foot to set</param>
+		/// <param name="_Value">The rotation of the <paramref name="_Goal"/> in global context.</param>
+		public void SetIKRotationOnLocalPlayer(AvatarIKGoal _Goal, Quaternion _Value)
+		{
+			KinetixAnimationBehaviour.SetIKRotationOnLocalPlayer(_Goal, _Value);
+		}
+
+		/// <summary>
+		/// Set the target IK rotation and rotation weight of a member (Hand or Foot) on a local Character
+		/// </summary>
+		/// <param name="_Goal">Select which Hand or Foot to set</param>
+		/// <param name="_Rotation">The rotation of the <paramref name="_Goal"/> in global context.</param>
+		/// <param name="_Weight">The weight of the IK rotation.<br/>
+		/// 0 = no IK<br/>
+		/// 1 = full IK<br/>
+		/// </param>
+		public void SetIKRotationAndWeightOnLocalPlayer(AvatarIKGoal _Goal, Quaternion _Rotation, float _Weight)
+		{
+			KinetixAnimationBehaviour.SetIKRotationOnLocalPlayer(_Goal, _Rotation);
+			KinetixAnimationBehaviour.SetIKRotationWeightOnLocalPlayer(_Goal, _Weight);
+		}
+
+		/// <summary>
+		/// Set the IK rotation weight of a member (Hand or Foot) on the local Player
+		/// </summary>
+		/// <param name="_Goal">Select which Hand or Foot to set</param>
+		/// <param name="_Value">The weight of the IK rotation.<br/>
+		/// 0 = no IK<br/>
+		/// 1 = full IK<br/>
+		/// </param>
+		public void SetIKRotationWeightOnLocalPlayer(AvatarIKGoal _Goal, float _Value)
+		{
+			KinetixAnimationBehaviour.SetIKRotationWeightOnLocalPlayer(_Goal, _Value);
+		}
+		/// <summary>
+		/// Register the event "OnBeforeIkEffect" on a local Character
+		/// </summary
+		/// <param name="_PlayerUUID">UUID of the avatar</param>
+		/// <param name="_OnBeforeIkEffect">This event is called before computing the IK. You can use it to modify the IK position</param>
+		public void RegisterIkEventOnAvatar(string _PlayerUUID, IKEffect.DelegateBeforeIkEffect _OnBeforeIkEffect)
+		{
+			KinetixAnimationBehaviour.RegisterIkEventOnAvatar(_PlayerUUID, _OnBeforeIkEffect);
+		}
+
+		/// <summary>
+		/// Unregister the event "OnBeforeIkEffect" on a local Character
+		/// </summary>
+		/// <param name="_PlayerUUID">UUID of the avatar</param>
+		/// <param name="_OnBeforeIkEffect">Event to unregister</param>
+		public void UnregisterIkEventOnAvatar(string _PlayerUUID, IKEffect.DelegateBeforeIkEffect _OnBeforeIkEffect)
+		{
+			KinetixAnimationBehaviour.UnregisterIkEventOnAvatar(_PlayerUUID, _OnBeforeIkEffect);
+		}
+
+		/// <summary>
+		/// Get the position of the hint (Knee or Elbow) on a local Character
+		/// </summary>
+		/// <param name="_PlayerUUID">UUID of the avatar</param>
+		/// <param name="_Hint">Select which Knee or Elbow to get</param>
+		/// <returns>The position of the <paramref name="_Hint"/> in global context</returns>
+		public Vector3 GetIKHintPositionOnAvatar(string _PlayerUUID, AvatarIKHint _Hint)
+		{
+			return KinetixAnimationBehaviour.GetIKHintPositionOnAvatar(_PlayerUUID, _Hint);
+		}
+
+		/// <summary>
+		/// Get the target IK position of a member (Hand or Foot) on a local Character
+		/// </summary>
+		/// <param name="_PlayerUUID">UUID of the avatar</param>
+		/// <param name="_Goal">Select which Hand or Foot to get</param>
+		/// <returns>The position of the <paramref name="_Goal"/> in global context</returns>
+		public Vector3 GetIKPositionOnAvatar(string _PlayerUUID, AvatarIKGoal _Goal)
+		{
+			return KinetixAnimationBehaviour.GetIKPositionOnAvatar(_PlayerUUID, _Goal);
+		}
+
+		/// <summary>
+		/// Get the IK position weight of a member (Hand or Foot) on a local Character
+		/// </summary>
+		/// <param name="_PlayerUUID">UUID of the avatar</param>
+		/// <param name="_Goal">Select which Hand or Foot to get</param>
+		/// <returns>The weight of the IK position.<br/>
+		/// 0 = no IK<br/>
+		/// 1 = full IK<br/>
+		/// </returns>
+		public float GetIKPositionWeightOnAvatar(string _PlayerUUID, AvatarIKGoal _Goal)
+		{
+			return KinetixAnimationBehaviour.GetIKPositionWeightOnAvatar(_PlayerUUID, _Goal);
+		}
+
+		/// <summary>
+		/// Get the target IK rotation of a member (Hand or Foot) on a local Character
+		/// </summary>
+		/// <param name="_PlayerUUID">UUID of the avatar</param>
+		/// <param name="_Goal">Select which Hand or Foot to get</param>
+		/// <returns>The rotation of the <paramref name="_Goal"/> in global context.</returns>
+		public Quaternion GetIKRotationOnAvatar(string _PlayerUUID, AvatarIKGoal _Goal)
+		{
+			return KinetixAnimationBehaviour.GetIKRotationOnAvatar(_PlayerUUID, _Goal);
+		}
+
+		/// <summary>
+		/// Get the IK rotation weight of a member (Hand or Foot) on a local Character
+		/// </summary>
+		/// <param name="_PlayerUUID">UUID of the avatar</param>
+		/// <param name="_Goal">Select which Hand or Foot to get</param>
+		/// <returns>The weight of the IK rotation.<br/>
+		/// 0 = no IK<br/>
+		/// 1 = full IK<br/>
+		/// </returns>
+		public float GetIKRotationWeightOnAvatar(string _PlayerUUID, AvatarIKGoal _Goal)
+		{
+			return KinetixAnimationBehaviour.GetIKRotationWeightOnAvatar(_PlayerUUID, _Goal);
+		}
+
+		/// <summary>
+		/// Set the position of the hint (Knee or Elbow) on a local Character
+		/// </summary>
+		/// <param name="_PlayerUUID">UUID of the avatar</param>
+		/// <param name="_Hint">Select which Knee or Elbow to set</param>
+		/// <param name="_Value">The position of the <paramref name="_Hint"/> in global context</param>
+		public void SetIKHintPositionOnAvatar(string _PlayerUUID, AvatarIKHint _Hint, Vector3 _Value)
+		{
+			KinetixAnimationBehaviour.SetIKHintPositionOnAvatar(_PlayerUUID, _Hint, _Value);
+		}
+
+		/// <summary>
+		/// Set the target IK position of a member (Hand or Foot) on a local Character
+		/// </summary>
+		/// <param name="_PlayerUUID">UUID of the avatar</param>
+		/// <param name="_Goal">Select which Hand or Foot to set</param>
+		/// <param name="_Value">The position of the <paramref name="_Goal"/> in global context</param>
+		public void SetIKPositionOnAvatar(string _PlayerUUID, AvatarIKGoal _Goal, Vector3 _Value)
+		{
+			KinetixAnimationBehaviour.SetIKPositionOnAvatar(_PlayerUUID, _Goal, _Value);
+		}
+
+		/// <summary>
+		/// Set the target IK position and position weight of a member (Hand or Foot) on a local Character.
+		/// </summary>
+		/// <param name="_PlayerUUID">UUID of the avatar</param>
+		/// <param name="_Goal">Select which Hand or Foot to set</param>
+		/// <param name="_Position">The position of the <paramref name="_Goal"/> in global context</param>
+		/// <param name="_Weight">The weight of the IK position.<br/>
+		/// 0 = no IK<br/>
+		/// 1 = full IK<br/>
+		/// </param>
+		public void SetIKPositionAndWeightOnAvatar(string _PlayerUUID, AvatarIKGoal _Goal, Vector3 _Position, float _Weight)
+		{
+			KinetixAnimationBehaviour.SetIKPositionOnAvatar(_PlayerUUID, _Goal, _Position);
+			KinetixAnimationBehaviour.SetIKPositionWeightOnAvatar(_PlayerUUID, _Goal, _Weight);
+		}
+
+		/// <summary>
+		/// Set the IK position weight of a member (Hand or Foot) on a local Character
+		/// </summary>
+		/// <param name="_PlayerUUID">UUID of the avatar</param>
+		/// <param name="_Goal">Select which Hand or Foot to set</param>
+		/// <param name="_Value">The weight of the IK position.<br/>
+		/// 0 = no IK<br/>
+		/// 1 = full IK<br/>
+		/// </param>
+		public void SetIKPositionWeightOnAvatar(string _PlayerUUID, AvatarIKGoal _Goal, float _Value)
+		{
+			KinetixAnimationBehaviour.SetIKPositionWeightOnAvatar(_PlayerUUID, _Goal, _Value);
+		}
+
+		/// <summary>
+		/// Set the target IK rotation of a member (Hand or Foot) on a local Character
+		/// </summary>
+		/// <param name="_PlayerUUID">UUID of the avatar</param>
+		/// <param name="_Goal">Select which Hand or Foot to set</param>
+		/// <param name="_Value">The rotation of the <paramref name="_Goal"/> in global context.</param>
+		public void SetIKRotationOnAvatar(string _PlayerUUID, AvatarIKGoal _Goal, Quaternion _Value)
+		{
+			KinetixAnimationBehaviour.SetIKRotationOnAvatar(_PlayerUUID, _Goal, _Value);
+		}
+
+		/// <summary>
+		/// Set the target IK rotation and rotation weight of a member (Hand or Foot) on a local Character
+		/// </summary>
+		/// <param name="_PlayerUUID">UUID of the avatar</param>
+		/// <param name="_Goal">Select which Hand or Foot to set</param>
+		/// <param name="_Rotation">The rotation of the <paramref name="_Goal"/> in global context.</param>
+		/// <param name="_Weight">The weight of the IK rotation.<br/>
+		/// 0 = no IK<br/>
+		/// 1 = full IK<br/>
+		/// </param>
+		public void SetIKRotationAndWeightOnAvatar(string _PlayerUUID, AvatarIKGoal _Goal, Quaternion _Rotation, float _Weight)
+		{
+			KinetixAnimationBehaviour.SetIKRotationOnAvatar(_PlayerUUID, _Goal, _Rotation);
+			KinetixAnimationBehaviour.SetIKRotationWeightOnAvatar(_PlayerUUID, _Goal, _Weight);
+		}
+
+		/// <summary>
+		/// Set the IK rotation weight of a member (Hand or Foot) on a local Character
+		/// </summary>
+		/// <param name="_PlayerUUID">UUID of the avatar</param>
+		/// <param name="_Goal">Select which Hand or Foot to set</param>
+		/// <param name="_Value">The weight of the IK rotation.<br/>
+		/// 0 = no IK<br/>
+		/// 1 = full IK<br/>
+		/// </param>
+		public void SetIKRotationWeightOnAvatar(string _PlayerUUID, AvatarIKGoal _Goal, float _Value)
+		{
+			KinetixAnimationBehaviour.SetIKRotationWeightOnAvatar(_PlayerUUID, _Goal, _Value);
+		}
+
+
+		#region Internal
 		public KinetixAnimation()
 		{
 			KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().OnAnimationStartOnLocalPlayerAnimator += AnimationStartOnLocalPlayerAnimator;

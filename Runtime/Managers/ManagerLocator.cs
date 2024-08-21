@@ -30,5 +30,14 @@ namespace Kinetix.Internal
 
             return (TManager) returnValue;
         }
+
+        public IKinetixManager Get(Type type)
+        {
+			IKinetixManager returnValue;
+
+            managers.TryGetValue(type, out returnValue);
+
+            return returnValue;
+        }
     }
 }

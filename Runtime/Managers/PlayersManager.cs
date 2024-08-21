@@ -149,6 +149,8 @@ namespace Kinetix.Internal
 			return players.Find((player) => player.UUID == _PlayerUUID);
 		}
 
+		#region Frame Controller
+
 		public void PlayAnimation(int _PlayerIndex, AnimationIds _Ids, Action<AnimationIds> _OnPlayedAnimation)
 			=> PlayAnimation(_PlayerIndex, _Ids, AnimationTimeRange.Default, _OnPlayedAnimation);
 		public void PlayAnimation(int _PlayerIndex, AnimationIds _Ids, AnimationTimeRange _AnimationTimeRange, Action<AnimationIds> _OnPlayedAnimation)
@@ -185,6 +187,19 @@ namespace Kinetix.Internal
 			PlayerManager player = players.Find((player) => player.UUID == _PlayerUUID);
 			player.StopAnimation();
 		}
+
+		public void SetBlendshapeActive(string _PlayerUUID, bool _Active)
+		{
+			PlayerManager player = players.Find((player) => player.UUID == _PlayerUUID);
+			player.SetBlendshapeActive(_Active);
+		}
+		public bool GetBlendshapeActive(string _PlayerUUID)
+		{
+			PlayerManager player = players.Find((player) => player.UUID == _PlayerUUID);
+			return player.GetBlendshapeActive();
+        }
+        public void SetBlendshapeActiveOnLocalPlayer(bool _Active) => localPlayer.SetBlendshapeActive(_Active);
+		public bool GetBlendshapeActiveOnLocalPlayer() => localPlayer.GetBlendshapeActive();
 
 		public void SetPause(string _PlayerUUID, bool _Paused)
 		{
@@ -247,12 +262,12 @@ namespace Kinetix.Internal
 			player.SetLoopAnimation(_Looping);
 		}
 
-        public void SetLoopAnimationOnLocalPlayer(bool _Looping)
-        {
-            localPlayer.SetLoopAnimation(_Looping);
-        }
+		public void SetLoopAnimationOnLocalPlayer(bool _Looping)
+		{
+			localPlayer.SetLoopAnimation(_Looping);
+		}
 
-        public bool GetIsLoopingAnimation(string _PlayerUUID)
+		public bool GetIsLoopingAnimation(string _PlayerUUID)
 		{
 			PlayerManager player = players.Find((player) => player.UUID == _PlayerUUID);
 			return player.GetIsLoopingAnimation();
@@ -262,9 +277,219 @@ namespace Kinetix.Internal
 		{
 			return localPlayer.GetIsLoopingAnimation();
 		}
+		#endregion
 
+		//===========================//
+		// IK Controller             //
+		//===========================//
+		#region IK Controller
 
-		public KinetixCharacterComponentLocal GetLocalKCC()
+		/* == == ==  == == == */
+		/* == Local Player == */
+		/* == == ==  == == == */
+
+		/* Event */
+		public void RegisterIkEventOnLocalPlayer(IKEffect.DelegateBeforeIkEffect _OnBeforeIkEffect)
+		{
+			localPlayer.RegisterIkEvent(_OnBeforeIkEffect);
+		}
+
+		public void UnregisterIkEventOnLocalPlayer(IKEffect.DelegateBeforeIkEffect _OnBeforeIkEffect)
+		{
+			localPlayer.UnregisterIkEvent(_OnBeforeIkEffect);
+		}
+
+		public void UnregisterAllIkEventsOnLocalPlayer()
+		{
+			localPlayer.UnregisterAllIkEvents();
+		}
+
+		/* GET */
+		public Vector3 GetIKHintPositionOnLocalPlayer(AvatarIKHint _Hint)
+		{
+			return localPlayer.GetIKHintPosition(_Hint);
+		}
+
+		public Vector3 GetIKPositionOnLocalPlayer(AvatarIKGoal _Goal)
+		{
+			return localPlayer.GetIKPosition(_Goal);
+		}
+
+		public float GetIKPositionWeightOnLocalPlayer(AvatarIKGoal _Goal)
+		{
+			return localPlayer.GetIKPositionWeight(_Goal);
+		}
+
+		public Quaternion GetIKRotationOnLocalPlayer(AvatarIKGoal _Goal)
+		{
+			return localPlayer.GetIKRotation(_Goal);
+		}
+
+		public float GetIKRotationWeightOnLocalPlayer(AvatarIKGoal _Goal)
+		{
+			return localPlayer.GetIKRotationWeight(_Goal);
+		}
+
+		public bool GetIKAdjustHipsOnLocalPlayer(AvatarIKGoal _Goal)
+		{
+			return localPlayer.GetIKAdjustHips(_Goal);
+		}
+
+		/* SET */
+		public void SetIKHintPositionOnLocalPlayer(AvatarIKHint _Hint, Vector3 _Value)
+		{
+			localPlayer.SetIKHintPosition(_Hint, _Value);
+		}
+
+		public void SetIKPositionOnLocalPlayer(AvatarIKGoal _Goal, Vector3 _Value)
+		{
+			localPlayer.SetIKPosition(_Goal, _Value);
+		}
+
+		public void SetIKPositionWeightOnLocalPlayer(AvatarIKGoal _Goal, float _Value)
+		{
+			localPlayer.SetIKPositionWeight(_Goal, _Value);
+		}
+
+		public void SetIKRotationOnLocalPlayer(AvatarIKGoal _Goal, Quaternion _Value)
+		{
+			localPlayer.SetIKRotation(_Goal, _Value);
+		}
+
+		public void SetIKRotationWeightOnLocalPlayer(AvatarIKGoal _Goal, float _Value)
+		{
+			localPlayer.SetIKRotationWeight(_Goal, _Value);
+		}
+
+		public void SetIKAdjustHipsOnLocalPlayer(AvatarIKGoal _Goal, bool _Value)
+		{
+			localPlayer.SetIKAdjustHips(_Goal, _Value);
+		}
+
+		/* == ==  == == */
+		/* == Avatar == */
+		/* == ==  == == */
+
+		/* Event */
+		public void RegisterIkEvent(string _PlayerUUID, IKEffect.DelegateBeforeIkEffect _OnBeforeIkEffect)
+		{
+			PlayerManager player = players.Find((player) => player.UUID == _PlayerUUID);
+			player.RegisterIkEvent(_OnBeforeIkEffect);
+		}
+
+		public void UnregisterIkEvent(string _PlayerUUID, IKEffect.DelegateBeforeIkEffect _OnBeforeIkEffect)
+		{
+			PlayerManager player = players.Find((player) => player.UUID == _PlayerUUID);
+			player.UnregisterIkEvent(_OnBeforeIkEffect);
+		}
+
+		public void UnregisterAllIkEvents(string _PlayerUUID)
+		{
+			PlayerManager player = players.Find((player) => player.UUID == _PlayerUUID);
+			player.UnregisterAllIkEvents();
+		}
+
+		/* GET */
+		public Vector3 GetIKHintPosition(string _PlayerUUID, AvatarIKHint _Hint)
+		{
+			PlayerManager player = players.Find((player) => player.UUID == _PlayerUUID);
+			return player.GetIKHintPosition(_Hint);
+		}
+
+		public Vector3 GetIKPosition(string _PlayerUUID, AvatarIKGoal _Goal)
+		{
+			PlayerManager player = players.Find((player) => player.UUID == _PlayerUUID);
+			return player.GetIKPosition(_Goal);
+		}
+
+		public float GetIKPositionWeight(string _PlayerUUID, AvatarIKGoal _Goal)
+		{
+			PlayerManager player = players.Find((player) => player.UUID == _PlayerUUID);
+			return player.GetIKPositionWeight(_Goal);
+		}
+
+		public Quaternion GetIKRotation(string _PlayerUUID, AvatarIKGoal _Goal)
+		{
+			PlayerManager player = players.Find((player) => player.UUID == _PlayerUUID);
+			return player.GetIKRotation(_Goal);
+		}
+
+		public float GetIKRotationWeight(string _PlayerUUID, AvatarIKGoal _Goal)
+		{
+			PlayerManager player = players.Find((player) => player.UUID == _PlayerUUID);
+			return player.GetIKRotationWeight(_Goal);
+		}
+
+		public bool GetIKAdjustHips(string _PlayerUUID, AvatarIKGoal _Goal)
+		{
+
+			PlayerManager player = players.Find((player) => player.UUID == _PlayerUUID);
+			return player.GetIKAdjustHips(_Goal);
+		}
+
+		/* SET */
+		public void SetIKHintPosition(string _PlayerUUID, AvatarIKHint _Hint, Vector3 _Value)
+		{
+			PlayerManager player = players.Find((player) => player.UUID == _PlayerUUID);
+			player.SetIKHintPosition(_Hint, _Value);
+		}
+
+		public void SetIKPosition(string _PlayerUUID, AvatarIKGoal _Goal, Vector3 _Value)
+		{
+			PlayerManager player = players.Find((player) => player.UUID == _PlayerUUID);
+			player.SetIKPosition(_Goal, _Value);
+		}
+
+		public void SetIKPositionWeight(string _PlayerUUID, AvatarIKGoal _Goal, float _Value)
+		{
+			PlayerManager player = players.Find((player) => player.UUID == _PlayerUUID);
+			player.SetIKPositionWeight(_Goal, _Value);
+		}
+
+		public void SetIKRotation(string _PlayerUUID, AvatarIKGoal _Goal, Quaternion _Value)
+		{
+			PlayerManager player = players.Find((player) => player.UUID == _PlayerUUID);
+			player.SetIKRotation(_Goal, _Value);
+		}
+
+		public void SetIKRotationWeight(string _PlayerUUID, AvatarIKGoal _Goal, float _Value)
+		{
+			PlayerManager player = players.Find((player) => player.UUID == _PlayerUUID);
+			player.SetIKRotationWeight(_Goal, _Value);
+		}
+
+		public void SetIKAdjustHips(string _PlayerUUID, AvatarIKGoal _Goal, bool _Value)
+		{
+
+			PlayerManager player = players.Find((player) => player.UUID == _PlayerUUID);
+			player.SetIKAdjustHips(_Goal, _Value);
+		}
+		#endregion
+
+		//=====================================//
+		// Mask                                //
+		//=====================================//
+		#region Mask
+		public void SetMaskOnLocalPlayer(KinetixMask _Mask) => localPlayer.SetMask(_Mask);
+		public KinetixMask GetMaskOnLocalPlayer() => localPlayer.GetMask();
+
+        public void SetMask(string _PlayerUUID, KinetixMask _Mask)
+        {
+			PlayerManager player = players.Find((player) => player.UUID == _PlayerUUID);
+			player.SetMask(_Mask);
+        }
+
+        public KinetixMask GetMask(string _PlayerUUID)
+		{
+			PlayerManager player = players.Find((player) => player.UUID == _PlayerUUID);
+			return player.GetMask();
+        }
+        #endregion
+
+        //=====================================//
+        // Other                               //
+        //=====================================//
+        public KinetixCharacterComponentLocal GetLocalKCC()
 		{
 			return localPlayer?.GetKCC();
 		}
@@ -354,6 +579,6 @@ namespace Kinetix.Internal
 			OnAnimationEndOnLocalPlayerAnimator?.Invoke(_AnimationIds);
 		}
 
-        #endregion
-    }
+		#endregion
+	}
 }

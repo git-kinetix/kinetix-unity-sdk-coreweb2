@@ -1,15 +1,13 @@
 // // ----------------------------------------------------------------------------
-// // <copyright file="KinetixPlayerCache.cs" company="Kinetix SAS">
+// // <copyright file="PlayerManager.cs" company="Kinetix SAS">
 // // Kinetix Unity SDK - Copyright (C) 2022 Kinetix SAS
 // // </copyright>
 // // ----------------------------------------------------------------------------
 
 using Kinetix.Internal.Retargeting;
 using Kinetix.Internal.Utils;
-using Kinetix.Utils;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 namespace Kinetix.Internal.Cache
@@ -498,10 +496,17 @@ namespace Kinetix.Internal.Cache
 			return downloadedEmotesReadyToPlay.ToArray();
 		}
 
+		//=====================================//
+		// Frame Controller                    //
+		//=====================================//
+		#region FrameController
 		public void SetLoopAnimation(bool _Looping) => KinetixCharacterComponent.SetLoopAnimation(_Looping);
 		public bool GetIsLoopingAnimation() => KinetixCharacterComponent.GetIsLoopingAnimation();
 
-		public void SetPause(bool _Paused) => KinetixCharacterComponent.SetPause(_Paused);
+        public void SetBlendshapeActive(bool _Active) => KinetixCharacterComponent.SetBlendshapeActive(_Active);
+        public bool GetBlendshapeActive() => KinetixCharacterComponent.GetBlendshapeActive();
+
+        public void SetPause(bool _Paused) => KinetixCharacterComponent.SetPause(_Paused);
 		public void SetPlayRate(float _PlayRate) => KinetixCharacterComponent.SetPlayRate(_PlayRate);
 		public void GetPlayRate() => KinetixCharacterComponent.GetPlayRate();
 		public void SetElapsedTime(float _ElapsedTime) => KinetixCharacterComponent.SetElapsedTime(_ElapsedTime);
@@ -547,7 +552,45 @@ namespace Kinetix.Internal.Cache
 			if (playAutomaticallyOnAnimator)
 				KinetixCharacterComponent.StopAnimation();
 		}
-		
+		#endregion
+
+		//=====================================//
+		// IK Controller                       //
+		//=====================================//
+		#region IK Controller
+		/* Event */
+		public void RegisterIkEvent(IKEffect.DelegateBeforeIkEffect _OnBeforeIkEffect)   => KinetixCharacterComponent.RegisterIkEvent(_OnBeforeIkEffect);
+		public void UnregisterIkEvent(IKEffect.DelegateBeforeIkEffect _OnBeforeIkEffect) => KinetixCharacterComponent.UnregisterIkEvent(_OnBeforeIkEffect);
+		public void UnregisterAllIkEvents() => KinetixCharacterComponent.UnregisterAllIkEvents();
+
+		/* GET */
+		public Vector3 GetIKHintPosition(AvatarIKHint _Hint) => KinetixCharacterComponent.GetIKHintPosition(_Hint);
+		public Vector3 GetIKPosition(AvatarIKGoal _Goal)     => KinetixCharacterComponent.GetIKPosition(_Goal);
+		public float GetIKPositionWeight(AvatarIKGoal _Goal) => KinetixCharacterComponent.GetIKPositionWeight(_Goal);
+		public Quaternion GetIKRotation(AvatarIKGoal _Goal)  => KinetixCharacterComponent.GetIKRotation(_Goal);
+		public float GetIKRotationWeight(AvatarIKGoal _Goal) => KinetixCharacterComponent.GetIKRotationWeight(_Goal);
+		public bool GetIKAdjustHips(AvatarIKGoal _Goal) => KinetixCharacterComponent.GetIKAdjustHips(_Goal);
+		/* SET */
+		public void SetIKHintPosition(AvatarIKHint _Hint, Vector3 _Value) => KinetixCharacterComponent.SetIKHintPosition(_Hint, _Value);
+		public void SetIKPosition(AvatarIKGoal _Goal, Vector3 _Value)     => KinetixCharacterComponent.SetIKPosition(_Goal, _Value);
+		public void SetIKPositionWeight(AvatarIKGoal _Goal, float _Value) => KinetixCharacterComponent.SetIKPositionWeight(_Goal, _Value);
+		public void SetIKRotation(AvatarIKGoal _Goal, Quaternion _Value)  => KinetixCharacterComponent.SetIKRotation(_Goal, _Value);
+		public void SetIKRotationWeight(AvatarIKGoal _Goal, float _Value) => KinetixCharacterComponent.SetIKRotationWeight(_Goal, _Value);
+		public void SetIKAdjustHips(AvatarIKGoal _Goal, bool _Value) => KinetixCharacterComponent.SetIKAdjustHips(_Goal, _Value);
+		#endregion
+
+		//=====================================//
+		// Mask                                //
+		//=====================================//
+		#region Mask
+		public void SetMask(KinetixMask _Mask) => KinetixCharacterComponent.SetMask(_Mask);
+
+		public KinetixMask GetMask() => KinetixCharacterComponent.GetMask();
+		#endregion
+
+		//=====================================//
+		// Other                               //
+		//=====================================//
 		private void OnRegisterPlayer()
 		{
 			foreach (KeyValuePair<AnimationIds, List<Action>> kvp in callbackOnRetargetedAnimationIdOnPlayer)

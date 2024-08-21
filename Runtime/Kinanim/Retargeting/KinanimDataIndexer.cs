@@ -20,6 +20,7 @@ namespace Kinetix.Internal.Retargeting.AnimationData
 			for (int j = 0; j < KinanimData.BLENDSHAPE_COUNT; j++)
 			{
 				dataTarget.blendshapesName[j] = ((ARKitBlendshapes)j).ToString();
+				dataTarget.blendshapesType[j] = ((ARKitBlendshapes)j);
 			}
 
 			SetDefaultFingerprint();
@@ -56,7 +57,7 @@ namespace Kinetix.Internal.Retargeting.AnimationData
 				frame.SetTransform((HumanBodyBones)Enum.Parse(typeof(HumanBodyBones), ((KinanimTransform)j).ToString()), frameData.transforms[j].ToSdkData());
 			}
 
-			if (frameData.blendshapes != null)
+			if (dataTarget.hasBlendshape && frameData.blendshapes != null)
 			{
 				for (int j = 0; j < KinanimData.BLENDSHAPE_COUNT; j++)
 				{

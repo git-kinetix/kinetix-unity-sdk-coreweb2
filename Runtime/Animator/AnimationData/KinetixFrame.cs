@@ -27,6 +27,7 @@ namespace Kinetix.Internal
 		/// </summary>
 		public readonly Dictionary<string, TransformData> resetKeys;
 		public readonly int frame;
+		public bool hasBlendshapes;
 		public float CurrentTime 
 		{ 
 			get 
@@ -46,8 +47,8 @@ namespace Kinetix.Internal
 		/// <param name="pose">Pose to duplicate as a frame</param>
 		public KinetixFrame(KinetixPose pose) : base()
 		{
-			humanTransforms = (TransformData[])pose.humanTransforms.Clone();
-			bones           = (HumanBodyBones[])pose.bones.Clone();
+			humanTransforms = new List<TransformData>(pose.humanTransforms);
+			bones           = new List<HumanBodyBones>(pose.bones);
 			blendshapes     = (BlendshapeArray)pose.blendshapes.Clone();
 			armature        = pose.armature;
 			root            = pose.root;
@@ -61,8 +62,8 @@ namespace Kinetix.Internal
 		/// <param name="frame">Frame to duplicate</param>
 		public KinetixFrame(KinetixFrame frame) : base()
 		{
-			humanTransforms = (TransformData[])frame.humanTransforms.Clone();
-			bones           = (HumanBodyBones[])frame.bones.Clone();
+			humanTransforms = new List<TransformData>(frame.humanTransforms);
+			bones           = new List<HumanBodyBones>(frame.bones);
 			blendshapes     = (BlendshapeArray)frame.blendshapes.Clone();
 			armature		= frame.armature;
 			root            = frame.root;
@@ -75,7 +76,7 @@ namespace Kinetix.Internal
 
 		/// <param name="transforms">Transforms of the frame (see: <see cref="KinetixPose.humanTransforms")/></param>
 		/// <param name="bones">Bones corrisponding to the transforms (see: <see cref="KinetixPose.bones")/></param>
-		public KinetixFrame(TransformData[] transforms, HumanBodyBones[] bones, IEnumerable<float> blendshapes) : base(transforms, bones, blendshapes, default, default)
+		public KinetixFrame(List<TransformData> transforms, List<HumanBodyBones> bones, IEnumerable<float> blendshapes) : base(transforms, bones, blendshapes, default, default)
 		{
 			resetKeys = null;
 			frame = -1;
@@ -95,10 +96,11 @@ namespace Kinetix.Internal
 			int count = clip.humanKeys.Count;
 			humanBones = new HumanBodyBones[count];
 
-			bones = new HumanBodyBones[count];
-			humanTransforms = new TransformData[count];
+			bones = new List<HumanBodyBones>(count);
+			humanTransforms = new List<TransformData>(count);
 			blendshapes = clip.blendshapeKeys.Count == 0 ? new BlendshapeArray() : new BlendshapeArray(clip.blendshapeKeys.Select(SelectBlendshape));
-			
+			hasBlendshapes = clip.hasBlendshape || (clip.blendshapeKeys != null && clip.blendshapeKeys.Count != 0);
+
 			if (frame == 0)
 			{
 				resetKeys = new Dictionary<string, TransformData>(clip.resetKeys.GetDictionary());
@@ -116,7 +118,7 @@ namespace Kinetix.Internal
 				++i;
 			}
 
-			Array.Copy(bones, humanBones, bones.Length);
+			humanBones = bones.ToArray();
 		}
 
 		/// <param name="humanBones">Bones in the animation using a cache (see: <see cref="KinetixPose.bones")/></param>
@@ -129,9 +131,11 @@ namespace Kinetix.Internal
 			CurrentTime = frame / clip.FrameRate; //s = f / (f/s)
 
 			int count = humanBones.Length;
-			bones = (HumanBodyBones[])humanBones.Clone();
-			humanTransforms = new TransformData[count];
+			bones = new List<HumanBodyBones>(humanBones);
+			humanTransforms = new List<TransformData>(count);
 			blendshapes = clip.blendshapeKeys.Count == 0 ? new BlendshapeArray() : new BlendshapeArray(clip.blendshapeKeys.Select(SelectBlendshape));
+			hasBlendshapes = clip.hasBlendshape || (clip.blendshapeKeys != null && clip.blendshapeKeys.Count != 0);
+
 
 			if (frame == 0)
 			{
@@ -146,7 +150,7 @@ namespace Kinetix.Internal
 			{
 				if (!clip.humanKeys.ContainsKey(humanBones[i]))
 					continue;
-          
+		  
 				humanTransforms[i] = clip.humanKeys[humanBones[i]][frame];
 			}
 		}
@@ -186,7 +190,7 @@ namespace Kinetix.Internal
 
 			SampleHumanAnimation(interpreter);
 			SampleOthers(interpreter);
-			//SampleBlendshapePos(interpreter);         //PATCH 1.6.1
+			SampleBlendshapePos(interpreter);
 		}
 
 		/// <summary>
@@ -210,7 +214,7 @@ namespace Kinetix.Internal
 		/// <param name="interpreter">The interpreter to apply the pose on the avatar</param>
 		public void SampleHumanAnimation(IPoseInterpreter interpreter)
 		{
-			int count = bones.Length;
+			int count = bones.Count;
 			for (int i = 0; i < count; i++)
 			{
 				interpreter.ApplyBone(bones[i], humanTransforms[i]);
@@ -236,10 +240,9 @@ namespace Kinetix.Internal
 
 		private void SampleBlendshapePos(IPoseInterpreter interpreter)
 		{
-			if (blendshapes == null)
+			if (!hasBlendshapes || blendshapes == null)
 				return;
 			
-
 			ARKitBlendshapes arkit;
 			int count = blendshapes.Count;
 			for (int i = 0; i < count; i++)
