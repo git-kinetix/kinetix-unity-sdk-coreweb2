@@ -124,7 +124,7 @@ namespace Kinetix.Internal
 		{
 			if (!endBoneRotation.HasValue)
 				return default;
-			return endBoneRotation.Value * _RootGameObject.transform.rotation;
+			return _RootGameObject.transform.rotation * endBoneRotation.Value;
 		}
 
 		/// <remarks>
