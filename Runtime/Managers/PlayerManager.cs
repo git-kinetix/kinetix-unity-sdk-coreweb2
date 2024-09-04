@@ -60,12 +60,12 @@ namespace Kinetix.Internal.Cache
 			OnRegisterPlayer();
 		}
 
-		public void AddPlayerCharacterComponent(Animator _Animator, RootMotionConfig _RootMotionConfig)
+		public void AddPlayerCharacterComponent(Animator _Animator, Avatar _Avatar, RootMotionConfig _RootMotionConfig)
 		{
 			if (KAvatar != null)
 				UnregisterPlayerComponent();
 
-			KAvatar            = CreateKinetixAvatar(_Animator.avatar, _Animator.transform, EExportType.KinetixClip);
+			KAvatar            = CreateKinetixAvatar(_Avatar, _Animator.transform, EExportType.KinetixClip);
 			KinetixCharacterComponent = AddKCCAndInit(_Animator, KAvatar, _RootMotionConfig);
 			OnRegisterPlayer();
 		}
@@ -203,6 +203,7 @@ namespace Kinetix.Internal.Cache
 			
 			LoadPlayerAnimationInternal(emote, _OnSuccess, _OnFailure);
 		}
+
 
 		public void LoadPlayerAnimations(AnimationIds[] _Ids, string _LockId, Action _OnSuccess = null, Action _OnFailure = null)
 		{

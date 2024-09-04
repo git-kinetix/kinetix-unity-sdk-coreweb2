@@ -10,25 +10,37 @@ using UnityEngine;
 
 namespace Kinetix.Internal
 {
-	public class KinetixMaskEffect : IFrameEffect, IFrameEffectModify
+	public class KinetixMaskEffect : IFrameEffect, IFrameEffectModify, ISamplerAuthority
 	{
 		public int Priority => -150;
 		public KinetixMask mask;
 
 		public bool IsEnabled { get; set; } = true;
-		public void OnPlayedFrame(ref KinetixFrame _FinalFrame, KinetixFrame[] _Frames, in KinetixClipTrack[] _Tracks)
+        public SamplerAuthorityBridge Authority { get; set; }
+
+        public void OnPlayedFrame(ref KinetixFrame _FinalFrame, KinetixFrame[] _Frames, in KinetixClipTrack[] _Tracks)
 		{
 			if (mask == null || !IsEnabled)
 				return;
 
-			List<TransformData> tr = _FinalFrame.humanTransforms;
+			KinetixPose pose = Authority.GetAvatarPos();
+
+			List<TransformData>  poseTr    = pose.humanTransforms;
+			List<HumanBodyBones> poseBones = pose.bones;
+
+			List<TransformData> tr     = _FinalFrame.humanTransforms;
 			List<HumanBodyBones> bones = _FinalFrame.bones;
+
 			for (int i = _FinalFrame.bones.Count - 1; i >= 0; i--)
 			{
-				if (!mask.IsEnabled(bones[i]))
+                HumanBodyBones bone = bones[i];
+                if (!mask.IsEnabled(bone))
 				{
-					bones.RemoveAt(i);
-					tr.RemoveAt(i);
+					int g = poseBones.IndexOf(bone);
+					if (g < 0)
+						continue;
+
+					tr[i] = poseTr[g];
 				}
 			}
 		}
@@ -37,7 +49,7 @@ namespace Kinetix.Internal
 
 		public void OnQueueStart(){}
 
-		public void OnSoftStop(float softDuration){}
+		public void OnSoftStop(float _SoftDuration){}
 
 		public void Update(){}
 	}

@@ -21,7 +21,7 @@ namespace Kinetix.Internal
 		/// <param name="_Animator">Animator of the Local Player</param>
 		public static void RegisterLocalPlayerAnimator(Animator _Animator, string _AvatarID = null)
 		{
-			RegisterLocalPlayerAnimator(_Animator, _AvatarID, null);
+			RegisterLocalPlayerAnimator(_Animator, _AvatarID, _Animator.avatar, null);
 		}
 		
 
@@ -30,7 +30,7 @@ namespace Kinetix.Internal
 		/// </summary>
 		/// <param name="_Animator">Animator of the Local Player</param>
 		/// <param name="_Config">Configuration of the root motion</param>
-		public static void RegisterLocalPlayerAnimator(Animator _Animator, string _AvatarID, RootMotionConfig _Config)
+		public static void RegisterLocalPlayerAnimator(Animator _Animator, string _AvatarID, Avatar _Avatar, RootMotionConfig _Config)
 		{
 			if (KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().LocalPlayer != null &&
 				KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().LocalPlayer.KAvatar != null)
@@ -38,8 +38,11 @@ namespace Kinetix.Internal
 				KinetixDebug.LogWarning("A local player was already registered. Please call KinetixCore.Animation.UnregisterLocalPlayer");
 				return;
 			}
+
+			if (_Avatar == null)
+				_Avatar = _Animator.avatar;
 			
-			string playerUUID = KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().AddPlayerCharacterComponent(_Animator, _Config, true);
+			string playerUUID = KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().AddPlayerCharacterComponent(_Animator, _Avatar, _Config, true);
 			
 			KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().GetPlayerManager(playerUUID).SetAvatarID(_AvatarID);
 			KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().SetLocalPlayer(playerUUID);
@@ -152,6 +155,37 @@ namespace Kinetix.Internal
 		public static string RegisterAvatarAnimator(Animator _Animator, string _AvatarID, RootMotionConfig _Config)
 		{
 			string playerUUID = KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().AddPlayerCharacterComponent(_Animator, _Config, false);
+			KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().GetPlayerManager(playerUUID).SetAvatarID(_AvatarID);
+
+			return playerUUID;
+		}
+
+		/// <summary>
+		/// Register the Local Player Animator
+		/// </summary>
+		/// <param name="_Animator">Animator of the Local Player</param>
+		public static string RegisterAvatarAnimator(Animator _Animator, string _AvatarID, Avatar _Avatar)
+		{
+			if (_Avatar == null)
+				_Avatar = _Animator.avatar;
+
+			string playerUUID = KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().AddPlayerCharacterComponent(_Animator, _Avatar, null, false);
+			KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().GetPlayerManager(playerUUID).SetAvatarID(_AvatarID);
+
+			return playerUUID;
+		}
+
+		/// <summary>
+		/// Register the Local Player Animator
+		/// </summary>
+		/// <param name="_Animator">Animator of the Local Player</param>
+		/// <param name="_Config">Configuration of the root motion</param>
+		public static string RegisterAvatarAnimator(Animator _Animator, string _AvatarID, Avatar _Avatar, RootMotionConfig _Config)
+		{
+			if (_Avatar == null)
+				_Avatar = _Animator.avatar;
+				
+			string playerUUID = KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().AddPlayerCharacterComponent(_Animator, _Avatar, _Config, false);
 			KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().GetPlayerManager(playerUUID).SetAvatarID(_AvatarID);
 
 			return playerUUID;

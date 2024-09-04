@@ -28,6 +28,7 @@ namespace Kinetix.Internal
 		public readonly Dictionary<string, TransformData> resetKeys;
 		public readonly int frame;
 		public bool hasBlendshapes;
+		
 		public float CurrentTime 
 		{ 
 			get 

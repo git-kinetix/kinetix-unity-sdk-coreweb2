@@ -27,7 +27,7 @@ namespace Kinetix.Internal
             if (cancellationTokenSource != null && !cancellationTokenSource.IsCancellationRequested)
             {
                 cancellationTokenSource?.Cancel();
-                await Task.Yield();
+                await KinetixYield.Yield();
             }
 
             string url = KinetixConstants.c_SDK_API_URL + "/v1/users/" +

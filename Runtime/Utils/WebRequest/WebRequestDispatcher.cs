@@ -76,7 +76,7 @@ namespace Kinetix.Utils
 
             while (!asyncOperation.isDone && !_Ctx.IsCancellationRequested)
             {
-                await Task.Yield();
+                await KinetixYield.Yield();
                 ProgressChanged?.Invoke(request.downloadProgress);
             }
 

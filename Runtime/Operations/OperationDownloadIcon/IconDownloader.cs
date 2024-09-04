@@ -97,7 +97,7 @@ namespace Kinetix.Internal
 
                 if (y % COMPUTE_DOWNSAMPLE_EXECUTION_COUNT_BEFORE_YIELD == 0)
                 {
-                    await Task.Yield();
+                    await KinetixYield.Yield();
                 }
             }
 

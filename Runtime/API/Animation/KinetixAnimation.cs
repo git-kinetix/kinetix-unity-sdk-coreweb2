@@ -75,7 +75,7 @@ namespace Kinetix.Internal
 		/// <param name="_Config">Configuration for the root motion</param>
 		public void RegisterLocalPlayerAnimator(Animator _Animator, RootMotionConfig _Config)
 		{
-			KinetixAnimationBehaviour.RegisterLocalPlayerAnimator(_Animator, null, _Config);
+			KinetixAnimationBehaviour.RegisterLocalPlayerAnimator(_Animator, null, null, _Config);
 			OnRegisteredLocalPlayer?.Invoke();
 		}
 
@@ -87,7 +87,42 @@ namespace Kinetix.Internal
 		/// <param name="_Config">Configuration for the root motion</param>
 		public void RegisterLocalPlayerAnimator(Animator _Animator, string _AvatarID, RootMotionConfig _Config)
 		{
-			KinetixAnimationBehaviour.RegisterLocalPlayerAnimator(_Animator, _AvatarID, _Config);
+			KinetixAnimationBehaviour.RegisterLocalPlayerAnimator(_Animator, _AvatarID, null, _Config);
+			OnRegisteredLocalPlayer?.Invoke();
+		}
+
+		/// <summary>
+		/// Register the local Player animator with avatar setup to play animation on it 
+		/// </summary>
+		/// <param name="_Animator">Animator of your local character</param>
+		/// <param name="_AvatarID">ID of the avatar uploaded on your devportal</param>
+		public void RegisterLocalPlayerAnimator(Animator _Animator, Avatar _Avatar, string _AvatarID)
+		{
+			KinetixAnimationBehaviour.RegisterLocalPlayerAnimator(_Animator, _AvatarID, _Avatar, null);
+			
+			OnRegisteredLocalPlayer?.Invoke();
+		}
+
+		/// <summary>
+		/// Register the local Player animator with avatar setup to play animation on it 
+		/// </summary>
+		/// <param name="_Animator">Animator of your local character</param>
+		/// <param name="_Config">Configuration for the root motion</param>
+		public void RegisterLocalPlayerAnimator(Animator _Animator, Avatar _Avatar, RootMotionConfig _Config)
+		{
+			KinetixAnimationBehaviour.RegisterLocalPlayerAnimator(_Animator, null, _Avatar,  _Config);
+			OnRegisteredLocalPlayer?.Invoke();
+		}
+
+		/// <summary>
+		/// Register the local Player animator with avatar setup to play animation on it 
+		/// </summary>
+		/// <param name="_Animator">Animator of your local character</param>
+		/// <param name="_AvatarID">ID of the avatar uploaded on your devportal</param>
+		/// <param name="_Config">Configuration for the root motion</param>
+		public void RegisterLocalPlayerAnimator(Animator _Animator, Avatar _Avatar, string _AvatarID, RootMotionConfig _Config)
+		{
+			KinetixAnimationBehaviour.RegisterLocalPlayerAnimator(_Animator, _AvatarID, _Avatar, _Config);
 			OnRegisteredLocalPlayer?.Invoke();
 		}
 
@@ -280,6 +315,35 @@ namespace Kinetix.Internal
 		public string RegisterAvatarAnimator(Animator _Animator, string _AvatarID, RootMotionConfig _Config)
 		{
 			string playerUUID = KinetixAnimationBehaviour.RegisterAvatarAnimator(_Animator, _AvatarID, _Config);
+			
+			OnRegisteredCustomPlayer?.Invoke();
+			
+			return playerUUID;
+		}
+
+		/// <summary>
+		/// Register a local Character animator with avatar setup to play animation on it 
+		/// </summary>
+		/// <param name="_Animator">Animator of your local character</param>
+		/// <param name="_AvatarID">ID of the avatar uploaded on your devportal</param>
+		public string RegisterAvatarAnimator(Animator _Animator, Avatar _Avatar, string _AvatarID)
+		{
+			string playerUUID = KinetixAnimationBehaviour.RegisterAvatarAnimator(_Animator, _AvatarID, _Avatar);
+			
+			OnRegisteredCustomPlayer?.Invoke();
+			
+			return playerUUID;
+		}
+
+		/// <summary>
+		/// Register a local Character animator with avatar setup to play animation on it 
+		/// </summary>
+		/// <param name="_Animator">Animator of your local character</param>
+		/// <param name="_AvatarID">ID of the avatar uploaded on your devportal</param>
+		/// <param name="_Config">Configuration for the root motion</param>
+		public string RegisterAvatarAnimator(Animator _Animator, Avatar _Avatar, string _AvatarID, RootMotionConfig _Config)
+		{
+			string playerUUID = KinetixAnimationBehaviour.RegisterAvatarAnimator(_Animator, _AvatarID, _Avatar, _Config);
 			
 			OnRegisteredCustomPlayer?.Invoke();
 			
@@ -1458,6 +1522,33 @@ namespace Kinetix.Internal
 		{
 			KinetixAnimationBehaviour.SetIKRotationWeightOnAvatar(_PlayerUUID, _Goal, _Value);
 		}
+
+		//=====================================//
+		// Mask                                //
+		//=====================================//
+		#region Mask
+
+		public void SetMaskOnLocalPlayer(KinetixMask _Mask)
+        {
+            KinetixAnimationBehaviour.SetMaskOnLocalPlayer(_Mask);
+        }
+
+        public KinetixMask GetMaskOnLocalPlayer()
+        {
+            return KinetixAnimationBehaviour.GetMaskOnLocalPlayer();
+        }
+
+        public void SetMaskOnAvatar(string _PlayerUUID, KinetixMask _Mask)
+		{
+			KinetixAnimationBehaviour.SetMaskOnAvatar(_PlayerUUID, _Mask);
+		}
+
+		public KinetixMask GetMaskOnAvatar(string _PlayerUUID)
+		{
+			return KinetixAnimationBehaviour.GetMaskOnAvatar(_PlayerUUID);
+		}
+
+		#endregion
 
 
 		#region Internal
