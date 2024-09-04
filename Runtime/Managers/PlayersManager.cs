@@ -61,10 +61,18 @@ namespace Kinetix.Internal
 
 		public string AddPlayerCharacterComponent(Animator _Animator, RootMotionConfig _RootMotionConfig, bool _LocalPlayer)
 		{
+			return AddPlayerCharacterComponent(_Animator, _Animator.avatar, _RootMotionConfig, _LocalPlayer);
+		}
+
+
+		public string AddPlayerCharacterComponent(Animator _Animator, Avatar _Avatar, RootMotionConfig _RootMotionConfig, bool _LocalPlayer)
+		{
 			PlayerManager newPlayer = _LocalPlayer ? LocalPlayer : new PlayerManager(serviceLocator, config);
-			newPlayer.AddPlayerCharacterComponent(_Animator, _RootMotionConfig);
+			newPlayer.AddPlayerCharacterComponent(_Animator, _Avatar, _RootMotionConfig);
+
 			if (!players.Contains(newPlayer))
 				players.Add(newPlayer);
+				
 			return newPlayer.UUID;
 		}
 

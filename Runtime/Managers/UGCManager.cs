@@ -124,7 +124,8 @@ namespace Kinetix.Internal
             if (tokenCancellationPollingForToken != null && !tokenCancellationPollingForToken.IsCancellationRequested)
             {
                 tokenCancellationPollingForToken?.Cancel();
-                await Task.Yield();
+
+                await KinetixYield.Yield();
             }
 
             string url = KinetixConstants.c_SDK_API_URL + "/v1/process/token/" + TokenUUID;

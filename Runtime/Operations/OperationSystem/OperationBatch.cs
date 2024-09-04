@@ -51,7 +51,9 @@ namespace Kinetix.Internal
             try
             {
                 while (!source1.Task.IsCompleted && _CancellationTokenSource is { Token: { IsCancellationRequested: false } })
-                    await Task.Yield();
+                {
+                    await KinetixYield.Yield();
+                }
                 MirrorTCSResult(source1, source2, _CancellationTokenSource);
 
             }

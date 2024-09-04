@@ -13,6 +13,8 @@ namespace Kinetix.Internal
 
 		public override async Task Execute()
 		{
+			KinetixLogger.LogDebug("HELP," + Config.Emote.Ids.UUID, "EmoteRetargeting." + nameof(Execute) + " - 16", false);
+
 			if (CancellationTokenSource.IsCancellationRequested || Config.CancellationSequencer.canceled)
 			{
 				CurrentTaskCompletionSource.TrySetCanceled();
@@ -115,7 +117,7 @@ namespace Kinetix.Internal
 		{
 			while (!CurrentTaskCompletionSource.Task.IsCompleted)
 			{
-				await Task.Yield();
+				await KinetixYield.Yield();
 				if (CancellationTokenSource.IsCancellationRequested || Config.CancellationSequencer.canceled)
 					CurrentTaskCompletionSource.TrySetCanceled();
 			}
@@ -123,10 +125,19 @@ namespace Kinetix.Internal
 		
 		public override bool Compare(EmoteRetargetingConfig _Config)
 		{
-			return
-				Config.Path == null && _Config.Path == null ||
-				Config.Path != null && Config.Path.Equals(_Config.Path) ||
-				Config.Indexer != null && Config.Indexer.Equals(_Config.Indexer);
+			bool path = 
+				Config.Path == null && _Config.Path == null || 
+				Config.Path != null && Config.Path.Equals(_Config.Path);
+
+			bool emote =
+				Config.Emote == null && _Config.Emote == null ||
+				Config.Emote != null && Config.Emote.Equals(_Config.Emote);
+
+			bool avatar = Config.Avatar.Equals(_Config.Avatar);
+
+			bool indexer = Config.Indexer != null && Config.Indexer.GetType().Equals(_Config.Indexer.GetType());
+
+			return path && emote && avatar && indexer;
 		}
 
 		public override IOperation<EmoteRetargetingConfig, EmoteRetargetingResponse<TResponseType>> Clone()

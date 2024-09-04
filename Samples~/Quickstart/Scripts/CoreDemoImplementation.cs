@@ -11,14 +11,14 @@ using TMPro;
 
 public class CoreDemoImplementation : MonoBehaviour
 {
-    [SerializeField] private StepDisplayController stepDisplayController;
-    [SerializeField] private Animator myAnimator;
-    [SerializeField] private TMP_InputField apiKeyField;
-    [SerializeField] private TMP_InputField usernameField;
-    [SerializeField] private TMP_Text usernameLabel;
-    [SerializeField] private TMP_Text animationName;
-    [SerializeField] private Image animationIcon;
-    private string animationID;
+    [SerializeField] protected StepDisplayController stepDisplayController;
+    [SerializeField] protected Animator myAnimator;
+    [SerializeField] protected TMP_InputField apiKeyField;
+    [SerializeField] protected TMP_InputField usernameField;
+    [SerializeField] protected TMP_Text usernameLabel;
+    [SerializeField] protected TMP_Text animationName;
+    [SerializeField] protected Image animationIcon;
+    protected string animationID;
 
 
     public void OnValidateGameApiKey() 
@@ -28,12 +28,13 @@ public class CoreDemoImplementation : MonoBehaviour
         {
             GameAPIKey = apiKeyField.text,
             PlayAutomaticallyAnimationOnAnimators = true,
+            ShowLogs = true
         });
     }
 
     // This callback is used for the actions made after the SDK is initialized
     // Such as initializing the UI and Registering our LocalPlayer's animator
-    private void OnInitialize()
+    protected void OnInitialize()
     {
         // Register local player to receive animation
         // See "Animation System" documentation
@@ -42,7 +43,7 @@ public class CoreDemoImplementation : MonoBehaviour
         stepDisplayController.NextStep();
     }
 
-    private IEnumerator FetchEmotesAtInterval()
+    protected IEnumerator FetchEmotesAtInterval()
     {
         GetPlayerEmotes();
 
@@ -87,6 +88,7 @@ public class CoreDemoImplementation : MonoBehaviour
         // We get the animation 
         KinetixCore.Metadata.GetUserAnimationMetadatas(OnPlayerEmoteFetched);
     }
+    
 
     public void OnPlayerEmoteFetched(AnimationMetadata[] _Emotes)
     {
