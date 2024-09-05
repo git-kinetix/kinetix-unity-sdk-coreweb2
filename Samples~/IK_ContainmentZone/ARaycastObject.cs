@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using UnityEngine;
 
-public abstract class ARaycastObject : MonoBehaviour 
+public abstract class ARaycastObject : MonoBehaviour
 {
 	/// <summary>
 	/// Max default raycast distance
@@ -59,6 +59,7 @@ public abstract class ARaycastObject : MonoBehaviour
 		return true;
 
 	}
+
 	abstract public RaycastHit[] Raycast(Vector3 startPosition, Quaternion rotation, Vector3 direction, int layerMask, float distance = RAYCAST_DISTANCE);
 	/// <summary>
 	/// Get the farthest point (in global context) along the requested direction
@@ -77,13 +78,20 @@ public abstract class ARaycastObject : MonoBehaviour
 	/// <param name="rotation">Global rotation of the transform</param>
 	public abstract void DrawGizmo(Vector3 startPosition, Quaternion rotation);
 
-	protected bool WhereColliderFilter(RaycastHit raycastHit) => !ignoreColliders.Contains(raycastHit.collider.gameObject);
+
+
+	private bool DistanceSecurity(RaycastHit hit)
+	{
+		return hit.distance > Mathf.Epsilon;
+	}
+
+	protected bool WhereColliderFilter(RaycastHit raycastHit) => DistanceSecurity(raycastHit) && !ignoreColliders.Contains(raycastHit.collider.gameObject);
 	protected bool WhereColliderFilter(Collider collider) => !ignoreColliders.Contains(collider.gameObject);
-	
+
 	protected Func<Collider, bool> WhereHasSpecificCollider(Collider colliderToFind)
 	{
 		return Where;
-		bool Where (Collider other)
+		bool Where(Collider other)
 		{
 			return other == colliderToFind;
 		}
@@ -91,9 +99,9 @@ public abstract class ARaycastObject : MonoBehaviour
 	protected Func<RaycastHit, bool> WhereHasSpecificColliderRaycast(Collider colliderToFind)
 	{
 		return Where;
-		bool Where(RaycastHit other)
+		bool Where(RaycastHit raycastHit)
 		{
-			return other.collider == colliderToFind;
+			return DistanceSecurity(raycastHit) && raycastHit.collider == colliderToFind;
 		}
 	}
 }

@@ -13,8 +13,6 @@ namespace Kinetix.Internal
 
 		public override async Task Execute()
 		{
-			KinetixLogger.LogDebug("HELP," + Config.Emote.Ids.UUID, "EmoteRetargeting." + nameof(Execute) + " - 16", false);
-
 			if (CancellationTokenSource.IsCancellationRequested || Config.CancellationSequencer.canceled)
 			{
 				CurrentTaskCompletionSource.TrySetCanceled();

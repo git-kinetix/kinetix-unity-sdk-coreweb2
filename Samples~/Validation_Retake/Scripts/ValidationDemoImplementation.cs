@@ -67,6 +67,8 @@ public class ValidationDemoImplementation : CoreDemoImplementation
                 KinetixCore.Metadata.GetAnimationMetadataByAnimationIds(apiProcess.Emote.ToString(), (_AnimationMetadata) => {
                     StopCoroutine(processCoroutine);
                     
+                    AssignEmoteToButton(_AnimationMetadata);
+
                     stepDisplayController.NextStep();
                 });
             }

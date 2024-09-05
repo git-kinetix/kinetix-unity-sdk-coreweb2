@@ -1,5 +1,6 @@
 using Kinetix;
 using System;
+using System.Linq;
 using System.Collections;
 using TMPro;
 using UnityEngine;
@@ -37,7 +38,7 @@ public class IK_ContainmentZone : MonoBehaviour
 		gizmo = GetComponent<GizmoUtils>() ?? gameObject.AddComponent<GizmoUtils>();
 	}
 
-	public void OnValidateGameApiKey() 
+	public void OnValidateGameApiKey()
 	{
 		// Initialization is an async process, 
 		// We use a callback to tell when it's finished
@@ -88,9 +89,9 @@ public class IK_ContainmentZone : MonoBehaviour
 
 			stepDisplayController.NextStep();
 
-			if (routine != null) 
+			if (routine != null)
 				StopCoroutine(routine);
-			
+
 			routine = StartCoroutine(FetchEmotesAtInterval());
 		});
 	}
@@ -131,7 +132,7 @@ public class IK_ContainmentZone : MonoBehaviour
 		KinetixCore.Metadata.LoadIconByAnimationId(_Metadata.Ids.UUID, (_Sprite) => {
 			animationIcon.sprite = _Sprite;
 			animationName.text = _Metadata.Name;
-			animationID = _Metadata.Ids.UUID;
+				animationID = _Metadata.Ids.UUID;
 		});
 	}
 
@@ -151,15 +152,15 @@ public class IK_ContainmentZone : MonoBehaviour
 		Debug.DrawLine(currentPose.hips.globalPosition, currentPose.leftUpperLeg.globalPosition, Color.gray);
 		Debug.DrawLine(currentPose.leftUpperLeg.globalPosition, currentPose.leftLowerLeg.globalPosition, Color.gray);
 		Debug.DrawLine(currentPose.leftLowerLeg.globalPosition, currentPose.leftFoot.globalPosition, Color.gray);
-		
+
 		Debug.DrawLine(currentPose.hips.globalPosition, currentPose.leftUpperArm.globalPosition, Color.gray);
 		Debug.DrawLine(currentPose.leftUpperArm.globalPosition, currentPose.leftLowerArm.globalPosition, Color.gray);
 		Debug.DrawLine(currentPose.leftLowerArm.globalPosition, currentPose.leftHand.globalPosition, Color.gray);
-		
+
 		Debug.DrawLine(currentPose.hips.globalPosition, currentPose.rightUpperLeg.globalPosition, Color.gray);
 		Debug.DrawLine(currentPose.rightUpperLeg.globalPosition, currentPose.rightLowerLeg.globalPosition, Color.gray);
 		Debug.DrawLine(currentPose.rightLowerLeg.globalPosition, currentPose.rightFoot.globalPosition, Color.gray);
-		
+
 		Debug.DrawLine(currentPose.hips.globalPosition, currentPose.rightUpperArm.globalPosition, Color.gray);
 		Debug.DrawLine(currentPose.rightUpperArm.globalPosition, currentPose.rightLowerArm.globalPosition, Color.gray);
 		Debug.DrawLine(currentPose.rightLowerArm.globalPosition, currentPose.rightHand.globalPosition, Color.gray);
@@ -167,7 +168,7 @@ public class IK_ContainmentZone : MonoBehaviour
 
 		ApplyIK(currentPose, leftHandCollider, currentPose.leftHand, currentPose.leftLowerArm, AvatarIKGoal.LeftHand, AvatarIKHint.LeftElbow);
 		ApplyIK(currentPose, leftFootCollider, currentPose.leftFoot, currentPose.leftLowerLeg, AvatarIKGoal.LeftFoot, AvatarIKHint.LeftKnee);
-		
+
 		ApplyIK(currentPose, rightHandCollider, currentPose.rightHand, currentPose.rightLowerArm, AvatarIKGoal.RightHand, AvatarIKHint.RightElbow);
 		ApplyIK(currentPose, rightFootCollider, currentPose.rightFoot, currentPose.rightLowerLeg, AvatarIKGoal.RightFoot, AvatarIKHint.RightKnee);
 	}
@@ -179,7 +180,7 @@ public class IK_ContainmentZone : MonoBehaviour
 	private void ApplyIK(IKInfo currentPose, ARaycastObject raycast, IKTransformInfo transformGoal, IKTransformInfo transformHint, AvatarIKGoal goal, AvatarIKHint hint)
 	{
 		bool isFoot = goal.ToString().EndsWith("Foot");
-		
+
 		//Check collision for goals (hands / foot)
 		PhysicCast(currentPose, raycast, transformGoal, transformHint, (v) =>
 		{
@@ -187,7 +188,7 @@ public class IK_ContainmentZone : MonoBehaviour
 			{
 				KinetixCore.Animation.SetIKPositionAndWeightOnLocalPlayer(goal, v.Value, 1);
 				KinetixCore.Animation.SetIKHintPositionOnLocalPlayer(hint, transformGoal.globalPosition + (transformHint.globalPosition - transformGoal.globalPosition) * 2);
-				
+
 				if (isFoot)
 					KinetixCore.Animation.SetIKRotationAndWeightOnLocalPlayer(goal, transformGoal.globalRotation, 1);
 
@@ -234,7 +235,7 @@ public class IK_ContainmentZone : MonoBehaviour
 		gizmo.Color(GIZMO_COLOR);
 
 		//Check for colliders
-		Collider[] colliders = raycast.Overlap(transformGoal.globalPosition, transformGoal.globalRotation, overlapLayerMask);
+		Collider[] colliders = raycast.Overlap(transformGoal.globalPosition, transformGoal.globalRotation, overlapLayerMask).Distinct().ToArray();
 		int collidersLenght = colliders.Length;
 
 		bool defaultQuery = Physics.queriesHitBackfaces; //We need to restore physics after we're done computing the physic
@@ -246,39 +247,45 @@ public class IK_ContainmentZone : MonoBehaviour
 		Vector3 hipsToGoal = transformGoal.globalPosition - currentPose.hips.globalPosition;
 		//Compute hint -> goal (+offset)
 		Vector3 fromHintToGoal = (transformGoal.globalPosition + offset) - transformHint.globalPosition;
-		
+
 		//If an overlap has been detected
 		if (collidersLenght > 0)
 		{
-			Physics.queriesHitBackfaces = true; //enable back faces
+			Physics.queriesHitBackfaces = false; //disable back faces
 
 			Vector3 point, fromTo, hitPosition, hitNormal;
 			Vector3 moveDirection = Vector3.zero;//To be computed
 			for (int i = collidersLenght - 1; i >= 0; i--)
 			{
 				Collider collider = colliders[i];
-				point = collider.ClosestPointOnBounds(transformGoal.globalPosition);
-				fromTo = point - transformGoal.globalPosition;
+				bool colliderIsSelf = collider.GetComponentInParent<Animator>() == myAnimator;
+
+				Vector3 rayOrigin = colliderIsSelf ? transformGoal.globalPosition : currentPose.hips.globalPosition;
+
+				point = collider.ClosestPointOnBounds(transformGoal.globalPosition + offset);
+				fromTo = point - rayOrigin;
 
 				//If it's not interpenetrating, make the raycast point in the direction of the leg/arm.
 				//This is to fix backface normal that are on the opposite side
-				bool colliderIsSelf = collider.GetComponentInParent<Animator>() == myAnimator;
 				if (!colliderIsSelf)
 					fromTo *= Mathf.Sign(Vector3.Dot(hipsToGoal, fromTo));
 
+				if (fromTo == Vector3.zero) //Security
+					fromTo = offset;
+
 				#region GIZMO
 				//Nearest point on collider's bounding box
-				Debug.DrawLine(transformGoal.globalPosition, point, new Color(1, 0, 0, 0.2f));
+				Debug.DrawLine(transformGoal.globalPosition + offset, point, new Color(1, 0, 0, 0.2f));
 				gizmo.Color(GIZMO_COLOR_HIT);
 				gizmo.DrawSphere(point, 0.005f);
 
 				//Raycast
-				Debug.DrawRay(offset + transformGoal.globalPosition - fromTo.normalized * RAY_COLISION_OFFSET, fromTo.normalized * (fromTo.magnitude + RAY_COLISION_OFFSET), Color.white);
-				Debug.DrawRay(offset + transformGoal.globalPosition - fromTo.normalized * RAY_COLISION_OFFSET, fromTo.normalized * (fromTo.magnitude + RAY_COLISION_OFFSET) * 0.2f, Color.magenta);
+				Debug.DrawRay(offset + rayOrigin - fromTo.normalized * RAY_COLISION_OFFSET, fromTo.normalized * (fromTo.magnitude + RAY_COLISION_OFFSET), Color.white);
+				Debug.DrawRay(offset + rayOrigin - fromTo.normalized * RAY_COLISION_OFFSET, fromTo.normalized * (fromTo.magnitude + RAY_COLISION_OFFSET) * 0.2f, Color.magenta);
 				#endregion
 
 				//Do a raycast to get the actual position of the hit
-				if (!raycast.Raycast(transformGoal.globalPosition - fromTo.normalized * RAY_COLISION_OFFSET, transformGoal.globalRotation, fromTo, overlapLayerMask, out RaycastHit hit, fromTo.magnitude + RAY_COLISION_OFFSET, collider))
+				if (!raycast.Raycast(rayOrigin - fromTo.normalized * RAY_COLISION_OFFSET, transformGoal.globalRotation, fromTo, overlapLayerMask, out RaycastHit hit, fromTo.magnitude + RAY_COLISION_OFFSET, collider))
 				{
 					--collidersLenght;
 					continue;
@@ -297,7 +304,7 @@ public class IK_ContainmentZone : MonoBehaviour
 				//Add a 'velocity' to correct the position in the direction of the normal
 				Vector3 moveVelocity = Vector3.Dot(hitNormal, hitPosition - pointOnCollider) * hitNormal;
 				moveDirection += moveVelocity;
-				
+
 				#region GIZMO
 				//Normal
 				gizmo.Color(Color.cyan);
@@ -316,7 +323,7 @@ public class IK_ContainmentZone : MonoBehaviour
 			if (collidersLenght > 0)
 			{
 				toReturn = transformGoal.globalPosition + moveDirection;
-				
+
 				//Reset color to "color hit" (for the raycastObject's gizmo)
 				gizmo.Color(GIZMO_COLOR_HIT);
 			}
@@ -329,7 +336,7 @@ public class IK_ContainmentZone : MonoBehaviour
 		{
 			//Draw the raycast
 			Debug.DrawRay(transformHint.globalPosition - fromHintToGoal, fromHintToGoal * 2, Color.blue);
-			
+
 			//Init some variables
 			Vector3 hitPosition = hit.point;
 			Vector3 hitNormal = hit.normal;
@@ -347,7 +354,7 @@ public class IK_ContainmentZone : MonoBehaviour
 				//Point on collider
 				gizmo.Color(Color.green);
 				gizmo.DrawSphere(pointOnCollider, 0.01f);
-				
+
 				//Hit
 				gizmo.Color(GIZMO_COLOR_HIT);
 				gizmo.DrawSphere(hitPosition, 0.01f);
