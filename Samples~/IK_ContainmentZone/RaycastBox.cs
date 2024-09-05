@@ -40,7 +40,7 @@ public class RaycastBox : ARaycastObject
 
 	public override Collider[] Overlap(Vector3 startPosition, Quaternion rotation, int layerMask)
 	{
-		return Physics.OverlapBox(startPosition + rotation * offset, size/2, rotation)
+		return Physics.OverlapBox(startPosition + rotation * offset, size/2, rotation, layerMask)
 			.Where(WhereColliderFilter).ToArray();
 	}
 
