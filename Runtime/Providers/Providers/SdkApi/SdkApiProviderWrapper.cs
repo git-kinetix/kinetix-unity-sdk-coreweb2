@@ -241,9 +241,9 @@ namespace Kinetix.Utils
 			return await tcs.Task;
 		}
 
-		public async Task<SdkApiProcess> RetakeEmote(string _ProcessId)
+		public async Task<SdkTokenValidityResult> RetakeEmote(string _ProcessId)
 		{
-			TaskCompletionSource<SdkApiProcess> tcs = new TaskCompletionSource<SdkApiProcess>();
+			TaskCompletionSource<SdkTokenValidityResult> tcs = new TaskCompletionSource<SdkTokenValidityResult>();
 
 			string url = KinetixConstants.c_SDK_API_URL + "/v1/process/" + _ProcessId + "/retake";
             
@@ -264,7 +264,7 @@ namespace Kinetix.Utils
                 if (!response.IsSuccess)
                     throw new Exception(response.Error);
 
-				tcs.SetResult(JsonConvert.DeserializeObject<SdkApiProcess>(response.Content));
+				tcs.SetResult(JsonConvert.DeserializeObject<SdkTokenValidityResult>(response.Content));
             }
             catch (Exception e)
             {

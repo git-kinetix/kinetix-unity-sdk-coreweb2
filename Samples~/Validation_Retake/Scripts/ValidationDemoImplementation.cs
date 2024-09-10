@@ -99,6 +99,7 @@ public class ValidationDemoImplementation : CoreDemoImplementation
     public void OnProcessRejected(SdkApiProcess _Process)
     {
         KinetixCore.Process.RetakeEmoteProcess(_Process.Uuid.ToString(), (_RetakeUGCUrl) => {
+            Debug.Log(_RetakeUGCUrl);
             Application.OpenURL(_RetakeUGCUrl);
             stepDisplayController.PreviousStep();
         }, () => {

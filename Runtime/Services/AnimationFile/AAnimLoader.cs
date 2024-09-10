@@ -1,12 +1,13 @@
 using Kinetix.Internal.Retargeting.AnimationData;
 using Kinetix.Utils;
+using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Kinetix.Internal
 {
-	public abstract class AAnimLoader
+	public abstract class AAnimLoader : IDisposable
 	{
 		public abstract string Extension { get; }
 		protected readonly ServiceLocator serviceLocator;
@@ -51,5 +52,7 @@ namespace Kinetix.Internal
 
 			return filepath;
 		}
-	}
+
+        public virtual void Dispose() {}
+    }
 }

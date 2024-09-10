@@ -8,7 +8,7 @@ using Kinetix.Internal.Utils;
 
 namespace Kinetix.Internal
 {
-	public class LoadAnimService : IKinetixService
+	public class LoadAnimService : IKinetixService, IDisposable
 	{
 		private const string NO_METADATA_FOUND_FOR_EMOTE = "No metadata found for emote : ";
 		
@@ -215,5 +215,13 @@ namespace Kinetix.Internal
 				throw new Exception($"Couldn't find file extension '{extension}'", e);
 			}
 		}
-	}
+
+        public void Dispose()
+        {
+            for (int i = loaders.Length - 1; i >= 0; i--)
+            {
+				loaders[i].Dispose();
+            }
+        }
+    }
 }

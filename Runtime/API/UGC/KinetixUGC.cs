@@ -30,6 +30,7 @@ namespace Kinetix.Internal
             KinetixUGCBehaviour.GetUgcUrl(_UrlFetchedCallback);
         }
 
+        [Obsolete("RetakeEmoteProcess now returns the full url. This method will be deleted")]
         public void GetRetakeUgcUrl(string _RetakeToken, Action<string> _UrlFetchedCallback)
         {
             KinetixUGCBehaviour.GetRetakeUgcUrl(_RetakeToken, _UrlFetchedCallback);

@@ -14,6 +14,8 @@ namespace Kinetix.Internal
 {
 	internal class KinanimLoader : AAnimLoader
 	{
+		List<KinanimLoader> instance = new List<KinanimLoader>();
+
 		const long HEADER_DOWNLOAD_SIZE = 1000 * 5;
 
 		private readonly Dictionary<string, KinanimServiceData> kinanimIndexerByFilepath = new Dictionary<string, KinanimServiceData>();
@@ -21,6 +23,13 @@ namespace Kinetix.Internal
 
 		public KinanimLoader(ServiceLocator _ServiceLocator) : base(_ServiceLocator)
 		{
+			if (instance.Count != 0)
+			{
+				Debug.LogWarning(nameof(KinanimLoader) + "'s already has an instance. This could lead to " + nameof(IOException) + "s");
+			}
+
+			instance.Add(this);
+
 			downloadSpeedService = _ServiceLocator.Get<EmoteDownloadSpeedService>();
 		}
 
@@ -32,7 +41,8 @@ namespace Kinetix.Internal
 
 			if (kinanimIndexerByFilepath.TryGetValue(filepath, out KinanimServiceData data))
 			{
-				data.exporter?.Dispose();
+				if (data.exporter != null)
+					DisposeExporter(data);
 				data.exporter = new KinanimExporter(new FileStream(filepath, FileMode.OpenOrCreate, FileAccess.Write));
 			}
 			else
@@ -48,7 +58,7 @@ namespace Kinetix.Internal
 				await
 					AsyncDownloadRemainingFrames(data, url, null, true)
 					.Catch((e) => KinetixDebug.LogException(e))
-					.Then(() => { data.exporter.Dispose(); });
+					.Then(() => DisposeExporter(data));
 			}
 
 			return await Task.FromResult<RuntimeRetargetFrameIndexer>(data.indexer);
@@ -85,7 +95,7 @@ namespace Kinetix.Internal
 			//Download remaining frames
 			_ = AsyncDownloadRemainingFrames(kinanim, url, null, false)
 				.Catch(KinetixDebug.LogException)
-				.Then(kinanim.exporter.Dispose);
+				.Then(() => DisposeExporter(kinanim));
 
 			return kinanim.indexer;
 		}
@@ -150,19 +160,22 @@ namespace Kinetix.Internal
 			BinaryReader byteReader = new BinaryReader(readStream);
 			importer.ReadHeader(byteReader);
 			importer.ReadFrames(byteReader);
-			byteReader.Dispose();
-			readStream.Dispose();
+			readStream.Close();
 
 			//Set local dictionary with : KinanimDataIndexer
 			KinanimDataIndexer indexer = new KinanimDataIndexer(importer, !string.IsNullOrEmpty(avatarId));
 			indexer.Init();
-			indexer.UpdateIndexCount();
 			data = new KinanimServiceData(indexer, new KinanimExporter(new FileStream(filepath, FileMode.OpenOrCreate, FileAccess.Write)));
 
 			if (!(readStream is FileStream))
 				data.exporter.OverrideHeader(data.indexer.dataSource.UncompressedHeader); //Frame size changed so we need to rewrite the header
 
+			kinanimIndexerByFilepath.ValueOrDefault(filepath)?.exporter.Dispose();
 			kinanimIndexerByFilepath[filepath] = data;
+
+			//Update the indexer at the end only
+			indexer.UpdateIndexCount();
+
 			return data;
 		}
 
@@ -183,6 +196,7 @@ namespace Kinetix.Internal
 			indexer.dataSource.MoveHeaderToUncompressedHeader();
 			indexer.dataSource.ReadHeader(stream);
 			indexer.UpdateIndexCount();
+			stream.Close();
 		}
 
 		private async Task<(int frameMin, int frameMax)> LoadBatchFrameKinanim(KinanimDataIndexer indexer, string url, CancellationTokenSource cancellationToken)
@@ -202,11 +216,30 @@ namespace Kinetix.Internal
 			MemoryStream stream = new MemoryStream(response.bytes);
 			indexer.dataSource.ReadFrames(stream);
 			indexer.UpdateIndexCount();
-
+			stream.Close();
 #if DEV_KINETIX
 			KinetixLogger.LogDebug("Kinanim,Download", $"downloaded frames {minFrame}-{maxFrame} (byte={byteMin}-{byteMax})", true);
 #endif
 			return (minFrame, maxFrame);
+		}
+
+		private void DisposeExporter(KinanimServiceData data)
+		{
+			data.exporter.Dispose();
+		}
+
+		public override void Dispose()
+		{
+			base.Dispose();
+			try
+			{
+				instance.Remove(this);
+			}
+			catch (Exception) {}
+			foreach (var item in kinanimIndexerByFilepath)
+			{
+				item.Value.exporter?.Dispose();
+			}
 		}
 	}
 }
