@@ -81,9 +81,9 @@ namespace Kinetix.Internal
 		public string GetAnimationURLOrNull(string _Extension, string _AvatarId)
 		{
 			if (_AvatarId == null)
-				return Metadata.UrlByFormat[_Extension];
+				return Metadata.UrlByFormat.ValueOrDefault(_Extension);
 
-			return GetAvatarMetadata(_AvatarId)?.UrlByFormat[_Extension];
+			return GetAvatarMetadata(_AvatarId)?.UrlByFormat.ValueOrDefault(_Extension);
 		}
 	}
 }
