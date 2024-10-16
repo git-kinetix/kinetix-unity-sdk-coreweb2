@@ -20,6 +20,8 @@ public class ValidationDemoImplementation : CoreDemoImplementation
 
     public new void OpenUGELink()
     {
+        KinetixCore.UGC.ClearCachedUrl();
+        
         // Example on how to get the link
         KinetixCore.UGC.GetUgcUrl((_Url) => {
             Application.OpenURL(_Url);

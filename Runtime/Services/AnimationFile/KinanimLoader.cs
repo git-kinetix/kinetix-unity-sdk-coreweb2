@@ -56,7 +56,7 @@ namespace Kinetix.Internal
 			if (data.indexer.dataSource.HighestImportedFrame < data.indexer.dataSource.Result.header.FrameCount - 1)
 			{
 				await
-					AsyncDownloadRemainingFrames(data, url, null, true)
+					AsyncDownloadRemainingFrames(data, url, cancellationToken, true)
 					.Catch((e) => KinetixDebug.LogException(e))
 					.Then(() => DisposeExporter(data));
 			}
@@ -93,17 +93,18 @@ namespace Kinetix.Internal
 			kinanim.exporter.content.WriteFrames(new ArraySegment<KinanimData.FrameData>(kinanim.indexer.dataSource.Result.content.frames, 0, maxFrame + 1).ToArray(), kinanim.indexer.dataSource.Result.header.hasBlendshapes, 0);
 
 			//Download remaining frames
-			_ = AsyncDownloadRemainingFrames(kinanim, url, null, false)
+			_ = AsyncDownloadRemainingFrames(kinanim, url, cancellationToken, false)
+				.Catch<TaskCanceledException>((e) => { KinetixLogger.LogDebug(nameof(KinanimLoader), e.Message, true); })
 				.Catch(KinetixDebug.LogException)
 				.Then(() => DisposeExporter(kinanim));
 
 			return kinanim.indexer;
 		}
 
-		private async Task AsyncDownloadRemainingFrames(KinanimServiceData kinanim, string url, CancellationTokenSource cancellationTokenDownload, bool downloadHeader)
+		private async Task AsyncDownloadRemainingFrames(KinanimServiceData kinanim, string url, CancellationTokenSource cancellationToken, bool downloadHeader)
 		{
 			if (downloadHeader)
-				await GetServerHeader(kinanim.indexer, url, null);
+				await GetServerHeader(kinanim.indexer, url, cancellationToken);
 
 			// Create a separate task that will load each chunk
 			//
@@ -125,15 +126,21 @@ namespace Kinetix.Internal
 			int minFrame, maxFrame = kinanim.indexer.dataSource.HighestImportedFrame;
 			while (maxFrame < frameCount - 1)
 			{
+				if (cancellationToken != null && cancellationToken.IsCancellationRequested)
+					throw new TaskCanceledException("Task canceled during batch load operation");
+
 				minFrame = (kinanim.indexer.dataSource.compression?.MaxUncompressedFrame ?? kinanim.indexer.dataSource.HighestImportedFrame) + 1;
 
-				await LoadBatchFrameKinanim(kinanim.indexer, url, cancellationTokenDownload); //Partial file download operation (20 frames)
+				await LoadBatchFrameKinanim(kinanim.indexer, url, cancellationToken); //Partial file download operation (20 frames)
 
 				maxFrame = kinanim.indexer.dataSource.compression?.MaxUncompressedFrame ?? kinanim.indexer.dataSource.HighestImportedFrame;
 				if (maxFrame >= frameCount)
 				{
 					maxFrame = frameCount - 1;
 				}
+
+				if (cancellationToken.IsCancellationRequested)
+					throw new TaskCanceledException("Task canceled during batch load operation, before 'overrideHeader'");
 
 				kinanim.exporter.OverrideHeader(kinanim.indexer.dataSource.UncompressedHeader); //Frame size changed so we need to rewrite the header
 				kinanim.exporter.content.WriteFrames(new ArraySegment<KinanimData.FrameData>(kinanim.indexer.dataSource.Result.content.frames, minFrame, maxFrame - minFrame + 1).ToArray(), kinanim.indexer.dataSource.Result.header.hasBlendshapes, (ushort)minFrame);
@@ -158,9 +165,19 @@ namespace Kinetix.Internal
 			//Import Header and extra frames
 			KinanimImporter importer = new KinanimImporter(new InterpoCompression());
 			BinaryReader byteReader = new BinaryReader(readStream);
-			importer.ReadHeader(byteReader);
-			importer.ReadFrames(byteReader);
-			readStream.Close();
+			try
+			{
+				importer.ReadHeader(byteReader);
+				importer.ReadFrames(byteReader);
+			}
+			catch (Exception e)
+			{
+				throw e;
+			}
+			finally
+			{
+				readStream.Close();
+			}
 
 			//Set local dictionary with : KinanimDataIndexer
 			KinanimDataIndexer indexer = new KinanimDataIndexer(importer, !string.IsNullOrEmpty(avatarId));
@@ -193,10 +210,20 @@ namespace Kinetix.Internal
 
 			//Import frames
 			MemoryStream stream = new MemoryStream(response.bytes);
-			indexer.dataSource.MoveHeaderToUncompressedHeader();
-			indexer.dataSource.ReadHeader(stream);
-			indexer.UpdateIndexCount();
-			stream.Close();
+			try
+			{
+				indexer.dataSource.MoveHeaderToUncompressedHeader();
+				indexer.dataSource.ReadHeader(stream);
+				indexer.UpdateIndexCount();
+			}
+			catch (Exception e)
+			{
+				throw e;
+			}
+			finally 
+			{ 
+				stream.Close();
+			}
 		}
 
 		private async Task<(int frameMin, int frameMax)> LoadBatchFrameKinanim(KinanimDataIndexer indexer, string url, CancellationTokenSource cancellationToken)
@@ -214,9 +241,19 @@ namespace Kinetix.Internal
 
 			//Import frames
 			MemoryStream stream = new MemoryStream(response.bytes);
-			indexer.dataSource.ReadFrames(stream);
-			indexer.UpdateIndexCount();
-			stream.Close();
+			try
+			{
+				indexer.dataSource.ReadFrames(stream);
+				indexer.UpdateIndexCount();
+			}
+			catch (Exception e)
+			{
+				throw e;
+			}
+			finally
+			{
+				stream.Close();
+			}
 #if DEV_KINETIX
 			KinetixLogger.LogDebug("Kinanim,Download", $"downloaded frames {minFrame}-{maxFrame} (byte={byteMin}-{byteMax})", true);
 #endif

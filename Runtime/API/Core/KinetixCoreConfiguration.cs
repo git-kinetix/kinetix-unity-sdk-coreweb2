@@ -11,6 +11,7 @@ namespace Kinetix
     public class KinetixCoreConfiguration: IKinetixConfiguration
     {
         public string GameAPIKey;
+        public string APIBaseURL = "https://sdk-api.kinetix.tech";
         public ContextualEmoteSO EmoteContexts;
         public EKinetixNodeProvider EmoteProvider = EKinetixNodeProvider.SDK_API;
 

@@ -52,7 +52,7 @@ namespace Kinetix.Internal
 		/// <summary>
 		/// Instance Singleton shared between every effects
 		/// </summary>
-		private readonly SamplerAuthorityBridge authorityBridge;
+		internal readonly SamplerAuthorityBridge authorityBridge;
 
 		private uint currentPlayingTrackHash = 0;
 

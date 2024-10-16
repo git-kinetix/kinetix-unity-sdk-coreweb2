@@ -18,6 +18,7 @@ namespace Kinetix.Internal
 
         private bool   EnableUGC = true;
         private string GameAPIKey;
+        private string APIBaseUrl;
 
         //Cache
         private DateTime lastFetchDate = System.DateTime.MinValue;
@@ -40,14 +41,15 @@ namespace Kinetix.Internal
         
         protected override void Initialize(KinetixCoreConfiguration _Config)
         {
-            Initialize(_Config.GameAPIKey, _Config.EnableUGC);
+            Initialize(_Config.GameAPIKey, _Config.APIBaseURL, _Config.EnableUGC);
         }
 
 
-        protected void Initialize(string _GameAPIKey, bool _EnableUGC)
+        protected void Initialize(string _GameAPIKey, string _APIBaseUrl, bool _EnableUGC)
         {
             EnableUGC      = _EnableUGC;
             GameAPIKey = _GameAPIKey;
+            APIBaseUrl = _APIBaseUrl;
         }
         
         public bool IsUGCAvailable()
@@ -72,7 +74,7 @@ namespace Kinetix.Internal
                 return string.Empty;
             }
             
-            string uri = KinetixConstants.c_SDK_API_URL + "/v1/process/token?userId=" +
+            string uri = APIBaseUrl + "/v1/process/token?userId=" +
                          KinetixCoreBehaviour.ManagerLocator.Get<AccountManager>().LoggedAccount.AccountId;
 
 
@@ -128,7 +130,7 @@ namespace Kinetix.Internal
                 await KinetixYield.Yield();
             }
 
-            string url = KinetixConstants.c_SDK_API_URL + "/v1/process/token/" + TokenUUID;
+            string url = APIBaseUrl + "/v1/process/token/" + TokenUUID;
 
             float interval = (float)TOKEN_REQUEST_TIMEOUT / (float)TOKEN_CONTACT_ATTEMPTS;
             GetNewUgcTokenByPollingConfig getNewUgcTokenConfig =

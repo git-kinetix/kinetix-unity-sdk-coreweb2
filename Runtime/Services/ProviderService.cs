@@ -22,7 +22,7 @@ namespace Kinetix.Internal
         {
             ProviderWrappers ??= new Dictionary<EKinetixNodeProvider, IProviderWrapper>();
             
-            CreateProvider(_Config.EmoteProvider, _Config.GameAPIKey);
+            CreateProvider(_Config.EmoteProvider, _Config.GameAPIKey, _Config.APIBaseURL);
         }
 
       
@@ -30,12 +30,12 @@ namespace Kinetix.Internal
         /// Create an instance of the Wrapper based on the provider
         /// </summary>
         /// <param name="_Provider">Node URL Provider</param>
-        private void CreateProvider(EKinetixNodeProvider _Provider, string _APIKey = "")
+        private void CreateProvider(EKinetixNodeProvider _Provider, string _APIKey, string _APIBaseURL)
         {
             switch (_Provider)
             {
                 case EKinetixNodeProvider.SDK_API:
-                    ProviderWrappers[EKinetixNodeProvider.SDK_API] = new SdkApiProviderWrapper(_APIKey);
+                    ProviderWrappers[EKinetixNodeProvider.SDK_API] = new SdkApiProviderWrapper(_APIKey, _APIBaseURL);
                     break;
             }
         }

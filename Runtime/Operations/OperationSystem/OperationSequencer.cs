@@ -1,6 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using UnityEngine;
 
 namespace Kinetix.Internal
 {
@@ -56,8 +59,18 @@ namespace Kinetix.Internal
             Task task = operationBatch.GetOperation().Execute();
             
             isRunning = true;
-            await task;
-            isRunning = false;
+            try
+            {
+                await task;
+            }
+            catch (TaskCanceledException e)
+            {
+#if DEV_KINETIX
+				KinetixLogger.LogInfo("Cancel", "Canceled an operation. " + Environment.NewLine + e.StackTrace, true);
+#endif
+                operationBatch.GetOperation().CancellationTokenSource.Cancel();
+		    }
+		    isRunning = false;
             
             operationsQueue.Dequeue();
 

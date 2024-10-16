@@ -27,9 +27,12 @@ namespace Kinetix.Internal
                         );
 
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
                     _OnFailure?.Invoke();
+#if DEV_KINETIX
+                    Debug.LogException(e);
+#endif
                 }
             }
             else
@@ -43,9 +46,12 @@ namespace Kinetix.Internal
                         );
 
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
                     _OnFailure?.Invoke();
+#if DEV_KINETIX
+                    Debug.LogException(e);
+#endif
                 }
             }
 
@@ -53,7 +59,10 @@ namespace Kinetix.Internal
             if (metadata == null)
             {
                 _OnFailure?.Invoke();
-                return;
+#if DEV_KINETIX
+				KinetixLogger.LogError("", "Metadatas are null", true);
+#endif
+				return;
             }
 
             _OnSuccess?.Invoke(metadata);

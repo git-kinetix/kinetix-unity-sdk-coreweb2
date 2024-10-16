@@ -59,15 +59,15 @@ namespace Kinetix.Internal
 					track = _Tracks[i];
 					localElapsedTime = track.GlobalToLocalTime(elapsedTime);
 
-					if (track.timeRange.Range < blendDuration * 2f)
+					if (track.TimeRange.Range < blendDuration * 2f)
 					{
-						blendDuration = track.timeRange.Range / 2f;
+						blendDuration = track.TimeRange.Range / 2f;
 					}
 
 					weights[i] = Mathf.Min(
 						1,
-						Mathf.Abs( (localElapsedTime - track.timeRange.minTime) / blendDuration), //start blend weight = 1 ; end blend weight = 0
-						Mathf.Abs( (track.timeRange.maxTime - localElapsedTime) / blendDuration)  //start blend weight = 0 ; end blend weight = 1
+						Mathf.Abs( (localElapsedTime - track.TimeRange.minTime) / blendDuration), //start blend weight = 1 ; end blend weight = 0
+						Mathf.Abs( (track.TimeRange.maxTime - localElapsedTime) / blendDuration)  //start blend weight = 0 ; end blend weight = 1
 					);
 				}
 

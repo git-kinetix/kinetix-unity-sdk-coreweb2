@@ -26,7 +26,9 @@ namespace Kinetix.Internal
 			if (!string.IsNullOrEmpty(Config.Avatar.AvatarID) && Config.IsAnimationRT3K)
 			{
 				RetargetTask<TResponseType, TExporter> retargetTask = GetPreRetargetTask(useWebRequest);
+				RetargetTaskManager.AddTask(Config.Emote.Ids.UUID, retargetTask);
 				TExporter export = await retargetTask.AwaitAll();
+
 				if (CancellationTokenSource.IsCancellationRequested || Config.CancellationSequencer.canceled)
 				{
 
@@ -47,6 +49,8 @@ namespace Kinetix.Internal
 			try
 			{
 				RetargetTask<TResponseType, TExporter> retargetTask = GetRetargetTask(useWebRequest);
+				RetargetTaskManager.AddTask(Config.Emote.Ids.UUID, retargetTask);
+
 				if (Config.AwaitAll)
 				{
 					await retargetTask
@@ -115,7 +119,18 @@ namespace Kinetix.Internal
 		{
 			while (!CurrentTaskCompletionSource.Task.IsCompleted)
 			{
-				await KinetixYield.Yield();
+				try
+				{
+					await KinetixYield.Yield();
+				}
+				catch (TaskCanceledException e)
+				{
+#if DEV_KINETIX
+					KinetixLogger.LogInfo("Cancel", "Canceled an operation. " + Environment.NewLine + e.StackTrace, true);
+#endif
+					CancellationTokenSource.Cancel();
+				}
+
 				if (CancellationTokenSource.IsCancellationRequested || Config.CancellationSequencer.canceled)
 					CurrentTaskCompletionSource.TrySetCanceled();
 			}
@@ -133,7 +148,9 @@ namespace Kinetix.Internal
 
 			bool avatar = Config.Avatar.Equals(_Config.Avatar);
 
-			bool indexer = Config.Indexer != null && Config.Indexer.GetType().Equals(_Config.Indexer.GetType());
+			bool indexer =
+				Config.Indexer == null && _Config.Indexer == null ||
+				Config.Indexer != null && Config.Indexer.GetType().Equals(_Config.Indexer.GetType());
 
 			return path && emote && avatar && indexer;
 		}

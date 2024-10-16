@@ -18,6 +18,7 @@ namespace Kinetix.Internal
 
         private List<Account> Accounts;
         private string        GameAPIKey;
+        private string        APIBaseURL;
         
         public UserAccount LoggedAccount => loggedAccount;
 
@@ -29,20 +30,21 @@ namespace Kinetix.Internal
 
         protected override void Initialize(KinetixCoreConfiguration _Config)
         {
-            Initialize(_Config.GameAPIKey);
+            Initialize(_Config.GameAPIKey, _Config.APIBaseURL);
         }
 
         protected void Initialize()
         {
-            Initialize(string.Empty);
+            Initialize(string.Empty, string.Empty);
         }
 
-        protected void Initialize(string _GameAPIKey)
+        protected void Initialize(string _GameAPIKey, string _APIBaseURL)
         {
             GameAPIKey = _GameAPIKey;
+            APIBaseURL = _APIBaseURL;
             
             Accounts      = new List<Account>();
-            accountPoller = new AccountPoller(GameAPIKey);
+            accountPoller = new AccountPoller(GameAPIKey, _APIBaseURL);
         }
         
         public async Task<bool> ConnectAccount(string _UserId)
@@ -128,7 +130,7 @@ namespace Kinetix.Internal
             }
 
             // Try to create account
-            string url = KinetixConstants.c_SDK_API_URL + "/v1/virtual-world/users";
+            string url = APIBaseURL + "/v1/virtual-world/users";
             string payload = "{\"id\":\"" + _UserId + "\"}";
             
             Dictionary<string, string> headers = new Dictionary<string, string>
@@ -161,7 +163,7 @@ namespace Kinetix.Internal
                 return false;
             }
 
-            string uri = KinetixConstants.c_SDK_API_URL + "/v1/virtual-world/users/" + _UserId;
+            string uri = APIBaseURL + "/v1/virtual-world/users/" + _UserId;
 
             GetRawAPIResultConfig   apiResultOpConfig = new GetRawAPIResultConfig(uri, GameAPIKey);
             GetRawAPIResult         apiResultOp = new GetRawAPIResult(apiResultOpConfig);

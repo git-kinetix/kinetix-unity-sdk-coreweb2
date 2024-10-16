@@ -43,6 +43,12 @@ public class KinetixYield : MonoBehaviour
 
 	private void OnDestroy()
 	{
+        int count = yield.Count;
+        for (int i = 0; i < count; i++)
+		{
+			yield.Dequeue().TrySetCanceled();
+		}
+
 		if (kinetixYieldInstance == this)
 			kinetixYieldInstance = null;
 

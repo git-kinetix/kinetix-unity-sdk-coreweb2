@@ -46,7 +46,8 @@ namespace Kinetix.Internal
                 OperationBatch<TConfig, TResponse> opBatch = CreateOperationBatch(_Operation);
             }
 
-            GetRegisteredOperationBatch(_Operation).RegisterOperation(_Operation, _CancellationTokenSource);
+            var returned = GetRegisteredOperationBatch(_Operation);
+            returned.RegisterOperation(_Operation, _CancellationTokenSource);
         }
 
         private OperationBatch<TConfig, TResponse> CreateOperationBatch<TConfig, TResponse>(IOperation<TConfig, TResponse> _Operation)
@@ -60,6 +61,7 @@ namespace Kinetix.Internal
             OperationBatch<TConfig, TResponse> operationBatch = new OperationBatch<TConfig, TResponse>(operationClone);
             operationBatch.OnCompleted += () => Unregister(operationBatch.GetOperation());
 
+            bool ret = _Operation.Compare(operationClone.Config);
             operationsBatch.Add(operationBatch);
             return operationBatch;
         }
@@ -105,7 +107,7 @@ namespace Kinetix.Internal
             where TConfig : OperationConfig
             where TResponse : OperationResponse
         {
-            return (OperationBatch<TConfig, TResponse>)operationsBatch.SingleOrDefault(operationBatch =>
+            return (OperationBatch<TConfig, TResponse>)operationsBatch.FirstOrDefault(operationBatch =>
             {
                 IOperationBatch<TConfig, TResponse> op = operationBatch as IOperationBatch<TConfig, TResponse>;
                 return op != null && op.GetOperation().Compare(operation.Config);

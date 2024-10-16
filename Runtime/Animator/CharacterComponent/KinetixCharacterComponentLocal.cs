@@ -181,7 +181,7 @@ namespace Kinetix
 				return;
 			}
 
-			sampler.Play(true, new KinetixClipWrapper(clip, _AnimationIds)).timeRange = _TimeRange;
+			sampler.Play(true, new KinetixClipWrapper(clip, _AnimationIds)).TimeRange = _TimeRange;
 		}
 
 		public void StopAnimation()

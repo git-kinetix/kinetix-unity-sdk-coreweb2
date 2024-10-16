@@ -12,13 +12,13 @@ namespace Kinetix.Internal
 	/// <summary>
 	/// A pose interpreter for Avatars using unity's Animator
 	/// </summary>
-	public class AnimatorPoseInterpetor : TransformPoseInterpreter
+	public class AnimatorPoseInterpreter : TransformPoseInterpreter
 	{
 		private readonly Animator animator;
 		private bool wasOn;
 		private bool keepAnimatorState;
 
-		public AnimatorPoseInterpetor(Animator animator, Avatar avatar, SkinnedMeshRenderer[] skinnedMeshRenderer = null) : base(animator.gameObject, avatar, skinnedMeshRenderer)
+		public AnimatorPoseInterpreter(Animator animator, Avatar avatar, SkinnedMeshRenderer[] skinnedMeshRenderer = null) : base(animator.gameObject, avatar, skinnedMeshRenderer)
 		{
 			this.animator = animator;
 		}

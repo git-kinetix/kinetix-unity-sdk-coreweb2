@@ -14,7 +14,7 @@ using UnityEngine;
 
 namespace Kinetix.Internal
 {
-	public class KinanimServiceData
+    public class KinanimServiceData
 	{
 		public KinanimDataIndexer indexer;
 		public KinanimExporter exporter;
@@ -300,6 +300,7 @@ namespace Kinetix.Internal
 			EmoteRetargetingResponse<TResponseType> response = await OperationManagerShortcut.Get().RequestExecution(emoteRetargeting);
 
 			EmoteRetargetingClipResult<TResponseType> castedClipResult = (EmoteRetargetingClipResult<TResponseType>)retargetedEmoteByAvatar[_EmoteAvatarPair].clipsByType[typeof(TResponseType)];
+			
 			castedClipResult.Task.SetResult(response);
 
 			return response;
@@ -333,8 +334,14 @@ namespace Kinetix.Internal
 			if (OnEmoteRetargetedByAvatar.ContainsKey(pair))
 				OnEmoteRetargetedByAvatar.Remove(pair);
 
-			retargetedEmoteByAvatar[pair].CancellationTokenFileDownload?.Cancel();
-			retargetedEmoteByAvatar[pair].SequencerCancelToken?.Cancel();
+            CancellationTokenSource cancelTokenFileDownload = retargetedEmoteByAvatar[pair].CancellationTokenFileDownload;
+            SequencerCancel sequencerToken = retargetedEmoteByAvatar[pair].SequencerCancelToken;
+
+			if (cancelTokenFileDownload != null && !cancelTokenFileDownload.IsCancellationRequested)
+				cancelTokenFileDownload.Cancel();
+
+			if (sequencerToken != null && !sequencerToken.canceled)
+				sequencerToken.Cancel();
 
 			EmoteRetargetedData retargetedData = retargetedEmoteByAvatar[pair];
 			foreach (EmoteRetargetingClipResult emoteRetargetingClipResult in retargetedData.clipsByType.Values)

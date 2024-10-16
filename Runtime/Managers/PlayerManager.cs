@@ -196,30 +196,100 @@ namespace Kinetix.Internal.Cache
 			KinetixCoreBehaviour.ManagerLocator?.Get<AccountManager>().OnUpdatedAccount?.Invoke();
 		}
 
-		public void LoadPlayerAnimation(AnimationIds _Ids, string _LockId, Action _OnSuccess = null, Action _OnFailure = null)
+		public void LoadPlayerAnimation(AnimationIds _Ids, string _LockId, Action<KinetixClip> _OnSuccess = null, Action _OnFailure = null)
 		{
 			KinetixEmote emote = serviceLocator.Get<EmotesService>().GetEmote(_Ids);
 			serviceLocator.Get<LockService>().Lock(new KinetixEmoteAvatarPair() { Emote = emote, Avatar = KAvatar}, _LockId);
 			
-			LoadPlayerAnimationInternal(emote, _OnSuccess, _OnFailure);
+			LoadPlayerAnimationInternal(emote, (_Clip) => _OnSuccess?.Invoke(_Clip), _OnFailure);
+		}
+		
+		public void LoadPlayerAnimation(AnimationIds _Ids, string _LockId, Action<KinetixClip> _OnSuccess, Action<KinetixClip> _OnComplete, Action _OnFailure	)
+		{
+			KinetixEmote emote = serviceLocator.Get<EmotesService>().GetEmote(_Ids);
+			serviceLocator.Get<LockService>().Lock(new KinetixEmoteAvatarPair() { Emote = emote, Avatar = KAvatar}, _LockId);
+			
+			LoadPlayerAnimationInternal(emote, OnSuccess, _OnFailure);
+			
+			void OnSuccess(KinetixClip _Clip)
+			{
+				KinetixProgressData progressData = serviceLocator.Get<AnimationProgressService>().GetProgress(_Ids);
+				_OnSuccess?.Invoke(_Clip);
+				progressData.AwaitAll((_) =>
+				{
+					_OnComplete?.Invoke(_Clip);
+				}, (e) => {
+#if DEV_KINETIX
+					Debug.LogException(e);
+#endif
+					KinetixDebug.LogWarning($"Couldn't load part of the animation '{_Ids.UUID}'");
+					_OnComplete?.Invoke(_Clip);
+				});
+			}
 		}
 
-
-		public void LoadPlayerAnimations(AnimationIds[] _Ids, string _LockId, Action _OnSuccess = null, Action _OnFailure = null)
+		public void LoadPlayerAnimations(AnimationIds[] _Ids, string _LockId, Action<List<KinetixClip>> _OnSuccess = null, Action<List<KinetixClip>> _OnComplete = null, Action _OnFailure = null)
 		{
+			List<KinetixClip> clips = new List<KinetixClip>();
+			List<KinetixClip> clipsComplete = new List<KinetixClip>();
+			bool hasFailed = false;
+
 			for (int i = 0; i < _Ids.Length; i++)
 			{
-				LoadPlayerAnimation(_Ids[i], _LockId, _OnSuccess, _OnFailure);
+				LoadPlayerAnimation(_Ids[i], _LockId, (_Clip) => {
+					clips.Add(_Clip);
+
+					if (clips.Count == _Ids.Length)
+						_OnSuccess?.Invoke(clips);
+				},
+				_OnComplete: (_Clip) => {
+					clipsComplete.Add(_Clip);
+
+					if (clipsComplete.Count == _Ids.Length)
+						_OnComplete?.Invoke(clipsComplete);
+				},
+				_OnFailure: () => hasFailed = true
+				);
+
+				if (hasFailed)
+				{
+					_OnFailure?.Invoke();
+					return;
+				}
+			}
+		}
+
+		public void LoadPlayerAnimations(AnimationIds[] _Ids, string _LockId, Action<List<KinetixClip>> _OnSuccess = null, Action _OnFailure = null)
+		{
+			List<KinetixClip> clips = new List<KinetixClip>();
+			bool hasFailed = false;
+
+			for (int i = 0; i < _Ids.Length; i++)
+			{
+				LoadPlayerAnimation(_Ids[i], _LockId, (_Clip) => {
+					clips.Add(_Clip);
+
+					if (clips.Count == _Ids.Length)
+						_OnSuccess?.Invoke(clips);
+				}, 
+				_OnFailure: () => hasFailed = true
+				);
+
+				if (hasFailed)
+				{
+					_OnFailure?.Invoke();
+					return;
+				}
 			}
 		}
 
 		// To be called only in this class in case emote are preloaded with a lock
-		private void LoadPlayerAnimations(AnimationIds[] _Ids, Action _OnSuccess = null, Action _OnFailure = null)
+		private void LoadPlayerAnimations(AnimationIds[] _Ids, Action<List<KinetixClip>> _OnSuccess = null, Action _OnFailure = null)
 		{
 			LoadPlayerAnimations(_Ids, "", _OnSuccess, _OnFailure);
 		}
 
-		private async void LoadPlayerAnimationInternal(KinetixEmote _KinetixEmote, Action _OnSuccess, Action _OnFailure)
+		private async void LoadPlayerAnimationInternal(KinetixEmote _KinetixEmote, Action<KinetixClip> _OnSuccess, Action _OnFailure)
 		{
 			if (KAvatar == null)
 			{
@@ -237,7 +307,7 @@ namespace Kinetix.Internal.Cache
 			try
 			{
 				// TODO find a better way, this is not sexy at all
-				object retargetingResult;
+				object retargetingResult = null;
 				
 				if (KAvatar.ExportType == EExportType.KinetixClip)
 				{
@@ -252,7 +322,7 @@ namespace Kinetix.Internal.Cache
 				if (retargetingResult != null)
 				{
 					serviceLocator.Get<MemoryService>().OnAnimationLoadedOnPlayer(_KinetixEmote.Ids);
-					_OnSuccess?.Invoke();
+					_OnSuccess?.Invoke((KinetixClip) retargetingResult);
 				}
 				else
 				{
@@ -434,7 +504,7 @@ namespace Kinetix.Internal.Cache
 		{
 			KinetixCharacterComponentLocal kcc = new KinetixCharacterComponentLocal();
 
-			kcc.RegisterPoseInterpreter(new AnimatorPoseInterpetor(_Animator, _KinetixAvatar.Avatar.avatar, _Animator.GetComponentsInChildren<SkinnedMeshRenderer>().GetARKitRenderers()));
+			kcc.RegisterPoseInterpreter(new AnimatorPoseInterpreter(_Animator, _KinetixAvatar.Avatar.avatar, _Animator.GetComponentsInChildren<SkinnedMeshRenderer>().GetARKitRenderers()));
 			kcc.AutoPlay = true;
 
 			kcc.Init(serviceLocator, _KinetixAvatar);
@@ -447,7 +517,7 @@ namespace Kinetix.Internal.Cache
 		{
 			KinetixCharacterComponentLocal kcc = new KinetixCharacterComponentLocal();
 
-			kcc.RegisterPoseInterpreter(new AnimatorPoseInterpetor(_Animator, _KinetixAvatar.Avatar.avatar, _Animator.GetComponentsInChildren<SkinnedMeshRenderer>().GetARKitRenderers()));
+			kcc.RegisterPoseInterpreter(new AnimatorPoseInterpreter(_Animator, _KinetixAvatar.Avatar.avatar, _Animator.GetComponentsInChildren<SkinnedMeshRenderer>().GetARKitRenderers()));
 			kcc.AutoPlay = true;
 
 			kcc.Init(serviceLocator, _KinetixAvatar, _RootMotionConfig);
@@ -504,10 +574,10 @@ namespace Kinetix.Internal.Cache
 		public void SetLoopAnimation(bool _Looping) => KinetixCharacterComponent.SetLoopAnimation(_Looping);
 		public bool GetIsLoopingAnimation() => KinetixCharacterComponent.GetIsLoopingAnimation();
 
-        public void SetBlendshapeActive(bool _Active) => KinetixCharacterComponent.SetBlendshapeActive(_Active);
-        public bool GetBlendshapeActive() => KinetixCharacterComponent.GetBlendshapeActive();
+		public void SetBlendshapeActive(bool _Active) => KinetixCharacterComponent.SetBlendshapeActive(_Active);
+		public bool GetBlendshapeActive() => KinetixCharacterComponent.GetBlendshapeActive();
 
-        public void SetPause(bool _Paused) => KinetixCharacterComponent.SetPause(_Paused);
+		public void SetPause(bool _Paused) => KinetixCharacterComponent.SetPause(_Paused);
 		public void SetPlayRate(float _PlayRate) => KinetixCharacterComponent.SetPlayRate(_PlayRate);
 		public void GetPlayRate() => KinetixCharacterComponent.GetPlayRate();
 		public void SetElapsedTime(float _ElapsedTime) => KinetixCharacterComponent.SetElapsedTime(_ElapsedTime);

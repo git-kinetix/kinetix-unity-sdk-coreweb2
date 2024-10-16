@@ -53,23 +53,35 @@ namespace Kinetix.Internal
 
 		public void Update()
 		{
-			if (!position.HasValue || (targetRotationWeight == 0 && targetPositionWeight == 0))
+			if ((!position.HasValue && !endBoneRotation.HasValue) || (targetRotationWeight == 0 && targetPositionWeight == 0))
 				return;				  
 
 			//Get animation rotation of the endbone
 			Quaternion[] endBoneQ = resolver.transforms.Select(t => t.localRotation).ToArray();
 
-			resolver.endBoneRotation = targetRotationWeight == 0 ? null : endBoneRotation;
-			resolver.Resolve(position.Value);
+			Vector3 target = position ?? resolver.transforms[0].position;
 
+			resolver.endBoneRotation = targetRotationWeight == 0 ? null : endBoneRotation;
+			resolver.Resolve(target);
+
+			Quaternion endBoneGlobRot = default;
 			//End bone lerp
 			if (targetRotationWeight != 0 && endBoneRotation != null)
+			{
 				resolver.transforms[0].localRotation = Quaternion.Slerp(endBoneQ[0], resolver.transforms[0].localRotation, targetRotationWeight);
-	
+				endBoneGlobRot = resolver.transforms[0].rotation;
+			}
+
 			//End position lerp (= bones 1 and 2)
 			for (int i = 1; i < endBoneQ.Length; i++)
 			{
 				resolver.transforms[i].localRotation = Quaternion.Slerp(endBoneQ[i], resolver.transforms[i].localRotation, targetPositionWeight);
+			}
+
+			//Fix end bone rotation
+			if (targetRotationWeight != 0 && endBoneRotation != null)
+			{
+				resolver.transforms[0].rotation = endBoneGlobRot;
 			}
 		}
 

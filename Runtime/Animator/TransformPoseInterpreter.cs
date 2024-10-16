@@ -218,6 +218,8 @@ namespace Kinetix.Internal
 			return path;
 		}
 
+		internal GameObject GetBone(HumanBodyBones bone) => boneMap[bone];
+
 		///<inheritdoc/>
 		public virtual KinetixPose GetPose()
 		{
@@ -290,6 +292,5 @@ namespace Kinetix.Internal
 			rotation = transform.rotation,
 			scale = transform.lossyScale
 		};
-
 	}
 }

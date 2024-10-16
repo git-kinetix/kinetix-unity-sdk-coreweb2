@@ -42,7 +42,14 @@ namespace Kinetix.Internal
 		/// <summary>
 		/// Range in animation context (local time) to be played
 		/// </summary>
-		public AnimationTimeRange timeRange = AnimationTimeRange.Default;
+		public AnimationTimeRange TimeRange {
+			get => _timeRange;
+			set {
+				_timeRange = value;
+				FixTimeRange();
+			}
+		}
+		private AnimationTimeRange _timeRange = AnimationTimeRange.Default;
 
 
 		/// <summary>
@@ -52,23 +59,23 @@ namespace Kinetix.Internal
 		/// <summary>
 		/// Duration of the track
 		/// </summary>
-		public float Duration => timeRange.maxTime - timeRange.minTime;
+		public float Duration => TimeRange.maxTime - TimeRange.minTime;
 
 
 		/// <param name="_Clip"><see cref="Clip"/></param>
 		public KinetixClipTrack(KinetixClipWrapper _Clip) : this(_Clip, AnimationTimeRange.Default) { }
 		/// <param name="_Clip"><see cref="Clip"/></param>
-		/// <param name="_TimeRange"><see cref="timeRange"/></param>
+		/// <param name="_TimeRange"><see cref="TimeRange"/></param>
 		public KinetixClipTrack(KinetixClipWrapper _Clip, AnimationTimeRange _TimeRange) : this(_Clip, _TimeRange, 0) { }
 		/// <param name="_Clip"><see cref="Clip"/></param>
 		public KinetixClipTrack(KinetixClipWrapper _Clip, float _TimelineStartTime) : this(_Clip, AnimationTimeRange.Default, _TimelineStartTime) { }
 		/// <param name="_Clip"><see cref="Clip"/></param>
-		/// <param name="_TimeRange"><see cref="timeRange"/></param>
+		/// <param name="_TimeRange"><see cref="TimeRange"/></param>
 		/// <param name="_TimelineStartTime"><see cref="timelineStartTime"/></param>
 		public KinetixClipTrack(KinetixClipWrapper _Clip, AnimationTimeRange _TimeRange, float _TimelineStartTime)
 		{
 			this.clip = _Clip;
-			this.timeRange = _TimeRange;
+			this.TimeRange = _TimeRange;
 			this.timelineStartTime = _TimelineStartTime;
 			previousFrameIndex = -1;
 
@@ -78,16 +85,16 @@ namespace Kinetix.Internal
 		private void FixTimeRange()
 		{
 			float duration = clip.clip.Duration;
-			if (timeRange.minTime < 0 || timeRange.minTime > duration)
-				timeRange.minTime = 0;
+			if (_timeRange.minTime < 0 || _timeRange.minTime > duration)
+				_timeRange.minTime = 0;
 
-			if (timeRange.maxTime < 0 || timeRange.maxTime > duration)
-				timeRange.maxTime = duration;
+			if (_timeRange.maxTime < 0 || _timeRange.maxTime > duration)
+				_timeRange.maxTime = duration;
 
-			if (timeRange.minTime > timeRange.maxTime)
+			if (_timeRange.minTime > _timeRange.maxTime)
 			{
 				//Tuple exchange: Min become Max. Max become Min
-				(timeRange.minTime, timeRange.maxTime) = (timeRange.maxTime, timeRange.minTime);
+				(_timeRange.minTime, _timeRange.maxTime) = (_timeRange.maxTime, _timeRange.minTime);
 			}
 		}
 
@@ -121,8 +128,8 @@ namespace Kinetix.Internal
 
 			KinetixFrame toReturn = null;
 			int frame = Mathf.FloorToInt(elapsedTime * clip.clip.FrameRate); //s * f/s = f
-			int minFrame = Mathf.RoundToInt(timeRange.minTime * clip.clip.FrameRate);
-			int maxFrame = Mathf.RoundToInt(timeRange.maxTime * clip.clip.FrameRate);
+			int minFrame = Mathf.RoundToInt(TimeRange.minTime * clip.clip.FrameRate);
+			int maxFrame = Mathf.RoundToInt(TimeRange.maxTime * clip.clip.FrameRate);
 
 			if (frame >= minFrame && frame < maxFrame)
 			{
@@ -150,33 +157,33 @@ namespace Kinetix.Internal
 
 		public float GlobalToLocalTime(float _GlobalElapsedTime)
 		{
-			return _GlobalElapsedTime - timelineStartTime + timeRange.minTime;
+			return _GlobalElapsedTime - timelineStartTime + TimeRange.minTime;
 		}
 
 		/// <summary>
 		/// Truncate the _TimeRange so that the track ends at <paramref name="_GlobalEndTime"/> 
 		/// </summary>
 		/// <remarks>
-		/// If <paramref name="_GlobalEndTime"/> is goes behond the duration of the _Clip. <see cref="timeRange"/>.maxTime will be set to the _Clip duration
+		/// If <paramref name="_GlobalEndTime"/> is goes behond the duration of the _Clip. <see cref="TimeRange"/>.maxTime will be set to the _Clip duration
 		/// </remarks>
 		/// <param name="_GlobalEndTime">Time in sampler context (global time) at which the track will end</param>
 		public void TruncateEnd(float _GlobalEndTime)
 		{
 			float maxTime = _GlobalEndTime - timelineStartTime;
-			timeRange.maxTime = Mathf.Clamp(maxTime, 0, Clip.clip.Duration);
+			_timeRange.maxTime = Mathf.Clamp(maxTime, 0, Clip.clip.Duration);
 		}
 
 		/// <summary>
 		/// Truncate the _TimeRange so that the track ends at <paramref name="_GlobalStartTime"/> 
 		/// </summary>
 		/// <remarks>
-		/// If <paramref name="_GlobalStartTime"/> is goes before the duration of the _Clip. <see cref="timeRange"/>.min will be set to 0
+		/// If <paramref name="_GlobalStartTime"/> is goes before the duration of the _Clip. <see cref="TimeRange"/>.min will be set to 0
 		/// </remarks>
 		/// <param name="_GlobalStartTime">Time in sampler context (global time) at which the track will end</param>
 		public void TruncateStart(float _GlobalStartTime)
 		{
 			float minTime = _GlobalStartTime - timelineStartTime;
-			timeRange.minTime = Mathf.Max(0, minTime);
+			_timeRange.minTime = Mathf.Max(0, minTime);
 		}
 
 		/// <summary>
