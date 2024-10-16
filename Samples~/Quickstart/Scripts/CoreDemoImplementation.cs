@@ -34,7 +34,7 @@ public class CoreDemoImplementation : MonoBehaviour
 
     // This callback is used for the actions made after the SDK is initialized
     // Such as initializing the UI and Registering our LocalPlayer's animator
-    protected void OnInitialize()
+    protected virtual void OnInitialize()
     {
         // Register local player to receive animation
         // See "Animation System" documentation
@@ -73,6 +73,8 @@ public class CoreDemoImplementation : MonoBehaviour
 
     public void OpenUGELink()
     {
+        KinetixCore.UGC.ClearCachedUrl();
+
         // Example on how to get the link
         KinetixCore.UGC.GetUgcUrl((_Url) => {
             Application.OpenURL(_Url);

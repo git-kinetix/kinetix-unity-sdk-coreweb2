@@ -62,7 +62,7 @@ namespace Kinetix.Internal
 
 			kcc.Init(serviceLocator, kinetixAvatar, _RootMotion);
 
-			kcc.RegisterPoseInterpreter(new AnimatorPoseInterpetor(_Animator, _Animator.avatar, _Animator.GetComponentsInChildren<SkinnedMeshRenderer>().GetARKitRenderers()));
+			kcc.RegisterPoseInterpreter(new AnimatorPoseInterpreter(_Animator, _Animator.avatar, _Animator.GetComponentsInChildren<SkinnedMeshRenderer>().GetARKitRenderers()));
 			kcc.AutoPlay = true;
 
 			PeerByUUID.Add(_RemotePeerID, new KinetixPeer {

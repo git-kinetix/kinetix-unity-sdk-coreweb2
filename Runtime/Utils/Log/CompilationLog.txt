@@ -1,4 +1,0 @@
-# Starting compiling Kinetix.Internal.Utils.dll
-D:\UnityInstall\2020.3.33f1\Editor\Data\Tools\RoslynScripts\unity_csc.bat /noconfig @Temp/UnityTempFile-6661c66dd6ee0944ead0bc99abf66b6e
-# Starting IL post processing on Kinetix.Internal.Utils.dll
-D:/UnityInstall/2020.3.33f1/Editor/Data/MonoBleedingEdge/bin/mono.exe D:/UnityInstall/2020.3.33f1/Editor/Data/Tools/ILPostProcessorRunner/ILPostProcessorRunner.exe @D:/Kinetix/kinetix-emote-wheel/Temp/UnityTempFile-4935ea33124846e4c852490f57a661c1

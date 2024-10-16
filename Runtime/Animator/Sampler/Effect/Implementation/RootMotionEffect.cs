@@ -80,6 +80,8 @@ namespace Kinetix.Internal
 			hipsIndexStartPos = startPos.bones.IndexOf(HumanBodyBones.Hips);
 			hips = skeleton[UnityHumanUtils.AVATAR_HIPS];
 			root = (AvatarBoneTransform) hips.IterateParent().Last();
+			if (hipsIndexStartPos == -1)
+				return;
 			internalEnabled = true;
 
 			//Set hips to pos

@@ -15,11 +15,13 @@ namespace Kinetix.Utils
 {
 	public class SdkApiProviderWrapper : IProviderWrapper
 	{
-		private string GameAPIKey = string.Empty;
+		private readonly string GameAPIKey = string.Empty;
+		private readonly string APIBaseURL = string.Empty;
 
-		public SdkApiProviderWrapper(string _GameAPIKey)
+		public SdkApiProviderWrapper(string _GameAPIKey, string _APIBaseURL)
 		{
 			GameAPIKey = _GameAPIKey;
+			APIBaseURL = _APIBaseURL;
 		}
 
 		/// <summary>
@@ -46,7 +48,7 @@ namespace Kinetix.Utils
 
 		private async void GetAnimationsMetadataOfOwnerInternal(string _AccountId, List<AnimationMetadata> _AnimationMetadatas = null, string _PageKey = null, Action<AnimationMetadata[]> _OnSuccess = null)
 		{
-			string uri = KinetixConstants.c_SDK_API_URL + "/v1/users/" + _AccountId + "/emotes";
+			string uri = APIBaseURL + "/v1/users/" + _AccountId + "/emotes";
 
 			_AnimationMetadatas ??= new List<AnimationMetadata>();
 
@@ -92,7 +94,7 @@ namespace Kinetix.Utils
 		{
 			TaskCompletionSource<AnimationMetadata> tcs = new TaskCompletionSource<AnimationMetadata>();
 
-			string uri = KinetixConstants.c_SDK_API_URL + "/v1/emotes/" + _AnimationIds.UUID;
+			string uri = APIBaseURL + "/v1/emotes/" + _AnimationIds.UUID;
 
 			GetRawAPIResultConfig   apiResultOpConfig = new GetRawAPIResultConfig(uri, GameAPIKey);
 			GetRawAPIResult         apiResultOp       = new GetRawAPIResult(apiResultOpConfig);
@@ -102,6 +104,13 @@ namespace Kinetix.Utils
 			if (response.raw.ResponseCode == 404)
 			{
 				KinetixDebug.LogError($"\"{nameof(GetAnimationMetadataOfEmote)}\" returned (404) : Emote not found");
+				tcs.SetResult(null);
+				return await tcs.Task;
+			}
+
+			if (response.raw.ResponseCode == 403)
+			{
+				KinetixDebug.LogError($"\"{nameof(GetAnimationMetadataOfEmote)}\" returned (403) : Forbidden");
 				tcs.SetResult(null);
 				return await tcs.Task;
 			}
@@ -134,7 +143,7 @@ namespace Kinetix.Utils
         {
 			TaskCompletionSource<AnimationMetadata> tcs = new TaskCompletionSource<AnimationMetadata>();
 
-			string uri = KinetixConstants.c_SDK_API_URL + "/v1/emotes/" + _AnimationIds.UUID + "/avatar/" + _AvatarId;
+			string uri = APIBaseURL + "/v1/emotes/" + _AnimationIds.UUID + "/avatar/" + _AvatarId;
 
 			GetRawAPIResultConfig apiResultOpConfig = new GetRawAPIResultConfig(uri, GameAPIKey);
 			GetRawAPIResult apiResultOp = new GetRawAPIResult(apiResultOpConfig);
@@ -177,7 +186,7 @@ namespace Kinetix.Utils
 		{
 			TaskCompletionSource<SdkApiProcess[]> tcs = new TaskCompletionSource<SdkApiProcess[]>();
 
-			string uri = KinetixConstants.c_SDK_API_URL + "/v2/users/" + _AccountId + "/processes";
+			string uri = APIBaseURL + "/v2/users/" + _AccountId + "/processes";
 
 			GetRawAPIResultConfig apiResultOpConfig = new GetRawAPIResultConfig(uri, GameAPIKey);
 			GetRawAPIResult apiResultOp = new GetRawAPIResult(apiResultOpConfig);
@@ -212,7 +221,7 @@ namespace Kinetix.Utils
 		{
 			TaskCompletionSource<SdkApiProcess> tcs = new TaskCompletionSource<SdkApiProcess>();
 
-			string url = KinetixConstants.c_SDK_API_URL + "/v1/process/" + _ProcessId + "/validate";
+			string url = APIBaseURL + "/v1/process/" + _ProcessId + "/validate";
             
             Dictionary<string, string> headers = new Dictionary<string, string>
             {
@@ -245,7 +254,7 @@ namespace Kinetix.Utils
 		{
 			TaskCompletionSource<SdkTokenValidityResult> tcs = new TaskCompletionSource<SdkTokenValidityResult>();
 
-			string url = KinetixConstants.c_SDK_API_URL + "/v1/process/" + _ProcessId + "/retake";
+			string url = APIBaseURL + "/v1/process/" + _ProcessId + "/retake";
             
             Dictionary<string, string> headers = new Dictionary<string, string>
             {

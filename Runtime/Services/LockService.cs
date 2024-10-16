@@ -53,8 +53,10 @@ namespace Kinetix.Internal
             }
 
             locksByPairs[_EmoteAvatarPair].Remove(_LockId);
+			RetargetTaskManager.RemoveTask(_EmoteAvatarPair.Emote.Ids.UUID);
 
-            KinetixDebug.Log("[UNLOCK] Animation : " + _EmoteAvatarPair.Emote.Ids + ". Locks left: " + locksByPairs[_EmoteAvatarPair].Count);
+
+			KinetixDebug.Log("[UNLOCK] Animation : " + _EmoteAvatarPair.Emote.Ids + ". Locks left: " + locksByPairs[_EmoteAvatarPair].Count);
 
             if (locksByPairs[_EmoteAvatarPair].Count == 0)
                 Unload(_EmoteAvatarPair);
@@ -80,8 +82,9 @@ namespace Kinetix.Internal
             KinetixDebug.Log("[UNLOAD] Animation : " + _EmoteAvatarPair.Emote.Ids);
 
             locksByPairs.Remove(_EmoteAvatarPair);
+			RetargetTaskManager.RemoveTask(_EmoteAvatarPair.Emote.Ids.UUID);
 
-            OnRequestEmoteUnload?.Invoke(_EmoteAvatarPair);
+			OnRequestEmoteUnload?.Invoke(_EmoteAvatarPair);
         }
     }
 }

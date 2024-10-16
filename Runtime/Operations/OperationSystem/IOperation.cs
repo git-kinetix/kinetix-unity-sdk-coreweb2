@@ -13,9 +13,15 @@ namespace Kinetix.Internal
         Task Execute();
 
         bool IsCompleted();
-    }
 
-    public interface IOperation<TConfig, TResponse> : IOperation
+		/// <summary>
+		/// CancellationTokenSource of the operation
+		/// </summary>
+		public CancellationTokenSource CancellationTokenSource { get; set; }
+
+	}
+
+	public interface IOperation<TConfig, TResponse> : IOperation
         where TConfig : OperationConfig
         where TResponse : OperationResponse
     {
@@ -29,11 +35,6 @@ namespace Kinetix.Internal
         /// </summary>
         TConfig                 Config                  { get; set; }
         
-        /// <summary>
-        /// CancellationTokenSource of the operation
-        /// </summary>
-        public CancellationTokenSource CancellationTokenSource { get; set; }
-
         /// <summary>
         /// Execute the CurrentTask
         /// </summary>

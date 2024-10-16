@@ -14,11 +14,13 @@ namespace Kinetix.Internal
         
         // Cache
         private readonly string                  GameAPIKey;
+        private readonly string                  APIBaseURL;
         private          CancellationTokenSource cancellationTokenSource;
         
-        public AccountPoller(string _GameAPIKey)
+        public AccountPoller(string _GameAPIKey, string _APIBaseURL)
         {
             GameAPIKey =  _GameAPIKey;
+            APIBaseURL = _APIBaseURL;
             OnEndPoll  += HandleOnEndPoll;
         }
 
@@ -30,7 +32,7 @@ namespace Kinetix.Internal
                 await KinetixYield.Yield();
             }
 
-            string url = KinetixConstants.c_SDK_API_URL + "/v1/users/" +
+            string url = APIBaseURL + "/v1/users/" +
                          KinetixCoreBehaviour.ManagerLocator.Get<AccountManager>().LoggedAccount.AccountId +
                          "/emotes";
 

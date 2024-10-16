@@ -524,16 +524,6 @@ namespace Kinetix.Internal
 		{
 			KinetixAnimationBehaviour.UnregisterAvatar(_PlayerUUID);
 		}
-		
-		/// <summary>
-		/// Play animation on local Player
-		/// </summary>
-		/// <param name="_AnimationIds">IDs of the animation</param>
-		[Obsolete("Please use the overload with the EmoteID as string.", false)]
-		public void PlayAnimationOnLocalPlayer(AnimationIds _AnimationIds)
-		{
-			KinetixAnimationBehaviour.PlayAnimationOnLocalPlayer(_AnimationIds, OnPlayedAnimationLocalPlayer);
-		}
 
 		/// <summary>
 		/// Play animation on local Player
@@ -551,17 +541,6 @@ namespace Kinetix.Internal
 		public void PlayAnimationOnLocalPlayer(string _EmoteID, string _ForceExtension = "")
 		{
 			KinetixAnimationBehaviour.PlayAnimationOnLocalPlayer(new AnimationIds(_EmoteID), OnPlayedAnimationLocalPlayer, _ForceExtension);
-		}
-
-		/// <summary>
-		/// Play animation on a local Character
-		/// </summary>
-		/// <param name="_PlayerUUID">UUID of the avatar</param>
-		/// <param name="_AnimationIds">IDs of the animation</param>
-		[Obsolete("Please use the overload with the EmoteID as string.", false)]
-		public void PlayAnimationOnAvatar(string _PlayerUUID, AnimationIds _AnimationIds)
-		{
-			KinetixAnimationBehaviour.PlayAnimationOnAvatar(_PlayerUUID, _AnimationIds, OnPlayedAnimationLocalPlayer);
 		}
 
 		/// <summary>
@@ -737,34 +716,11 @@ namespace Kinetix.Internal
 		/// <summary>
 		/// Play animations on local Player
 		/// </summary>
-		/// <param name="_Ids">IDs of the animations</param>
-		/// <param name="_Loop">Loop the queue</param>
-		[Obsolete("Please use the overload with the EmoteID as string.", false)]
-		public void PlayAnimationQueueOnLocalPlayer(AnimationIds[] _Ids, bool _Loop = false)
-		{
-			KinetixAnimationBehaviour.PlayAnimationQueueOnLocalPlayer(_Ids, _Loop, OnPlayedAnimationQueueLocalPlayer);
-		}
-
-		/// <summary>
-		/// Play animations on local Player
-		/// </summary>
 		/// <param name="_EmoteIDs">ID of the animations</param>
 		/// <param name="_Loop">Loop the queue</param>
 		public void PlayAnimationQueueOnLocalPlayer(string[] _EmoteIDs, bool _Loop = false)
 		{
 			KinetixAnimationBehaviour.PlayAnimationQueueOnLocalPlayer(_EmoteIDs.Select(t => new AnimationIds(t)).ToArray(), _Loop, OnPlayedAnimationQueueLocalPlayer);
-		}
-		
-		/// <summary>
-		/// Get Retargeted KinetixClip for local Player
-		/// </summary>
-		/// <param name="_AnimationIds">IDs of the animation</param>
-		/// <param name="_OnSuccess">Callback on Success providing KinetixClip Legacy</param>
-		/// <param name="_OnFailure">Callback on Failure</param>
-		[Obsolete("Please use the overload with the EmoteID as string.", false)]
-		public void GetRetargetedKinetixClipForLocalPlayer(AnimationIds _AnimationIds, Action<KinetixClip> _OnSuccess, Action _OnFailure = null)
-		{
-			KinetixAnimationBehaviour.GetRetargetedKinetixClipOnLocalPlayer(_AnimationIds, _OnSuccess, _OnFailure);
 		}
 
 		/// <summary>
@@ -782,19 +738,6 @@ namespace Kinetix.Internal
 		/// Get Retargeted KinetixClip for local Character
 		/// </summary>
 		/// <param name="_PlayerUUID">UUID of the avatar</param>
-		/// <param name="_AnimationIds">IDs of the animation</param>
-		/// <param name="_OnSuccess">Callback on Success providing KinetixClip Legacy</param>
-		/// <param name="_OnFailure">Callback on Failure</param>
-		[Obsolete("Please use the overload with the EmoteID as string.", false)]
-		public void GetRetargetedKinetixClipForAvatar(string _PlayerUUID, AnimationIds _AnimationIds, Action<KinetixClip> _OnSuccess, Action _OnFailure = null)
-		{
-			KinetixAnimationBehaviour.GetRetargetedKinetixClipOnAvatar(_PlayerUUID, _AnimationIds, _OnSuccess, _OnFailure);
-		}
-
-		/// <summary>
-		/// Get Retargeted KinetixClip for local Character
-		/// </summary>
-		/// <param name="_PlayerUUID">UUID of the avatar</param>
 		/// <param name="_EmoteID">ID of the animation</param>
 		/// <param name="_OnSuccess">Callback on Success providing KinetixClip Legacy</param>
 		/// <param name="_OnFailure">Callback on Failure</param>
@@ -802,21 +745,6 @@ namespace Kinetix.Internal
 		{
 			KinetixAnimationBehaviour.GetRetargetedKinetixClipOnAvatar(_PlayerUUID, new AnimationIds(_EmoteID), _OnSuccess, _OnFailure);
 		}
-		
-		/// <summary>
-		/// Get Retargeted AnimationClip Legacy for local Player
-		/// </summary>
-		/// <remarks>
-		/// The animation clip memory isn't unhandeled by the sdk. You have to call the <see cref="UnityEngine.Object.Destroy"/> after using it.
-		/// </remarks>
-		/// <param name="_AnimationIds">IDs of the animation</param>
-		/// <param name="_OnSuccess">Callback on Success providing KinetixClip Legacy</param>
-		/// <param name="_OnFailure">Callback on Failure</param>
-		[Obsolete("Please use the overload with the EmoteID as string.", false)]
-		public void GetRetargetedAnimationClipLegacyForLocalPlayer(AnimationIds _AnimationIds, Action<AnimationClip> _OnSuccess, Action _OnFailure = null)
-		{
-			KinetixAnimationBehaviour.GetRetargetedAnimationClipLegacyOnLocalPlayer(_AnimationIds, _OnSuccess, _OnFailure);
-		}
 
 		/// <summary>
 		/// Get Retargeted AnimationClip Legacy for local Player
@@ -827,6 +755,7 @@ namespace Kinetix.Internal
 		/// <param name="_EmoteID">ID of the animation</param>
 		/// <param name="_OnSuccess">Callback on Success providing KinetixClip Legacy</param>
 		/// <param name="_OnFailure">Callback on Failure</param>
+		[Obsolete("Support for AnimationClip Legacy is deprecated. Use GetRetargetedKinetixClipForLocalPlayer instead.")] 
 		public void GetRetargetedAnimationClipLegacyForLocalPlayer(string _EmoteID, Action<AnimationClip> _OnSuccess, Action _OnFailure = null)
 		{
 			KinetixAnimationBehaviour.GetRetargetedAnimationClipLegacyOnLocalPlayer(new AnimationIds(_EmoteID), _OnSuccess, _OnFailure);
@@ -910,13 +839,12 @@ namespace Kinetix.Internal
 		/// <summary>
 		/// Load a local Player animation
 		/// </summary>
-		/// <param name="_AnimationIds">IDs of the animation</param>
+		/// <param name="_EmoteID">ID of the animation</param>
 		/// <param name="_LockId">Arbitrary Identifier of the component asking for the animation, to pass when unloading the animation</param>
 		/// <param name="_OnSuccess">Callback when successfully loaded animation</param>
-		[Obsolete("Please use the overload with the EmoteID as string.", false)]
-		public void LoadLocalPlayerAnimation(AnimationIds _AnimationIds, string _LockId, Action _OnSuccess = null, Action _OnFailure = null)
+		public void LoadLocalPlayerAnimation(string _EmoteID, string _LockId, Action _OnSuccess = null, Action _OnFailure = null)
 		{
-			KinetixAnimationBehaviour.LoadLocalPlayerAnimation(_AnimationIds, _LockId, _OnSuccess, _OnFailure);
+			KinetixAnimationBehaviour.LoadLocalPlayerAnimation(new AnimationIds(_EmoteID), _LockId, (_Clip) => { _OnSuccess?.Invoke(); }, _OnFailure);
 		}
 
 		/// <summary>
@@ -925,21 +853,21 @@ namespace Kinetix.Internal
 		/// <param name="_EmoteID">ID of the animation</param>
 		/// <param name="_LockId">Arbitrary Identifier of the component asking for the animation, to pass when unloading the animation</param>
 		/// <param name="_OnSuccess">Callback when successfully loaded animation</param>
-		public void LoadLocalPlayerAnimation(string _EmoteID, string _LockId, Action _OnSuccess = null, Action _OnFailure = null)
+		public void LoadLocalPlayerAnimation(string _EmoteID, string _LockId, Action<KinetixClip> _OnSuccess, Action _OnFailure = null)
 		{
 			KinetixAnimationBehaviour.LoadLocalPlayerAnimation(new AnimationIds(_EmoteID), _LockId, _OnSuccess, _OnFailure);
 		}
-		
+
 		/// <summary>
-		/// Load local Player animations
+		/// Load a local Player animation
 		/// </summary>
-		/// <param name="_AnimationIds">IDs of the animations</param>
+		/// <param name="_EmoteID">ID of the animation</param>
 		/// <param name="_LockId">Arbitrary Identifier of the component asking for the animation, to pass when unloading the animation</param>
-		/// <param name="_OnSuccess">Callback when successfully loaded animations</param>
-		[Obsolete("Please use the overload with the EmoteID as string.", false)]
-		public void LoadLocalPlayerAnimations(AnimationIds[] _AnimationIds, string _LockId, Action _OnSuccess = null, Action _OnFailure = null)
+		/// <param name="_OnSuccess">Callback when successfully loaded animation</param>
+		/// <param name="_OnComplete">Callback when the animation is 100% loaded</param>
+		public void LoadLocalPlayerAnimation(string _EmoteID, string _LockId, Action<KinetixClip> _OnSuccess, Action<KinetixClip> _OnComplete, Action _OnFailure = null)
 		{
-			KinetixAnimationBehaviour.LoadLocalPlayerAnimations(_AnimationIds, _LockId, _OnSuccess, _OnFailure);
+			KinetixAnimationBehaviour.LoadLocalPlayerAnimation(new AnimationIds(_EmoteID), _LockId, _OnSuccess, _OnComplete, _OnFailure);
 		}
 
 		/// <summary>
@@ -950,20 +878,30 @@ namespace Kinetix.Internal
 		/// <param name="_OnSuccess">Callback when successfully loaded animations</param>
 		public void LoadLocalPlayerAnimations(string[] _EmoteIDs, string _LockId, Action _OnSuccess = null, Action _OnFailure = null)
 		{
+			KinetixAnimationBehaviour.LoadLocalPlayerAnimations(_EmoteIDs.Select(t => new AnimationIds(t)).ToArray(), _LockId, (_Clip) => { _OnSuccess?.Invoke(); }, _OnFailure);
+		}
+
+		/// <summary>
+		/// Load local Player animations
+		/// </summary>
+		/// <param name="_EmoteIDs">ID of the animations</param>
+		/// <param name="_LockId">Arbitrary Identifier of the component asking for the animation, to pass when unloading the animation</param>
+		/// <param name="_OnSuccess">Callback when successfully loaded animations</param>
+		public void LoadLocalPlayerAnimations(string[] _EmoteIDs, string _LockId, Action<List<KinetixClip>> _OnSuccess, Action _OnFailure = null)
+		{
 			KinetixAnimationBehaviour.LoadLocalPlayerAnimations(_EmoteIDs.Select(t => new AnimationIds(t)).ToArray(), _LockId, _OnSuccess, _OnFailure);
 		}
 
 		/// <summary>
-		/// Load a Character animation
+		/// Load local Player animations
 		/// </summary>
-		/// <param name="_PlayerUUID">UUID of the avatar</param>
-		/// <param name="_AnimationIds">IDs of the animation</param>
+		/// <param name="_EmoteIDs">ID of the animations</param>
 		/// <param name="_LockId">Arbitrary Identifier of the component asking for the animation, to pass when unloading the animation</param>
-		/// <param name="_OnSuccess">Callback when successfully loaded animation</param>
-		[Obsolete("Please use the overload with the EmoteID as string.", false)]
-		public void LoadAvatarAnimation(string _PlayerUUID, AnimationIds _AnimationIds, string _LockId, Action _OnSuccess = null, Action _OnFailure = null)
+		/// <param name="_OnSuccess">Callback when successfully loaded animations</param>
+		/// <param name="_OnComplete">Callback when every animations are 100% loaded</param>
+		public void LoadLocalPlayerAnimations(string[] _EmoteIDs, string _LockId, Action<List<KinetixClip>> _OnSuccess, Action<List<KinetixClip>> _OnComplete, Action _OnFailure = null)
 		{
-			KinetixAnimationBehaviour.LoadAvatarAnimation(_PlayerUUID, _AnimationIds, _LockId, _OnSuccess, _OnFailure);
+			KinetixAnimationBehaviour.LoadLocalPlayerAnimations(_EmoteIDs.Select(t => new AnimationIds(t)).ToArray(), _LockId, _OnSuccess, _OnComplete, _OnFailure);
 		}
 
 		/// <summary>
@@ -975,20 +913,32 @@ namespace Kinetix.Internal
 		/// <param name="_OnSuccess">Callback when successfully loaded animation</param>
 		public void LoadAvatarAnimation(string _PlayerUUID, string _EmoteID, string _LockId, Action _OnSuccess = null, Action _OnFailure = null)
 		{
+			KinetixAnimationBehaviour.LoadAvatarAnimation(_PlayerUUID, new AnimationIds(_EmoteID), _LockId, (_Clip) => { _OnSuccess?.Invoke(); }, _OnFailure);
+		}
+
+		/// <summary>
+		/// Load a Character animation
+		/// </summary>
+		/// <param name="_PlayerUUID">UUID of the avatar</param>
+		/// <param name="_EmoteID">ID of the animation</param>
+		/// <param name="_LockId">Arbitrary Identifier of the component asking for the animation, to pass when unloading the animation</param>
+		/// <param name="_OnSuccess">Callback when successfully loaded animation</param>
+		public void LoadAvatarAnimation(string _PlayerUUID, string _EmoteID, string _LockId, Action<KinetixClip> _OnSuccess, Action _OnFailure = null)
+		{
 			KinetixAnimationBehaviour.LoadAvatarAnimation(_PlayerUUID, new AnimationIds(_EmoteID), _LockId, _OnSuccess, _OnFailure);
 		}
 
 		/// <summary>
-		/// Load a Character animations
+		/// Load a Character animation
 		/// </summary>
 		/// <param name="_PlayerUUID">UUID of the avatar</param>
-		/// <param name="_AnimationIds">IDs of the animations</param>
+		/// <param name="_EmoteID">ID of the animation</param>
 		/// <param name="_LockId">Arbitrary Identifier of the component asking for the animation, to pass when unloading the animation</param>
-		/// <param name="_OnSuccess">Callback when successfully loaded animations</param>
-		[Obsolete("Please use the overload with the EmoteID as string.", false)]
-		public void LoadAvatarAnimations(string _PlayerUUID, AnimationIds[] _AnimationIds, string _LockId, Action _OnSuccess = null, Action _OnFailure = null)
+		/// <param name="_OnSuccess">Callback when successfully loaded animation</param>
+		/// <param name="_OnComplete">Callback when the animation is 100% loaded</param>
+		public void LoadAvatarAnimation(string _PlayerUUID, string _EmoteID, string _LockId, Action<KinetixClip> _OnSuccess, Action<KinetixClip> _OnComplete, Action _OnFailure = null)
 		{
-			KinetixAnimationBehaviour.LoadAvatarAnimations(_PlayerUUID, _AnimationIds, _LockId, _OnSuccess, _OnFailure);
+			KinetixAnimationBehaviour.LoadAvatarAnimation(_PlayerUUID, new AnimationIds(_EmoteID), _LockId, _OnSuccess, _OnComplete, _OnFailure);
 		}
 
 
@@ -1001,18 +951,32 @@ namespace Kinetix.Internal
 		/// <param name="_OnSuccess">Callback when successfully loaded animations</param>
 		public void LoadAvatarAnimations(string _PlayerUUID, string[] _EmoteIDs, string _LockId, Action _OnSuccess = null, Action _OnFailure = null)
 		{
+			KinetixAnimationBehaviour.LoadAvatarAnimations(_PlayerUUID, _EmoteIDs.Select(t => new AnimationIds(t)).ToArray(), _LockId, (_Clip) => { _OnSuccess?.Invoke(); }, _OnFailure);
+		}
+
+		/// <summary>
+		/// Load a Character animations
+		/// </summary>
+		/// <param name="_PlayerUUID">UUID of the avatar</param>
+		/// <param name="_EmoteIDs">ID of the animations</param>
+		/// <param name="_LockId">Arbitrary Identifier of the component asking for the animation, to pass when unloading the animation</param>
+		/// <param name="_OnSuccess">Callback when successfully loaded animations</param>
+		public void LoadAvatarAnimations(string _PlayerUUID, string[] _EmoteIDs, string _LockId, Action<List<KinetixClip>> _OnSuccess, Action _OnFailure = null)
+		{
 			KinetixAnimationBehaviour.LoadAvatarAnimations(_PlayerUUID, _EmoteIDs.Select(t => new AnimationIds(t)).ToArray(), _LockId, _OnSuccess, _OnFailure);
 		}
-		
+
 		/// <summary>
-		/// Unload a local Player animation
+		/// Load a Character animations
 		/// </summary>
-		/// <param name="_AnimationIds">IDs of the animation</param>
+		/// <param name="_PlayerUUID">UUID of the avatar</param>
+		/// <param name="_EmoteIDs">ID of the animations</param>
 		/// <param name="_LockId">Arbitrary Identifier of the component asking for the animation, to pass when unloading the animation</param>
-		[Obsolete("Please use the overload with the EmoteID as string.", false)]
-		public void UnloadLocalPlayerAnimation(AnimationIds _AnimationIds, string _LockId)
+		/// <param name="_OnSuccess">Callback when successfully loaded animations</param>
+		/// <param name="_OnComplete">Callback when every animations are 100% loaded</param>
+		public void LoadAvatarAnimations(string _PlayerUUID, string[] _EmoteIDs, string _LockId, Action<List<KinetixClip>> _OnSuccess, Action<List<KinetixClip>> _OnComplete, Action _OnFailure = null)
 		{
-			KinetixAnimationBehaviour.UnloadLocalPlayerAnimation(_AnimationIds, _LockId);
+			KinetixAnimationBehaviour.LoadAvatarAnimations(_PlayerUUID, _EmoteIDs.Select(t => new AnimationIds(t)).ToArray(), _LockId, _OnSuccess, _OnComplete, _OnFailure);
 		}
 
 		/// <summary>
@@ -1023,17 +987,6 @@ namespace Kinetix.Internal
 		public void UnloadLocalPlayerAnimation(string _EmoteID, string _LockId)
 		{
 			KinetixAnimationBehaviour.UnloadLocalPlayerAnimation(new AnimationIds(_EmoteID), _LockId);
-		}
-		
-		/// <summary>
-		/// Unload local Player animations
-		/// </summary>
-		/// <param name="_AnimationIds">IDs of the animations</param>
-		/// <param name="_LockId">Arbitrary Identifier of the component asking for the animation, to pass when unloading the animation</param>
-		[Obsolete("Please use the overload with the EmoteID as string.", false)]
-		public void UnloadLocalPlayerAnimations(AnimationIds[] _AnimationIds, string _LockId)
-		{
-			KinetixAnimationBehaviour.UnloadLocalPlayerAnimations(_AnimationIds, _LockId);
 		}
 
 		/// <summary>
@@ -1050,18 +1003,6 @@ namespace Kinetix.Internal
 		/// Unload a Character animations
 		/// </summary>
 		/// <param name="_PlayerUUID">UUID of the avatar</param>
-		/// <param name="_AnimationIds">IDs of the animations</param>
-		/// <param name="_LockId">Arbitrary Identifier of the component asking for the animation, to pass when unloading the animation</param>
-		[Obsolete("Please use the overload with the EmoteID as string.", false)]
-		public void UnloadAvatarAnimations(string _PlayerUUID, AnimationIds[] _AnimationIds, string _LockId)
-		{
-			KinetixAnimationBehaviour.UnloadAvatarAnimations(_PlayerUUID, _AnimationIds, _LockId);
-		}
-
-		/// <summary>
-		/// Unload a Character animations
-		/// </summary>
-		/// <param name="_PlayerUUID">UUID of the avatar</param>
 		/// <param name="_EmoteIDs">ID of the animations</param>
 		/// <param name="_LockId">Arbitrary Identifier of the component asking for the animation, to pass when unloading the animation</param>
 		public void UnloadAvatarAnimations(string _PlayerUUID, string[] _EmoteIDs, string _LockId)
@@ -1072,33 +1013,11 @@ namespace Kinetix.Internal
 		/// <summary>
 		/// Is animation available on local Player
 		/// </summary>
-		/// <param name="_AnimationIds">IDs of the animation</param>
-		/// <returns>True if animation available on local Player</returns>
-		[Obsolete("Please use the overload with the EmoteID as string.", false)]
-		public bool IsAnimationAvailableOnLocalPlayer(AnimationIds _AnimationIds)
-		{
-			return KinetixAnimationBehaviour.IsAnimationAvailableOnLocalPlayer(_AnimationIds);
-		}
-
-		/// <summary>
-		/// Is animation available on local Player
-		/// </summary>
 		/// <param name="_EmoteID">ID of the animation</param>
 		/// <returns>True if animation available on local Player</returns>
 		public bool IsAnimationAvailableOnLocalPlayer(string _EmoteID)
 		{
 			return KinetixAnimationBehaviour.IsAnimationAvailableOnLocalPlayer(new AnimationIds(_EmoteID));
-		}
-
-		/// <summary>
-		/// Get notified when an animation is ready on local Player
-		/// </summary>
-		/// <param name="_Ids">IDs of the animation</param>
-		/// <param name="_OnSuccess">Callback on animation ready</param>
-		[Obsolete("Please use the overload with the EmoteID as string.", false)]
-		public void GetNotifiedOnAnimationReadyOnLocalPlayer(AnimationIds _Ids, Action _OnSuccess)
-		{
-			KinetixAnimationBehaviour.GetNotifiedOnAnimationReadyOnLocalPlayer(_Ids, _OnSuccess);
 		}
 
 		/// <summary>
@@ -1529,16 +1448,16 @@ namespace Kinetix.Internal
 		#region Mask
 
 		public void SetMaskOnLocalPlayer(KinetixMask _Mask)
-        {
-            KinetixAnimationBehaviour.SetMaskOnLocalPlayer(_Mask);
-        }
+		{
+			KinetixAnimationBehaviour.SetMaskOnLocalPlayer(_Mask);
+		}
 
-        public KinetixMask GetMaskOnLocalPlayer()
-        {
-            return KinetixAnimationBehaviour.GetMaskOnLocalPlayer();
-        }
+		public KinetixMask GetMaskOnLocalPlayer()
+		{
+			return KinetixAnimationBehaviour.GetMaskOnLocalPlayer();
+		}
 
-        public void SetMaskOnAvatar(string _PlayerUUID, KinetixMask _Mask)
+		public void SetMaskOnAvatar(string _PlayerUUID, KinetixMask _Mask)
 		{
 			KinetixAnimationBehaviour.SetMaskOnAvatar(_PlayerUUID, _Mask);
 		}

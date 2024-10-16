@@ -8,17 +8,8 @@ namespace Kinetix.Internal
 {
     public static class KinetixConstants
     {
-        public const  string version                = "1.9.2";
+        public const  string version                = "1.10.0";
         public static bool   C_ShouldUGCBeAvailable = true;
-        
-#if STAGING_KINETIX
-        public static readonly string c_SDK_API_URL = "https://sdk-api.staging.kinetix.tech";
-#elif DEV_KINETIX
-        public static readonly string c_SDK_API_URL = "https://sdk-api.dev.kinetix.tech";
-#else
-        public static readonly string c_SDK_API_URL = "https://sdk-api.kinetix.tech";
-#endif
-
         public static readonly int c_TimeOutCreateQRCode = 305;
         
         

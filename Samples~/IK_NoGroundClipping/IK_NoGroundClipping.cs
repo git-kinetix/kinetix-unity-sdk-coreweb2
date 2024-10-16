@@ -4,17 +4,9 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class IK_NoGroundClipping : MonoBehaviour
+public class IK_NoGroundClipping : CoreDemoImplementation
 {
-	[SerializeField] private StepDisplayController stepDisplayController;
-	[SerializeField] private Animator myAnimator;
-	[SerializeField] private TMP_InputField apiKeyField;
-	[SerializeField] private TMP_InputField usernameField;
-	[SerializeField] private TMP_Text usernameLabel;
-	[SerializeField] private TMP_Text animationName;
-	[SerializeField] private Image animationIcon;
 	[SerializeField] private bool rootMotionEnabled = true;
-	private string animationID;
 
 	[Header("Physic")]
 	[SerializeField] private LayerMask raycastLayerMask;
@@ -28,30 +20,18 @@ public class IK_NoGroundClipping : MonoBehaviour
 	[SerializeField] private float ikInterpolationSpeedRotation = 180f;
 
 	private GizmoUtils gizmo;
-	private Coroutine routine;
 
 	private void Awake()
 	{
 		gizmo = GetComponent<GizmoUtils>() ?? gameObject.AddComponent<GizmoUtils>();
 	}
 
-	public void OnValidateGameApiKey()
-	{
-		// Initialization is an async process, 
-		// We use a callback to tell when it's finished
-		KinetixCore.OnInitialized += OnInitialize;
-		KinetixCore.Initialize(new KinetixCoreConfiguration()
-		{
-			GameAPIKey = apiKeyField.text,
-			PlayAutomaticallyAnimationOnAnimators = true,
-		});
-	}
 
 	/// <summary>
 	/// This callback is used for the actions made after the SDK is initialized
 	/// Such as initializing the UI and Registering our LocalPlayer's animator
 	/// </summary>
-	private void OnInitialize()
+	protected override void OnInitialize()
 	{
 		// Register local player to receive animation
 		// See "Animation System" documentation
@@ -63,81 +43,6 @@ public class IK_NoGroundClipping : MonoBehaviour
 		stepDisplayController.NextStep();
 	}
 
-	public void ConnectAccount()
-	{
-		// Now, we connect the current user's account to get his emotes
-		// The userID is chosen by you, and must be unique to each user
-		// See "Account Management" documentation
-		KinetixCore.Account.ConnectAccount(usernameField.text, () => {
-			Debug.Log("Account connected successfully");
-			usernameLabel.text = usernameField.text;
-
-			stepDisplayController.NextStep();
-		}, () => {
-			Debug.LogError("There was a problem during account connection. Is the GameAPIKey correct?");
-		});
-	}
-
-	public void OpenUGELink()
-	{
-		// Example on how to get the link
-		KinetixCore.UGC.GetUgcUrl((_Url) => {
-			Application.OpenURL(_Url);
-
-			stepDisplayController.NextStep();
-
-			if (routine != null)
-				StopCoroutine(routine);
-
-			routine = StartCoroutine(FetchEmotesAtInterval());
-		});
-	}
-
-	private IEnumerator FetchEmotesAtInterval()
-	{
-		GetPlayerEmotes();
-
-		while (enabled)
-		{
-			// Fetch emotes every 5 minutes
-			yield return new WaitForSeconds(300);
-
-			GetPlayerEmotes();
-		}
-	}
-
-	public void GetPlayerEmotes()
-	{
-		// We get the animation 
-		KinetixCore.Metadata.GetUserAnimationMetadatas(OnPlayerEmoteFetched);
-	}
-
-	public void OnPlayerEmoteFetched(AnimationMetadata[] _Emotes)
-	{
-		if (_Emotes.Length == 0)
-			return;
-
-		stepDisplayController.NextStep();
-
-		// Let's create a button for the last emote we fetched
-		AssignEmoteToButton(_Emotes[_Emotes.Length - 1]);
-	}
-
-	public void AssignEmoteToButton(AnimationMetadata _Metadata)
-	{
-		// We cn load the icon of the emote using this
-		KinetixCore.Metadata.LoadIconByAnimationId(_Metadata.Ids.UUID, (_Sprite) => {
-			animationIcon.sprite = _Sprite;
-			animationName.text = _Metadata.Name;
-			animationID = _Metadata.Ids.UUID;
-		});
-	}
-
-	public void PlayEmote()
-	{
-		// Finally we can play the animation on our local player
-		KinetixCore.Animation.PlayAnimationOnLocalPlayer(animationID);
-	}
 
 	//===================================================//
 	//                      PHYSICS                      //

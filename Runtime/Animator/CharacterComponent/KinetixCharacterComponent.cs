@@ -58,7 +58,8 @@ namespace Kinetix
 
 		// CACHE
 		protected KinetixAvatar kinetixAvatar;
-        
+
+		internal IPoseInterpreter MainPoseInterpreter => poseInterpretor.FirstOrDefault();
 		protected readonly List<IPoseInterpreter> poseInterpretor = new List<IPoseInterpreter>();
 		protected HumanBodyBones[] characterBones;
 		protected ServiceLocator serviceLocator;
