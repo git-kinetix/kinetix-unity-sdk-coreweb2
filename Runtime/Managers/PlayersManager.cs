@@ -236,10 +236,10 @@ namespace Kinetix.Internal
 			localPlayer.GetPlayRate();
 		}
 		
-		public void GetPlayRate(string _PlayerUUID) 
+		public float GetPlayRate(string _PlayerUUID) 
 		{
 			PlayerManager player = players.Find((player) => player.UUID == _PlayerUUID);
-			player.GetPlayRate();
+			return player.GetPlayRate();
 		}
 		
 		public void SetElapsedTimeOnLocalPlayer(float _ElapsedTime)
@@ -258,10 +258,10 @@ namespace Kinetix.Internal
 			localPlayer.GetElapsedTime();
 		}
 		
-		public void GetElapsedTime(string _PlayerUUID)
+		public float GetElapsedTime(string _PlayerUUID)
 		{
 			PlayerManager player = players.Find((player) => player.UUID == _PlayerUUID);
-			player.GetElapsedTime();
+			return player.GetElapsedTime();
 		}
 		
 		public void SetLoopAnimation(string _PlayerUUID, bool _Looping) 

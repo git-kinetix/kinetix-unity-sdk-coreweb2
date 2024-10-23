@@ -8,7 +8,7 @@ namespace Kinetix.Internal
 {
     public static class KinetixConstants
     {
-        public const  string version                = "1.10.0";
+        public const  string version                = "1.10.1";
         public static bool   C_ShouldUGCBeAvailable = true;
         public static readonly int c_TimeOutCreateQRCode = 305;
         

@@ -620,9 +620,9 @@ namespace Kinetix.Internal
 		/// <summary>
 		/// Get the play rate of the local Player's kinetix animator
 		/// </summary>
-		public void GetPlayRateOnLocalPlayer() 
+		public float GetPlayRateOnLocalPlayer() 
 		{
-			KinetixAnimationBehaviour.GetPlayRateOnLocalPlayer();
+			return KinetixAnimationBehaviour.GetPlayRateOnLocalPlayer();
 		}
 
 		/// <summary>
@@ -637,9 +637,9 @@ namespace Kinetix.Internal
 		/// <summary>
 		/// Get the current time of the local Player's kinetix animator
 		/// </summary>
-		public void GetElapsedTimeOnLocalPlayer() 
+		public float GetElapsedTimeOnLocalPlayer() 
 		{
-			KinetixAnimationBehaviour.GetElapsedTimeOnLocalPlayer();
+			return KinetixAnimationBehaviour.GetElapsedTimeOnLocalPlayer();
 		}
 
 		/// <summary>
@@ -656,9 +656,9 @@ namespace Kinetix.Internal
 		/// Get the play rate of a local Character's kinetix animator
 		/// </summary>
 		/// <param name="_PlayerUUID">UUID of the avatar</param>
-		public void GetPlayRateOnAvatar(string _PlayerUUID) 
+		public float GetPlayRateOnAvatar(string _PlayerUUID) 
 		{
-			KinetixAnimationBehaviour.GetPlayRateOnAvatar(_PlayerUUID);
+			return KinetixAnimationBehaviour.GetPlayRateOnAvatar(_PlayerUUID);
 		}
 
 		/// <summary>
@@ -675,9 +675,9 @@ namespace Kinetix.Internal
 		/// Get the current time of a local Character's kinetix animator
 		/// </summary>
 		/// <param name="_PlayerUUID">UUID of the avatar</param>
-		public void GetElapsedTimeOnAvatar(string _PlayerUUID) 
+		public float GetElapsedTimeOnAvatar(string _PlayerUUID) 
 		{
-			KinetixAnimationBehaviour.GetElapsedTimeOnAvatar(_PlayerUUID);
+			return KinetixAnimationBehaviour.GetElapsedTimeOnAvatar(_PlayerUUID);
 		}
 
 		/// <summary>

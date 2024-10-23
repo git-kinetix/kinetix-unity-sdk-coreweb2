@@ -367,33 +367,33 @@ namespace Kinetix.Internal
 		{
 			KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().LocalPlayer.SetPlayRate(_PlayRate);
 		}
-		public static void GetPlayRateOnLocalPlayer() 
+		public static float GetPlayRateOnLocalPlayer() 
 		{
-			KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().LocalPlayer.GetPlayRate();
+			return KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().LocalPlayer.GetPlayRate();
 		}
 		public static void SetElapsedTimeOnLocalPlayer(float _ElapsedTime) 
 		{
 			KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().LocalPlayer.SetElapsedTime(_ElapsedTime);
 		}
-		public static void GetElapsedTimeOnLocalPlayer() 
+		public static float GetElapsedTimeOnLocalPlayer() 
 		{
-			KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().LocalPlayer.GetElapsedTime();
+			return KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().LocalPlayer.GetElapsedTime();
 		}
 		public static void SetPlayRateOnAvatar(string _PlayerUUID, float _PlayRate)
 		{
 			KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().SetPlayRate(_PlayerUUID, _PlayRate);
 		}
-		public static void GetPlayRateOnAvatar(string _PlayerUUID) 
+		public static float GetPlayRateOnAvatar(string _PlayerUUID) 
 		{
-			KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().GetPlayRate(_PlayerUUID);
+			return KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().GetPlayRate(_PlayerUUID);
 		}
 		public static void SetElapsedTimeOnAvatar(string _PlayerUUID, float _ElapsedTime) 
 		{
 			KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().SetElapsedTime(_PlayerUUID, _ElapsedTime);
 		}
-		public static void GetElapsedTimeOnAvatar(string _PlayerUUID) 
+		public static float GetElapsedTimeOnAvatar(string _PlayerUUID) 
 		{
-			KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().GetElapsedTime(_PlayerUUID);
+			return KinetixCoreBehaviour.ManagerLocator.Get<PlayersManager>().GetElapsedTime(_PlayerUUID);
 		}
 		#endregion
 

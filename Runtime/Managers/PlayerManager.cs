@@ -579,9 +579,9 @@ namespace Kinetix.Internal.Cache
 
 		public void SetPause(bool _Paused) => KinetixCharacterComponent.SetPause(_Paused);
 		public void SetPlayRate(float _PlayRate) => KinetixCharacterComponent.SetPlayRate(_PlayRate);
-		public void GetPlayRate() => KinetixCharacterComponent.GetPlayRate();
+		public float GetPlayRate() => KinetixCharacterComponent.GetPlayRate();
 		public void SetElapsedTime(float _ElapsedTime) => KinetixCharacterComponent.SetElapsedTime(_ElapsedTime);
-		public void GetElapsedTime() => KinetixCharacterComponent.GetElapsedTime();
+		public float GetElapsedTime() => KinetixCharacterComponent.GetElapsedTime();
 
 		public void PlayAnimation(AnimationIds _AnimationsIds, Action<AnimationIds> _OnPlayedAnimation, string _ForcedExtension = "")
 			=> PlayAnimation(_AnimationsIds, AnimationTimeRange.Default, _OnPlayedAnimation, _ForcedExtension);
