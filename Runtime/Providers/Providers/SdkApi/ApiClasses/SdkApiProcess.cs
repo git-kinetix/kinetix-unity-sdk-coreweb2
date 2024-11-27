@@ -11,6 +11,8 @@ namespace Kinetix.Internal
         public Guid Video;
         public int Vw;
         public int User;
+        public bool PostMLError;
+        public string Status;
         public int Progression;
         public DateTime CreatedAt;
         public string Name;
